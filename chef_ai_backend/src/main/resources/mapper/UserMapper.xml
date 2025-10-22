@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chef_ai_backend.mapper.UserMapper">
+  <resultMap id="UserMap" type="com.example.chef_ai_backend.model.User">
+    <id property="userId" column="user_id"/>
+    <result property="username" column="username"/>
+    <result property="avatar" column="avatar"/>
+    <result property="signature" column="signature"/>
+    <result property="followCount" column="follow_count"/>
+    <result property="fanCount" column="fan_count"/>
+    <result property="likeCount" column="like_count"/>
+    <result property="createTime" column="create_time"/>
+    <result property="updateTime" column="update_time"/>
+  </resultMap>
+
+  <!-- 推荐作者：按粉丝数、获赞数倒序 -->
+  <select id="selectRecommended" resultMap="UserMap">
+    SELECT *
+    FROM user
+    ORDER BY fan_count DESC, like_count DESC, create_time DESC
+    LIMIT #{limit}
+  </select>
+</mapper>
