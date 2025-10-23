@@ -5,6 +5,10 @@
       "style": { "navigationBarTitleText": "首页" }
     },
     {
+      "path": "pages/chat/index",
+      "style": { "navigationBarTitleText": "美食灵感" }
+    },
+    {
       "path": "pages/recipes/index",
       "style": { "navigationBarTitleText": "菜谱大全" }
     },

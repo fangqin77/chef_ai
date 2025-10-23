@@ -169,62 +169,14 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
 var _default =
 {
   data: function data() {
-    return {
-      categories: [
-      { key: 'cn', name: '中式菜谱', emoji: '🥘' },
-      { key: 'west', name: '西式菜谱', emoji: '🥗' },
-      { key: 'jp', name: '日式菜谱', emoji: '🍣' },
-      { key: 'kr', name: '韩式菜谱', emoji: '🥣' },
-      { key: 'veg', name: '素食', emoji: '🥦' }],
-
-      recommend: {
-        id: 'gongbao-jiding',
-        title: '宫保鸡丁',
-        time: 25,
-        // 临时占位图：使用本地 logo 以避免外链依赖，项目内可替换为真实图片 /static/xxx.jpg
-        cover: '/static/logo.png' } };
-
-
+    return {};
   },
   methods: {
-    onPickToday: function onPickToday() {
-      uni.removeStorageSync('recipes_cat');
-      uni.switchTab({ url: '/pages/recipes/index' });
-    },
-    onTapCategory: function onTapCategory(c) {
-      uni.setStorageSync('recipes_cat', c.key);
-      uni.switchTab({ url: '/pages/recipes/index' });
-    },
-    onOpenRecipe: function onOpenRecipe(id) {
-      uni.showToast({ title: '打开：' + id, icon: 'none' });
-      // 这里按需跳转到详情页
-      // uni.navigateTo({ url: '/pages/recipe/detail?id=' + id })
+    onOpenChat: function onOpenChat() {
+      uni.navigateTo({ url: '/pages/chat/index' });
     } } };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 

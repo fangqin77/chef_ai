@@ -1,37 +1,14 @@
 {
   "description": "项目配置文件。",
   "packOptions": {
-    "ignore": [],
-    "include": []
+    "ignore": []
   },
   "setting": {
-    "urlCheck": false,
-    "minifyWXML": true,
-    "minified": true,
-    "es6": false,
-    "postcss": false,
-    "compileWorklet": false,
-    "uglifyFileName": false,
-    "uploadWithSourceMap": true,
-    "enhance": false,
-    "packNpmManually": false,
-    "packNpmRelationList": [],
-    "minifyWXSS": true,
-    "localPlugins": false,
-    "disableUseStrict": false,
-    "useCompilerPlugins": false,
-    "condition": false,
-    "swc": false,
-    "disableSWC": true,
-    "babelSetting": {
-      "ignore": [],
-      "disablePlugins": [],
-      "outputPath": ""
-    }
+    "urlCheck": false
   },
   "compileType": "miniprogram",
   "libVersion": "",
-  "appid": "wx62a7c994122f8fcf",
+  "appid": "touristappid",
   "projectname": "chef_ai",
   "condition": {
     "search": {
@@ -50,7 +27,5 @@
       "current": -1,
       "list": []
     }
-  },
-  "simulatorPluginLibVersion": {},
-  "editorSetting": {}
+  }
 }

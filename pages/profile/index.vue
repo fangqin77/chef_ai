@@ -36,13 +36,7 @@
       </view>
     </view>
 
-    <!-- 快捷入口 -->
-    <view class="quick">
-      <view class="quick-item" v-for="q in quicks" :key="q.key" @click="tapQuick(q)">
-        <text class="q-icon">{{ q.icon }}</text>
-        <text class="q-text">{{ q.text }}</text>
-      </view>
-    </view>
+
 
     <!-- 分组列表 -->
     <view class="group">
@@ -55,6 +49,17 @@
       </view>
     </view>
 
+    <!-- 我的（放在工具与服务前） -->
+    <view class="group">
+      <view class="group-title">我的内容</view>
+      <view class="cell" @click="toast('我的收藏')">
+        <text class="cell-icon">❤</text><text class="cell-text">我的收藏</text><text class="arrow">›</text>
+      </view>
+      <view class="cell" @click="toast('浏览历史')">
+        <text class="cell-icon">↻</text><text class="cell-text">浏览历史</text><text class="arrow">›</text>
+      </view>
+    </view>
+
     <view class="group">
       <view class="group-title">工具与服务</view>
       <view class="cell" @click="toast('营养计算器')">
@@ -63,9 +68,7 @@
       <view class="cell" @click="toast('烹饪计时器')">
         <text class="cell-icon">⏱</text><text class="cell-text">烹饪计时器</text><text class="arrow">›</text>
       </view>
-      <view class="cell" @click="toast('购物清单')">
-        <text class="cell-icon">🛒</text><text class="cell-text">购物清单</text><text class="arrow">›</text>
-      </view>
+
     </view>
 
     <view class="group">
@@ -87,12 +90,7 @@ export default {
   data() {
     return {
       stats: { follow: 125, fans: '1.2k', likes: '3.6k' },
-      quicks: [
-        { key: 'fav', icon: '❤', text: '我的收藏' },
-        { key: 'mine', icon: '📄', text: '我的菜谱' },
-        { key: 'history', icon: '↻', text: '浏览历史' },
-        { key: 'offline', icon: '⬇', text: '离线菜谱' }
-      ]
+      quicks: []
     }
   },
   methods: {
@@ -118,8 +116,8 @@ export default {
 /* 名片 */
 .card {
   margin: 16rpx 24rpx; border-radius: 24rpx; padding: 20rpx;
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%); color: #fff;
-  box-shadow: 0 10rpx 24rpx rgba(255, 122, 0, 0.25);
+  background: #fff; color: #1f2937;
+  box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
 }
 .card-top { display: flex; align-items: center; }
 .avatar-wrap { width: 96rpx; height: 96rpx; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.25); }
@@ -131,7 +129,7 @@ export default {
 .stat { flex: 1; text-align: center; }
 .num { font-size: 30rpx; font-weight: 700; }
 .label { font-size: 22rpx; opacity: 0.9; }
-.divider { width: 1rpx; height: 40rpx; background: rgba(255,255,255,0.35); }
+.divider { width: 1rpx; height: 40rpx; background: #e5e7eb; }
 
 /* 快捷入口 */
 .quick {

@@ -17,9 +17,8 @@
 /* 名片 */
 .card {
   margin: 16rpx 24rpx; border-radius: 24rpx; padding: 20rpx;
-  background: -webkit-linear-gradient(left, #ff8a34 0%, #ff6a00 100%);
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%); color: #fff;
-  box-shadow: 0 10rpx 24rpx rgba(255, 122, 0, 0.25);
+  background: #fff; color: #1f2937;
+  box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
 }
 .card-top { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center;
 }
@@ -41,7 +40,7 @@
 }
 .label { font-size: 22rpx; opacity: 0.9;
 }
-.divider { width: 1rpx; height: 40rpx; background: rgba(255,255,255,0.35);
+.divider { width: 1rpx; height: 40rpx; background: #e5e7eb;
 }
 /* 快捷入口 */
 .quick {
