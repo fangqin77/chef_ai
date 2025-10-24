@@ -11,7 +11,7 @@
     <view class="card">
       <view class="card-top">
         <view class="avatar-wrap">
-          <image class="avatar" src="/static/logo.png" mode="aspectFill" />
+          <image class="avatar" src="https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png" mode="aspectFill" />
         </view>
         <view class="profile">
           <text class="name">美食爱好者</text>
@@ -37,17 +37,6 @@
     </view>
 
 
-
-    <!-- 分组列表 -->
-    <view class="group">
-      <view class="group-title">学习与成长</view>
-      <view class="cell" @click="toast('我的成就')">
-        <text class="cell-icon">🏆</text><text class="cell-text">我的成就</text><text class="arrow">›</text>
-      </view>
-      <view class="cell" @click="toast('每日打卡')">
-        <text class="cell-icon">🗓</text><text class="cell-text">每日打卡</text><text class="arrow">›</text>
-      </view>
-    </view>
 
     <!-- 我的（放在工具与服务前） -->
     <view class="group">

@@ -52,9 +52,9 @@ export default {
           id: 'p1',
           name: '小雅厨房',
           time: '2 小时前',
-          avatar: '/static/logo.png',
+          avatar: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
           text: '今天尝试做了传说中的网红芝士蛋糕，第一次做就成功了！奶香浓郁、入口即化，太满足了～',
-          images: ['/static/logo.png'],
+          images: ['https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'],
           likes: 128,
           comments: 24
         },
@@ -62,9 +62,9 @@ export default {
           id: 'p2',
           name: '老八的美食',
           time: '5 小时前',
-          avatar: '/static/logo.png',
+          avatar: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
           text: '周末在家做了一锅香喷喷的红烧肉，肥而不腻、瘦而不柴。秘诀就是要用冰糖炒糖色，火候掌握好！',
-          images: ['/static/logo.png','/static/logo.png'],
+          images: ['https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png','https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'],
           likes: 256,
           comments: 18
         },
@@ -72,9 +72,9 @@ export default {
           id: 'p3',
           name: '美食达人小丽',
           time: '1 天前',
-          avatar: '/static/logo.png',
+          avatar: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
           text: '分享一个超简单的早餐食谱！牛油果吐司配煎蛋，营养丰富又美味，5 分钟就能搞定～',
-          images: ['/static/logo.png'],
+          images: ['https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'],
           likes: 173,
           comments: 31
         }

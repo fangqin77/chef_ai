@@ -5,7 +5,7 @@
     <!-- 会话区 -->
     <scroll-view class="messages" scroll-y>
       <view class="msg assistant">
-        <image class="avatar" src="/static/logo.png" mode="aspectFit" />
+        <image class="avatar" src="https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png" mode="aspectFit" />
         <view class="bubble">
           今天吃点什么呢？可以输入食材或口味偏好，我来给你灵感～
         </view>

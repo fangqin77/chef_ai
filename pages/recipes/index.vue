@@ -62,12 +62,12 @@ export default {
       ],
       // 示例数据：可替换为接口返回
       list: [
-        { id: 'mapo-tofu', name: '麻婆豆腐', level: '简单', time: 20, cat: 'cn', cover: '/static/logo.png' },
-        { id: 'egg-fried-rice', name: '蛋炒饭', level: '简单', time: 15, cat: 'cn', cover: '/static/logo.png' },
-        { id: 'hongshao-rou', name: '红烧肉', level: '中等', time: 45, cat: 'cn', cover: '/static/logo.png' },
-        { id: 'tangcu-liji', name: '糖醋里脊', level: '中等', time: 35, cat: 'cn', cover: '/static/logo.png' },
-        { id: 'sushi', name: '寿司拼盘', level: '中等', time: 40, cat: 'jp', cover: '/static/logo.png' },
-        { id: 'bibimbap', name: '石锅拌饭', level: '简单', time: 25, cat: 'kr', cover: '/static/logo.png' }
+        { id: 'mapo-tofu', name: '麻婆豆腐', level: '简单', time: 20, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
+        { id: 'egg-fried-rice', name: '蛋炒饭', level: '简单', time: 15, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
+        { id: 'hongshao-rou', name: '红烧肉', level: '中等', time: 45, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
+        { id: 'tangcu-liji', name: '糖醋里脊', level: '中等', time: 35, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
+        { id: 'sushi', name: '寿司拼盘', level: '中等', time: 40, cat: 'jp', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
+        { id: 'bibimbap', name: '石锅拌饭', level: '简单', time: 25, cat: 'kr', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' }
       ]
     }
   },
