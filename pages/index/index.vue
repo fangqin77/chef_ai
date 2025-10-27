@@ -6,6 +6,9 @@
         <image class="logo" src="https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png" mode="heightFix" />
         <text class="brand">智趣厨房</text>
       </view>
+      <view class="nav-right">
+        <text class="bell" @click="goToProfileOrLogin">👤</text>
+      </view>
     </view>
 
     <!-- 搜索框 -->
@@ -68,6 +71,20 @@ export default {
   methods: {
     onOpenChat() {
       uni.navigateTo({ url: '/pages/chat/index' });
+    },
+    goToProfileOrLogin() {
+      // 检查是否已登录
+      const userInfo = uni.getStorageSync('userInfo');
+      if (userInfo && userInfo.nickName) {
+        // 已登录，跳转到个人中心
+        uni.switchTab({ url: '/pages/profile/index' });
+      } else {
+        // 未登录，执行微信登录
+        const app = getApp();
+        if (app && app.$options.methods) {
+          app.$options.methods.wxLogin.call(app);
+        }
+      }
     }
   }
 }

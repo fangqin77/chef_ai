@@ -11,11 +11,11 @@
     <view class="card">
       <view class="card-top">
         <view class="avatar-wrap">
-          <image class="avatar" src="https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png" mode="aspectFill" />
+          <image class="avatar" :src="userInfo.avatarUrl || 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'" mode="aspectFill" />
         </view>
         <view class="profile">
-          <text class="name">美食爱好者</text>
-          <text class="desc">分享生活中的美好味道</text>
+          <text class="name">{{ userInfo.nickName || '美食爱好者' }}</text>
+          <text class="desc">{{ userInfo.signature || '分享生活中的美好味道' }}</text>
         </view>
       </view>
       <view class="stats">
@@ -36,7 +36,10 @@
       </view>
     </view>
 
-
+    <!-- 登录按钮 (如果未登录) -->
+    <view class="login-section" v-if="!userInfo.nickName">
+      <button class="login-btn" @click="handleLogin">微信授权登录</button>
+    </view>
 
     <!-- 我的（放在工具与服务前） -->
     <view class="group">
@@ -78,14 +81,54 @@
 export default {
   data() {
     return {
+      userInfo: {},
       stats: { follow: 125, fans: '1.2k', likes: '3.6k' },
       quicks: []
     }
   },
+  onLoad() {
+    // 页面加载时获取用户信息
+    this.getUserInfo();
+  },
+  onShow() {
+    // 每次显示页面时都刷新用户信息
+    this.getUserInfo();
+  },
   methods: {
-    onSettings() { uni.showToast({ title: '设置入口预留', icon: 'none' }) },
-    tapQuick(q) { uni.showToast({ title: q.text, icon: 'none' }) },
-    toast(t) { uni.showToast({ title: t, icon: 'none' }) }
+    onSettings() { 
+      uni.showToast({ title: '设置入口预留', icon: 'none' }) 
+    },
+    tapQuick(q) { 
+      uni.showToast({ title: q.text, icon: 'none' }) 
+    },
+    toast(t) { 
+      uni.showToast({ title: t, icon: 'none' }) 
+    },
+    
+    // 获取用户信息
+    getUserInfo() {
+      try {
+        const userInfo = uni.getStorageSync('userInfo');
+        if (userInfo) {
+          this.userInfo = userInfo;
+        }
+      } catch (e) {
+        console.error('获取用户信息失败', e);
+      }
+    },
+    
+    // 处理登录
+    handleLogin() {
+      // 调用App的登录方法
+      const app = getApp();
+      if (app && app.$options.methods) {
+        app.$options.methods.wxLogin.call(app);
+        // 登录后更新页面用户信息
+        setTimeout(() => {
+          this.getUserInfo();
+        }, 1500);
+      }
+    }
   }
 }
 </script>
@@ -138,4 +181,22 @@ export default {
 .cell-icon { width: 48rpx; text-align: center; font-size: 30rpx; color: #ff6a00; }
 .cell-text { flex: 1; font-size: 28rpx; color: #1f2937; }
 .arrow { font-size: 36rpx; color: #c7cdd3; }
+
+/* 登录按钮 */
+.login-section {
+  display: flex;
+  justify-content: center;
+  margin: 20rpx 24rpx;
+}
+.login-btn {
+  width: 80%;
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  color: #fff;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>

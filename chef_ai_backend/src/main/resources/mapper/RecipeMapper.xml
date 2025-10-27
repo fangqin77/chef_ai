@@ -3,27 +3,52 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.chef_ai_backend.mapper.RecipeMapper">
+  <!-- 菜谱结果集映射 -->
   <resultMap id="RecipeMap" type="com.example.chef_ai_backend.model.Recipe">
-    <id property="recipeId" column="recipe_id"/>
-    <result property="userId" column="user_id"/>
-    <result property="name" column="name"/>
-    <result property="coverImg" column="cover_img"/>
-    <result property="cuisineType" column="cuisine_type"/>
-    <result property="difficulty" column="difficulty"/>
-    <result property="cookTime" column="cook_time"/>
-    <result property="ingredients" column="ingredients"/>
-    <result property="steps" column="steps"/>
-    <result property="viewCount" column="view_count"/>
-    <result property="likeCount" column="like_count"/>
-    <result property="createTime" column="create_time"/>
-    <result property="updateTime" column="update_time"/>
+    <id property="recipeId" column="菜谱ID"/>
+    <result property="cuisineType" column="菜谱类型号"/>
+    <result property="name" column="菜谱名称"/>
+    <result property="steps" column="做法"/>
+    <result property="ingredients" column="原料"/>
+    <result property="coverImg" column="图片URL"/>
+    <result property="difficulty" column="特性"/>
   </resultMap>
 
-  <!-- 热门菜谱：按 like_count desc、view_count desc，取前 N 条 -->
+  <!-- 分类结果集映射 -->
+  <resultMap id="RecipeTypeMap" type="com.example.chef_ai_backend.model.RecipeType">
+    <id property="nodeId" column="节点ID"/>
+    <result property="ftype" column="ftype"/>
+    <result property="typeName" column="类型名称"/>
+    <result property="parentNode" column="父节点"/>
+    <result property="sortOrder" column="顺序"/>
+  </resultMap>
+
+  <!-- 热门菜谱查询 -->
   <select id="selectHotRecipes" resultMap="RecipeMap">
-    SELECT *
-    FROM recipe
-    ORDER BY like_count DESC, view_count DESC, create_time DESC
-    LIMIT #{limit}
+    SELECT * FROM recipes
+    ORDER BY 菜谱ID DESC LIMIT #{limit}
+  </select>
+
+  <!-- 获取非根节点分类（排除parentNode为0或null的节点） -->
+  <select id="selectNonRootCategories" resultMap="RecipeTypeMap">
+    SELECT * FROM recipe_types
+    WHERE 父节点 IS NOT NULL AND 父节点 != 0
+    ORDER BY 顺序 ASC
+  </select>
+
+  <!-- 根据分类ID查询菜谱 -->
+  <select id="selectByCategoryId" resultMap="RecipeMap">
+    SELECT * FROM recipes
+    WHERE 菜谱类型号 = #{categoryId}
+    ORDER BY 菜谱ID DESC LIMIT #{limit}
+  </select>
+
+  <!-- 搜索菜谱（模糊匹配） -->
+  <select id="searchRecipes" resultMap="RecipeMap">
+    SELECT * FROM recipes
+    WHERE 菜谱名称 LIKE CONCAT('%', #{keyword}, '%')
+       OR 原料 LIKE CONCAT('%', #{keyword}, '%')
+       OR 做法 LIKE CONCAT('%', #{keyword}, '%')
+    ORDER BY 菜谱ID DESC
   </select>
 </mapper>

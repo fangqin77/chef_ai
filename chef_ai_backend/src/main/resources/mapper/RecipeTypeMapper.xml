@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chef_ai_backend.mapper.RecipeTypeMapper">
+  <resultMap id="RecipeTypeMap" type="com.example.chef_ai_backend.model.RecipeType">
+    <id property="typeId" column="type_id"/>
+    <result property="typeName" column="type_name"/>
+    <result property="parentId" column="parent_id"/>
+    <result property="sortOrder" column="sort_order"/>
+  </resultMap>
+
+  <select id="selectAll" resultMap="RecipeTypeMap">
+    SELECT * FROM recipe_type ORDER BY sort_order
+  </select>
+</mapper>

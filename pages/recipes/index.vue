@@ -3,7 +3,19 @@
     <!-- 顶部栏 -->
     <view class="header">
       <text class="title">菜谱大全</text>
-      <text class="icon-search" @click="onSearch">🔍</text>
+      <text class="icon-search" @click="onSearchDialog">🔍</text>
+    </view>
+
+    <!-- 搜索框（默认隐藏，点击搜索图标显示） -->
+    <view class="search-container" v-if="showSearch">
+      <input 
+        class="search-input" 
+        type="text" 
+        placeholder="搜索菜谱或食材..." 
+        v-model="searchKeyword"
+        @confirm="doSearch"
+      />
+      <text class="cancel-btn" @click="showSearch = false">取消</text>
     </view>
 
     <!-- 分类筛选 -->
@@ -32,16 +44,35 @@
       </view>
     </view>
 
+    <!-- 空状态提示 -->
+    <view class="empty" v-if="filteredList.length === 0">
+      <text>没有找到相关菜谱哦~</text>
+    </view>
+
     <view style="height: 24rpx;" />
   </view>
 </template>
 
 <script>
 export default {
+  data() {
+    return {
+      activeCat: 'all',
+      cats: [
+        { key: 'all', name: '全部' }
+        // 其他分类将从接口加载
+      ],
+      list: [],          // 所有菜谱数据
+      searchKeyword: '', // 搜索关键词
+      showSearch: false  // 是否显示搜索框
+    }
+  },
   onLoad(options) {
     if (options && options.cat) {
       this.activeCat = options.cat;
     }
+    this.loadCategories();
+    this.loadRecipes();
   },
   onShow() {
     const cat = uni.getStorageSync('recipes_cat');
@@ -50,41 +81,113 @@ export default {
       uni.removeStorageSync('recipes_cat');
     }
   },
-  data() {
-    return {
-      activeCat: 'all',
-      cats: [
-        { key: 'all', name: '全部' },
-        { key: 'cn', name: '中式' },
-        { key: 'west', name: '西式' },
-        { key: 'jp', name: '日式' },
-        { key: 'kr', name: '韩式' }
-      ],
-      // 示例数据：可替换为接口返回
-      list: [
-        { id: 'mapo-tofu', name: '麻婆豆腐', level: '简单', time: 20, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'egg-fried-rice', name: '蛋炒饭', level: '简单', time: 15, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'hongshao-rou', name: '红烧肉', level: '中等', time: 45, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'tangcu-liji', name: '糖醋里脊', level: '中等', time: 35, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'sushi', name: '寿司拼盘', level: '中等', time: 40, cat: 'jp', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'bibimbap', name: '石锅拌饭', level: '简单', time: 25, cat: 'kr', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' }
-      ]
-    }
-  },
   computed: {
     filteredList() {
-      if (this.activeCat === 'all') return this.list
-      return this.list.filter(i => i.cat === this.activeCat)
+      // 优先显示搜索结果
+      if (this.searchKeyword) {
+        return this.list;
+      }
+      // 分类筛选
+      if (this.activeCat === 'all') return this.list;
+      return this.list.filter(i => i.cat.toString() === this.activeCat);
     }
   },
   methods: {
-    onSearch() {
-      uni.showToast({ title: '搜索暂未接入', icon: 'none' })
+    // 加载分类（排除根节点）
+    loadCategories() {
+      uni.request({
+        url: 'http://localhost:8080/api/recipes/categories',
+        method: 'GET',
+        success: (res) => {
+          if (res.statusCode === 200 && res.data) {
+            // 合并默认的"全部"选项和接口返回的分类
+            this.cats = [
+              { key: 'all', name: '全部' },
+              ...res.data.map(type => ({
+                key: type.nodeId.toString(),
+                name: type.typeName
+              }))
+            ];
+          }
+        },
+        fail: (err) => {
+          console.error('加载分类失败', err);
+        }
+      });
     },
+    
+    // 加载菜谱数据
+    loadRecipes() {
+      const categoryId = this.activeCat === 'all' ? '' : this.activeCat;
+      uni.request({
+        url: `http://localhost:8080/api/recipes?categoryId=${categoryId}`,
+        method: 'GET',
+        success: (res) => {
+          if (res.statusCode === 200 && res.data) {
+            this.list = res.data.map(recipe => ({
+              id: recipe.recipeId,
+              name: recipe.name,
+              level: recipe.difficulty || '简单',
+              time: recipe.cookTime || Math.floor(Math.random() * 30) + 10,
+              cat: recipe.cuisineType,
+              cover: recipe.coverImg || 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'
+            }));
+          }
+        },
+        fail: (err) => {
+          console.error('加载菜谱失败', err);
+        }
+      });
+    },
+    
+    // 显示搜索框
+    onSearchDialog() {
+      this.showSearch = true;
+      // 自动聚焦（需要配合组件实现）
+      setTimeout(() => {
+        // 注意：在uni-app中，直接聚焦可能不生效，需要使用ref方式
+      }, 100);
+    },
+    
+    // 执行搜索
+    doSearch() {
+      if (!this.searchKeyword.trim()) {
+        uni.showToast({ title: '请输入搜索内容', icon: 'none' });
+        return;
+      }
+      
+      uni.request({
+        url: `http://localhost:8080/api/recipes/search?keyword=${encodeURIComponent(this.searchKeyword)}`,
+        method: 'GET',
+        success: (res) => {
+          if (res.statusCode === 200 && res.data) {
+            this.list = res.data.map(recipe => ({
+              id: recipe.recipeId,
+              name: recipe.name,
+              level: recipe.difficulty || '简单',
+              time: recipe.cookTime || Math.floor(Math.random() * 30) + 10,
+              cat: recipe.cuisineType,
+              cover: recipe.coverImg || 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'
+            }));
+          }
+        },
+        fail: (err) => {
+          console.error('搜索失败', err);
+          uni.showToast({ title: '搜索失败', icon: 'none' });
+        }
+      });
+    },
+    
+    // 打开菜谱详情
     openRecipe(r) {
-      uni.showToast({ title: '打开：' + r.name, icon: 'none' })
-      // 可跳转到详情页
-      // uni.navigateTo({ url: '/pages/recipe/detail?id=' + r.id })
+      uni.navigateTo({ url: `/pages/recipe/detail?id=${r.id}` });
+    }
+  },
+  watch: {
+    activeCat() {
+      // 切换分类时清空搜索关键词
+      this.searchKeyword = '';
+      this.loadRecipes();
     }
   }
 }
@@ -113,6 +216,28 @@ export default {
 .icon-search {
   font-size: 36rpx;
   color: #5f6368;
+}
+
+/* 搜索框 */
+.search-container {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background: #f5f6f7;
+  border-radius: 44rpx;
+  margin: 16rpx 0;
+}
+.search-input {
+  flex: 1;
+  height: 60rpx;
+  font-size: 28rpx;
+  background: transparent;
+}
+.cancel-btn {
+  color: #ff6a00;
+  font-size: 28rpx;
+  margin-left: 16rpx;
+  padding: 8rpx 0;
 }
 
 /* 分类 Chip */
@@ -186,5 +311,13 @@ export default {
 .time {
   font-size: 24rpx;
   color: #6b7280;
+}
+
+/* 空状态 */
+.empty {
+  padding: 100rpx 0;
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
 }
 </style>
