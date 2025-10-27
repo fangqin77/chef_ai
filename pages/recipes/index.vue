@@ -1,5 +1,22 @@
 <template>
   <view class="page">
+    <!-- 推荐模式全屏卡片 -->
+    <view v-if="recommendMode" class="recom-mask">
+      <view class="recom-card">
+        <image class="recom-cover" :src="(reco && reco.cover) || ''" mode="aspectFill" />
+        <view class="recom-info">
+          <text class="recom-name">{{ (reco && reco.name) || '今日推荐' }}</text>
+          <view class="recom-meta">
+            <view class="tag" :class="((reco && reco.level) === '简单') ? 'tag-green' : 'tag-orange'">{{ (reco && reco.level) || '适中' }}</view>
+            <text class="time">{{ (reco && reco.time) || '--' }}min</text>
+          </view>
+        </view>
+        <view class="recom-actions">
+          <button class="btn cancel" @click="cancelRecommend">取消</button>
+          <button class="btn change" @click="nextRecommend">换一个</button>
+        </view>
+      </view>
+    </view>
     <!-- 顶部栏 -->
     <view class="header">
       <text class="title">菜谱大全</text>
@@ -42,6 +59,11 @@ export default {
     if (options && options.cat) {
       this.activeCat = options.cat;
     }
+    // 推荐模式入口：/pages/recipes/index?recommend=1
+    if (options && (options.recommend === '1' || options.recommend === 1 || options.recommend === true)) {
+      this.recommendMode = true;
+      this.pickRandom();
+    }
   },
   onShow() {
     const cat = uni.getStorageSync('recipes_cat');
@@ -52,6 +74,8 @@ export default {
   },
   data() {
     return {
+      recommendMode: false,
+      reco: null,
       activeCat: 'all',
       cats: [
         { key: 'all', name: '全部' },
@@ -78,13 +102,37 @@ export default {
     }
   },
   methods: {
+    // 推荐模式方法
+    pickRandom() {
+      if (!this.list || this.list.length === 0) {
+        this.reco = null
+        return
+      }
+      const idx = Math.floor(Math.random() * this.list.length)
+      this.reco = this.list[idx]
+    },
+    cancelRecommend() {
+      const pages = getCurrentPages && getCurrentPages()
+      if (pages && pages.length > 1) {
+        uni.navigateBack({ delta: 1 })
+      } else {
+        this.recommendMode = false
+      }
+    },
+    nextRecommend() {
+      this.pickRandom()
+    },
     onSearch() {
       uni.showToast({ title: '搜索暂未接入', icon: 'none' })
     },
     openRecipe(r) {
-      uni.showToast({ title: '打开：' + r.name, icon: 'none' })
-      // 可跳转到详情页
-      // uni.navigateTo({ url: '/pages/recipe/detail?id=' + r.id })
+      // 跳转到详情页并传参（名称/做法/原料/调料/特性/图片）
+      const q = [
+        'id=' + encodeURIComponent(r.id || ''),
+        'name=' + encodeURIComponent(r.name || ''),
+        'imageUrl=' + encodeURIComponent(r.cover || '')
+      ].join('&')
+      uni.navigateTo({ url: '/pages/recipes/detail?' + q })
     }
   }
 }
@@ -187,4 +235,63 @@ export default {
   font-size: 24rpx;
   color: #6b7280;
 }
+/* 推荐模式样式 */
+.recom-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.recom-card {
+  width: 86%;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 22rpx 60rpx rgba(0,0,0,0.22);
+}
+.recom-cover {
+  width: 100%;
+  height: 360rpx;
+  background: #eee;
+}
+.recom-info {
+  padding: 24rpx;
+}
+.recom-name {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #111827;
+}
+.recom-meta {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.recom-actions {
+  display: flex;
+  padding: 18rpx 22rpx 26rpx;
+  gap: 18rpx;
+}
+.btn {
+  flex: 1 1 0;
+  height: 84rpx;
+  line-height: 84rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+.btn.cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+.btn.change {
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(255,122,0,0.35);
+}
+
 </style>

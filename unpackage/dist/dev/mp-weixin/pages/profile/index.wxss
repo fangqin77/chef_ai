@@ -6,9 +6,7 @@
 /* 顶部 */
 .header {
   height: 88rpx; padding: 0 24rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between; background: #fff;
+  display: flex; align-items: center; justify-content: space-between; background: #fff;
 }
 .title { font-size: 36rpx; font-weight: 700; color: #1a1f36;
 }
@@ -20,21 +18,21 @@
   background: #fff; color: #1f2937;
   box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
 }
-.card-top { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+.card-top { display: flex; align-items: center;
 }
 .avatar-wrap { width: 96rpx; height: 96rpx; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.25);
 }
 .avatar { width: 100%; height: 100%;
 }
-.profile { margin-left: 16rpx; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -webkit-flex-direction: column; flex-direction: column;
+.profile { margin-left: 16rpx; display: flex; flex-direction: column;
 }
 .name { font-size: 32rpx; font-weight: 700;
 }
 .desc { margin-top: 6rpx; font-size: 24rpx; opacity: 0.9;
 }
-.stats { margin-top: 16rpx; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+.stats { margin-top: 16rpx; display: flex; align-items: center; justify-content: space-between;
 }
-.stat { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; text-align: center;
+.stat { flex: 1; text-align: center;
 }
 .num { font-size: 30rpx; font-weight: 700;
 }
@@ -45,12 +43,10 @@
 /* 快捷入口 */
 .quick {
   margin: 0 24rpx; padding: 20rpx; background: #fff; border-radius: 24rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-box-pack: justify; -webkit-justify-content: space-between; justify-content: space-between;
+  display: flex; flex-wrap: wrap; justify-content: space-between;
   box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
 }
-.quick-item { width: 25%; padding: 8rpx 0; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-orient: vertical; -webkit-box-direction: normal; -webkit-flex-direction: column; flex-direction: column; -webkit-box-align: center; -webkit-align-items: center; align-items: center; box-sizing: border-box;
+.quick-item { width: 25%; padding: 8rpx 0; display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
 }
 .q-icon { font-size: 36rpx; color: #ff6a00;
 }
@@ -61,13 +57,13 @@
 }
 .group-title { padding: 20rpx 20rpx 0; font-size: 26rpx; color: #6b7280;
 }
-.cell { padding: 24rpx 20rpx; display: -webkit-box; display: -webkit-flex; display: flex; -webkit-box-align: center; -webkit-align-items: center; align-items: center;
+.cell { padding: 24rpx 20rpx; display: flex; align-items: center;
 }
 .cell + .cell { border-top: 1rpx solid #f0f2f5;
 }
 .cell-icon { width: 48rpx; text-align: center; font-size: 30rpx; color: #ff6a00;
 }
-.cell-text { -webkit-box-flex: 1; -webkit-flex: 1; flex: 1; font-size: 28rpx; color: #1f2937;
+.cell-text { flex: 1; font-size: 28rpx; color: #1f2937;
 }
 .arrow { font-size: 36rpx; color: #c7cdd3;
 }

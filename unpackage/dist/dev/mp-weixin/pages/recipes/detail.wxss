@@ -1,0 +1,215 @@
+
+.detail-page {
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* 顶部大图 */
+.hero {
+  position: relative;
+  height: 420rpx;
+  overflow: hidden;
+}
+.hero-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.hero-mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 100%);
+}
+.hero-title {
+  position: absolute;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 24rpx;
+  color: #fff;
+}
+.name {
+  font-size: 40rpx;
+  font-weight: 800;
+}
+.meta {
+  margin-top: 12rpx;
+  display: flex;
+  gap: 12rpx;
+}
+.tag {
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.tag-orange { background: linear-gradient(90deg, #ff8a34, #ff6a00);
+}
+.tag-green { background: #27ae60;
+}
+.tag-blue { background: #3b82f6;
+}
+
+/* 卡通云朵（与首页云朵呼应） */
+.cloud {
+  position: absolute;
+  right: 24rpx;
+  bottom: 100rpx;
+  width: 200rpx;
+  height: 100rpx;
+  background: #fff;
+  border-radius: 50rpx;
+  box-shadow: 0 12rpx 30rpx rgba(0,0,0,0.12);
+  opacity: 0.95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cloud .b1, .cloud .b2, .cloud .b3 {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+}
+.cloud .b1 { width: 60rpx; height: 60rpx; left: -12rpx; top: -8rpx;
+}
+.cloud .b2 { width: 80rpx; height: 80rpx; left: 40rpx; top: -30rpx;
+}
+.cloud .b3 { width: 56rpx; height: 56rpx; right: -10rpx; top: -6rpx;
+}
+.cloud-text {
+  position: relative;
+  font-size: 24rpx;
+  color: #374151;
+}
+
+/* 卡片通用 */
+.card {
+  margin: -40rpx 24rpx 16rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 16rpx 36rpx rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+.card-title {
+  padding: 22rpx 24rpx 0;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+.card-body {
+  padding: 16rpx 24rpx 24rpx;
+}
+.para {
+  font-size: 26rpx;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+/* 步骤列表 */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+}
+.step-index {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 20rpx;
+  text-align: center;
+  line-height: 40rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  color: #fff;
+  box-shadow: 0 6rpx 16rpx rgba(255,122,0,0.3);
+}
+.step-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #374151;
+}
+
+/* 底部操作条 */
+.bottom-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 12rpx 20rpx 22rpx;
+  background: rgba(255,255,255,0.9);
+  -webkit-backdrop-filter: blur(6rpx);
+          backdrop-filter: blur(6rpx);
+  display: flex;
+  gap: 16rpx;
+}
+.btn {
+  flex: 1 1 0;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+.btn.ghost {
+  background: #f3f4f6;
+  color: #374151;
+}
+.btn.primary {
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 22rpx rgba(255,122,0,0.32);
+}
+
+/* 计时UI */
+.timer-card .timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.time-left {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #111827;
+}
+.preset-group {
+  display: flex;
+  gap: 12rpx;
+}
+.chip-btn {
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  background: #f3f4f6;
+  color: #374151;
+}
+.chip-btn.active {
+  color: #fff;
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  box-shadow: 0 6rpx 14rpx rgba(255,122,0,0.28);
+}
+.progress {
+  margin-top: 16rpx;
+  height: 12rpx;
+  background: #e5e7eb;
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+.progress .bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  width: 0%;
+}
+.timer-actions {
+  margin-top: 16rpx;
+  display: flex;
+  gap: 16rpx;
+}
+.btn.small {
+  height: 72rpx;
+  line-height: 72rpx;
+  font-size: 26rpx;
+}
+

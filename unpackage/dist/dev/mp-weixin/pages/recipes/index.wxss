@@ -9,15 +9,9 @@
 /* 顶部栏 */
 .header {
   height: 88rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  -webkit-box-pack: justify;
-  -webkit-justify-content: space-between;
-          justify-content: space-between;
+  align-items: center;
+  justify-content: space-between;
 }
 .title {
   font-size: 36rpx;
@@ -35,8 +29,6 @@
   white-space: nowrap;
 }
 .chip {
-  display: -webkit-inline-box;
-  display: -webkit-inline-flex;
   display: inline-flex;
   padding: 12rpx 24rpx;
   background: #f3f4f6;
@@ -47,7 +39,6 @@
 }
 .chip.active {
   color: #fff;
-  background: -webkit-linear-gradient(left, #ff8a34 0%, #ff6a00 100%);
   background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
   box-shadow: 0 6rpx 16rpx rgba(255, 122, 0, 0.3);
 }
@@ -55,14 +46,9 @@
 /* 网格 */
 .grid {
   margin-top: 20rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-flex-wrap: wrap;
-          flex-wrap: wrap;
-  -webkit-box-pack: justify;
-  -webkit-justify-content: space-between;
-          justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 /* 卡片 */
@@ -88,15 +74,9 @@
 }
 .meta {
   margin-top: 14rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  -webkit-box-pack: justify;
-  -webkit-justify-content: space-between;
-          justify-content: space-between;
+  align-items: center;
+  justify-content: space-between;
 }
 .tag {
   padding: 6rpx 16rpx;
@@ -115,4 +95,64 @@
   font-size: 24rpx;
   color: #6b7280;
 }
+
+/* 推荐模式样式 */
+.recom-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.recom-card {
+  width: 86%;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 22rpx 60rpx rgba(0,0,0,0.22);
+}
+.recom-cover {
+  width: 100%;
+  height: 360rpx;
+  background: #eee;
+}
+.recom-info {
+  padding: 24rpx;
+}
+.recom-name {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #111827;
+}
+.recom-meta {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.recom-actions {
+  display: flex;
+  padding: 18rpx 22rpx 26rpx;
+  gap: 18rpx;
+}
+.btn {
+  flex: 1 1 0;
+  height: 84rpx;
+  line-height: 84rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+.btn.cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+.btn.change {
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  color: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(255,122,0,0.35);
+}
+
 

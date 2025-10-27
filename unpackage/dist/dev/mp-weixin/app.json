@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/chat/index",
     "pages/recipes/index",
+    "pages/recipes/detail",
     "pages/social/index",
     "pages/profile/index"
   ],

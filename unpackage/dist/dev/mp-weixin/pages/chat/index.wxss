@@ -1,27 +1,18 @@
 
 .chat-page {
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-direction: column;
-          flex-direction: column;
+  flex-direction: column;
   height: 100vh;
   background: #f7f7f9;
 }
 
 /* 会话区 */
 .messages {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-          flex: 1;
+  flex: 1;
   padding: 24rpx 24rpx 12rpx 24rpx;
   box-sizing: border-box;
 }
 .msg {
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
   margin-bottom: 20rpx;
 }
@@ -45,30 +36,20 @@
 /* 输入区 */
 .input-bar {
   padding: 16rpx 20rpx 28rpx 20rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
+  align-items: center;
   gap: 16rpx;
   background: #f7f7f9;
   box-sizing: border-box;
 }
 .input-placeholder {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-          flex: 1;
+  flex: 1;
   height: 88rpx;
   border-radius: 44rpx;
   background: #eceff3;
   color: #9aa3af;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
+  align-items: center;
   padding: 0 24rpx;
   font-size: 26rpx;
 }

@@ -1,100 +1,83 @@
 
-.page {
-  padding: 24rpx;
+.full-bg {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+.bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* 覆盖层，负责布局 */
+.overlay {
+  position: absolute;
+  inset: 0;
+}
+/* 顶部1/3分割线 */
+.divider {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 33%;
+  height: 2rpx;
+  background: rgba(255,255,255,0.7);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.12);
+}
+/* 云朵入口：位于卡通人物下方大致区域（居中偏下，可按需微调） */
+.cloud-entry {
+  position: absolute;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+  top: 48%;
   background: #ffffff;
-  min-height: 100vh;
-  box-sizing: border-box;
-}
-
-/* 顶部栏 */
-.nav {
-  height: 88rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  -webkit-box-pack: justify;
-  -webkit-justify-content: space-between;
-          justify-content: space-between;
-}
-.nav-left {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-}
-.logo {
-  height: 40rpx;
-  width: 40rpx;
-  border-radius: 8rpx;
-}
-.brand {
-  font-size: 34rpx;
-  color: #ff6a00;
-  font-weight: 600;
-  margin-left: 12rpx;
-}
-.nav-right .bell {
-  font-size: 40rpx;
   color: #333;
+  padding: 18rpx 28rpx;
+  border-radius: 9999rpx;
+  box-shadow: 0 12rpx 30rpx rgba(0,0,0,0.12);
+  border: 2rpx solid rgba(255,255,255,0.85);
+  min-width: 360rpx;
+  text-align: center;
+  opacity: 0.95;
 }
-
-/* 搜索框 */
-.search {
-  margin-top: 16rpx;
-  height: 88rpx;
-  border-radius: 44rpx;
-  background: #f5f6f7;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  padding: 0 28rpx;
-}
-.search-icon {
-  font-size: 30rpx;
-  color: #999;
-  margin-right: 16rpx;
-}
-.search-input {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-          flex: 1;
+.cloud-text {
   font-size: 28rpx;
+  font-weight: 600;
 }
-
-/* 对话入口按钮 */
-.chat-btn {
-  margin-top: 24rpx;
-  height: 100rpx;
-  border-radius: 999rpx;
-  background: -webkit-linear-gradient(left, #ff8a34 0%, #ff6a00 100%);
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
-  display: -webkit-box;
-  display: -webkit-flex;
+/* 两个方块按钮：位于分割线下方 */
+.quick-actions {
+  position: absolute;
+  top: calc(33% + 40rpx);
+  left: 6%;
+  right: 6%;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  -webkit-box-pack: center;
-  -webkit-justify-content: center;
-          justify-content: center;
-  color: #fff;
-  box-shadow: 0 10rpx 24rpx rgba(255, 106, 0, 0.25);
+  justify-content: space-between;
+  gap: 28rpx;
 }
-.cta-hover { opacity: 0.92;
+.action-card {
+  flex: 1 1 0;
+  height: 220rpx;
+  background: rgba(255,255,255,0.9);
+  border-radius: 24rpx;
+  box-shadow: 0 16rpx 36rpx rgba(0,0,0,0.16);
+  -webkit-backdrop-filter: blur(6rpx);
+          backdrop-filter: blur(6rpx);
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-.chat-btn-text {
+.ac-title {
   font-size: 30rpx;
   font-weight: 700;
-  letter-spacing: 1rpx;
+  color: #1f2937;
 }
-
-
+.ac-desc {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #4b5563;
+}
 

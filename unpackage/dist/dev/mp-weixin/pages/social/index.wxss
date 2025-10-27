@@ -8,15 +8,9 @@
 .header {
   height: 88rpx;
   padding: 0 24rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  -webkit-box-pack: justify;
-  -webkit-justify-content: space-between;
-          justify-content: space-between;
+  align-items: center;
+  justify-content: space-between;
   background: #fff;
 }
 .title {
@@ -41,12 +35,8 @@
   box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
 }
 .post-top {
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
+  align-items: center;
 }
 .avatar {
   width: 64rpx;
@@ -55,16 +45,9 @@
   margin-right: 16rpx;
 }
 .author {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-          flex: 1;
-  display: -webkit-box;
-  display: -webkit-flex;
+  flex: 1;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-direction: column;
-          flex-direction: column;
+  flex-direction: column;
 }
 .name {
   font-size: 28rpx;
@@ -112,24 +95,15 @@
 /* 操作栏 */
 .actions {
   margin-top: 16rpx;
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
-  -webkit-justify-content: space-around;
-          justify-content: space-around;
+  align-items: center;
+  justify-content: space-around;
   padding-top: 8rpx;
   color: #6b7280;
 }
 .action {
-  display: -webkit-inline-box;
-  display: -webkit-inline-flex;
   display: inline-flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
+  align-items: center;
   font-size: 26rpx;
 }
 .action .num {
@@ -140,7 +114,6 @@
 .heart {
   font-size: 28rpx;
   color: #9ca3af;
-  -webkit-transition: color 0.2s;
   transition: color 0.2s;
 }
 .heart.liked {
