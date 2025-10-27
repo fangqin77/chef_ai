@@ -102,6 +102,8 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
+  var g0 = _vm.moreCats && _vm.moreCats.length
+  var g1 = _vm.showAllCats && _vm.moreCats && _vm.moreCats.length
   if (!_vm._isMounted) {
     _vm.e0 = function ($event, c) {
       var _temp = arguments[arguments.length - 1].currentTarget.dataset,
@@ -110,7 +112,23 @@ var render = function () {
       var _temp, _temp2
       _vm.activeCat = c.key
     }
+    _vm.e1 = function ($event, c) {
+      var _temp3 = arguments[arguments.length - 1].currentTarget.dataset,
+        _temp4 = _temp3.eventParams || _temp3["event-params"],
+        c = _temp4.c
+      var _temp3, _temp4
+      _vm.activeCat = c.key
+    }
   }
+  _vm.$mp.data = Object.assign(
+    {},
+    {
+      $root: {
+        g0: g0,
+        g1: g1,
+      },
+    }
+  )
 }
 var recyclableRender = false
 var staticRenderFns = []
@@ -146,10 +164,34 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 /* WEBPACK VAR INJECTION */(function(uni) {
 
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+var _toConsumableArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ 18));
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -215,6 +257,24 @@ var _default = {
       this.recommendMode = true;
       this.pickRandom();
     }
+    // 随机菜谱入口：从本页挑选4个并立刻打开第一个详情
+    if (options && (options.random === '1' || options.random === 1 || options.random === true)) {
+      var picked = this.pickFour();
+      try {
+        uni.setStorageSync('random_selection', (picked || []).map(function (x) {
+          return x.id;
+        }));
+        uni.setStorageSync('random_selection_data', picked || []);
+      } catch (e) {}
+      if (picked && picked.length) {
+        this.openRecipe(picked[0]);
+      } else {
+        uni.showToast({
+          title: '暂无菜谱可选',
+          icon: 'none'
+        });
+      }
+    }
   },
   onShow: function onShow() {
     var cat = uni.getStorageSync('recipes_cat');
@@ -243,7 +303,40 @@ var _default = {
       }, {
         key: 'kr',
         name: '韩式'
+      }, {
+        key: 'chuancai',
+        name: '川菜'
+      }, {
+        key: 'yuecai',
+        name: '粤菜'
+      }, {
+        key: 'xianggai',
+        name: '湘菜'
+      }, {
+        key: 'zhecai',
+        name: '浙菜'
+      }, {
+        key: 'dongbei',
+        name: '东北'
+      }, {
+        key: 'xibei',
+        name: '西北'
+      }, {
+        key: 'jiachang',
+        name: '家常'
+      }, {
+        key: 'sushi',
+        name: '素食'
+      }, {
+        key: 'shaokao',
+        name: '烧烤'
+      }, {
+        key: 'tianpin',
+        name: '甜品'
       }],
+      showAllCats: false,
+      maxCats: 8,
+      topCount: 6,
       // 示例数据：可替换为接口返回
       list: [{
         id: 'mapo-tofu',
@@ -297,9 +390,47 @@ var _default = {
       return this.list.filter(function (i) {
         return i.cat === _this.activeCat;
       });
+    },
+    // 根据当前列表品类出现频次，热门在前（保持 'all' 置顶）
+    orderedCats: function orderedCats() {
+      var arr = this.cats || [];
+      var counts = {};
+      (this.list || []).forEach(function (i) {
+        counts[i.cat] = (counts[i.cat] || 0) + 1;
+      });
+      var head = arr.filter(function (c) {
+        return c.key === 'all';
+      });
+      var rest = arr.filter(function (c) {
+        return c.key !== 'all';
+      }).sort(function (a, b) {
+        return (counts[b.key] || 0) - (counts[a.key] || 0);
+      });
+      return [].concat((0, _toConsumableArray2.default)(head), (0, _toConsumableArray2.default)(rest));
+    },
+    topCats: function topCats() {
+      var arr = this.orderedCats || this.cats || [];
+      var n = Math.min(this.topCount || 8, arr.length);
+      return arr.slice(0, n);
+    },
+    moreCats: function moreCats() {
+      var arr = this.orderedCats || this.cats || [];
+      return arr.slice(4);
     }
   },
   methods: {
+    // 随机挑选四个菜谱
+    pickFour: function pickFour() {
+      var src = this.list || [];
+      var n = Math.min(4, src.length);
+      var pool = (0, _toConsumableArray2.default)(src);
+      var res = [];
+      for (var i = 0; i < n; i++) {
+        var idx = Math.floor(Math.random() * pool.length);
+        res.push(pool.splice(idx, 1)[0]);
+      }
+      return res;
+    },
     // 推荐模式方法
     pickRandom: function pickRandom() {
       if (!this.list || this.list.length === 0) {
@@ -334,6 +465,9 @@ var _default = {
       uni.navigateTo({
         url: '/pages/recipes/detail?' + q
       });
+    },
+    toggleCats: function toggleCats() {
+      this.showAllCats = !this.showAllCats;
     }
   }
 };

@@ -1,5 +1,6 @@
 <template>
   <view class="page">
+
     <!-- 推荐模式全屏卡片 -->
     <view v-if="recommendMode" class="recom-mask">
       <view class="recom-card">
@@ -20,20 +21,41 @@
     <!-- 顶部栏 -->
     <view class="header">
       <text class="title">菜谱大全</text>
-      <text class="icon-search" @click="onSearch">🔍</text>
+      <view class="search-btn" @click="onSearch">
+        <text class="icon">🔍</text>
+        <text class="label">搜索</text>
+      </view>
     </view>
 
-    <!-- 分类筛选 -->
+
+    <!-- 分类筛选（顶排展示 4 个 + 省略号） -->
     <scroll-view class="chips" scroll-x>
       <view
-        v-for="c in cats"
+        v-for="c in topCats"
         :key="c.key"
         :class="['chip', activeCat === c.key ? 'active' : '']"
         @click="activeCat = c.key"
       >
         {{ c.name }}
       </view>
+      <view
+        v-if="moreCats && moreCats.length"
+        class="chip more"
+        @click="toggleCats"
+      >···</view>
     </scroll-view>
+
+    <!-- 展开后在下方展示更多标签 -->
+    <view v-if="showAllCats && moreCats && moreCats.length" class="chips-more">
+      <view
+        v-for="c in moreCats"
+        :key="c.key"
+        :class="['chip', activeCat === c.key ? 'active' : '']"
+        @click="activeCat = c.key"
+      >
+        {{ c.name }}
+      </view>
+    </view>
 
     <!-- 两列卡片网格 -->
     <view class="grid">
@@ -64,6 +86,19 @@ export default {
       this.recommendMode = true;
       this.pickRandom();
     }
+    // 随机菜谱入口：从本页挑选4个并立刻打开第一个详情
+    if (options && (options.random === '1' || options.random === 1 || options.random === true)) {
+      const picked = this.pickFour();
+      try {
+        uni.setStorageSync('random_selection', (picked || []).map(x => x.id));
+        uni.setStorageSync('random_selection_data', picked || []);
+      } catch(e) {}
+      if (picked && picked.length) {
+        this.openRecipe(picked[0]);
+      } else {
+        uni.showToast({ title: '暂无菜谱可选', icon: 'none' });
+      }
+    }
   },
   onShow() {
     const cat = uni.getStorageSync('recipes_cat');
@@ -82,8 +117,21 @@ export default {
         { key: 'cn', name: '中式' },
         { key: 'west', name: '西式' },
         { key: 'jp', name: '日式' },
-        { key: 'kr', name: '韩式' }
+        { key: 'kr', name: '韩式' },
+        { key: 'chuancai', name: '川菜' },
+        { key: 'yuecai', name: '粤菜' },
+        { key: 'xianggai', name: '湘菜' },
+        { key: 'zhecai', name: '浙菜' },
+        { key: 'dongbei', name: '东北' },
+        { key: 'xibei', name: '西北' },
+        { key: 'jiachang', name: '家常' },
+        { key: 'sushi', name: '素食' },
+        { key: 'shaokao', name: '烧烤' },
+        { key: 'tianpin', name: '甜品' }
       ],
+      showAllCats: false,
+      maxCats: 8,
+      topCount: 6,
       // 示例数据：可替换为接口返回
       list: [
         { id: 'mapo-tofu', name: '麻婆豆腐', level: '简单', time: 20, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
@@ -99,9 +147,42 @@ export default {
     filteredList() {
       if (this.activeCat === 'all') return this.list
       return this.list.filter(i => i.cat === this.activeCat)
+    },
+    // 根据当前列表品类出现频次，热门在前（保持 'all' 置顶）
+    orderedCats() {
+      const arr = this.cats || []
+      const counts = {}
+      ;(this.list || []).forEach(i => {
+        counts[i.cat] = (counts[i.cat] || 0) + 1
+      })
+      const head = arr.filter(c => c.key === 'all')
+      const rest = arr.filter(c => c.key !== 'all')
+        .sort((a, b) => (counts[b.key] || 0) - (counts[a.key] || 0))
+      return [...head, ...rest]
+    },
+    topCats() {
+      const arr = this.orderedCats || this.cats || []
+      const n = Math.min(this.topCount || 8, arr.length)
+      return arr.slice(0, n)
+    },
+    moreCats() {
+      const arr = this.orderedCats || this.cats || []
+      return arr.slice(4)
     }
   },
   methods: {
+    // 随机挑选四个菜谱
+    pickFour() {
+      const src = this.list || [];
+      const n = Math.min(4, src.length);
+      const pool = [...src];
+      const res = [];
+      for (let i = 0; i < n; i++) {
+        const idx = Math.floor(Math.random() * pool.length);
+        res.push(pool.splice(idx, 1)[0]);
+      }
+      return res;
+    },
     // 推荐模式方法
     pickRandom() {
       if (!this.list || this.list.length === 0) {
@@ -133,6 +214,9 @@ export default {
         'imageUrl=' + encodeURIComponent(r.cover || '')
       ].join('&')
       uni.navigateTo({ url: '/pages/recipes/detail?' + q })
+    },
+    toggleCats() {
+      this.showAllCats = !this.showAllCats
     }
   }
 }
@@ -141,7 +225,8 @@ export default {
 <style>
 .page {
   padding: 24rpx;
-  background: #ffffff;
+  background: #f7f2e7;
+  position: relative;
   min-height: 100vh;
   box-sizing: border-box;
 }
@@ -162,7 +247,30 @@ export default {
   font-size: 36rpx;
   color: #5f6368;
 }
+/* 显眼的搜索按钮 */
+.search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 10rpx 18rpx;
+  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  color: #fff;
+  border-radius: 999rpx;
+  box-shadow: 0 8rpx 20rpx rgba(255,122,0,0.28);
+}
+.search-btn .icon {
+  font-size: 30rpx;
+}
+.search-btn .label {
+  font-size: 28rpx;
+  font-weight: 600;
+}
 
+.subheading {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: #6b7280;
+}
 /* 分类 Chip */
 .chips {
   margin-top: 16rpx;
@@ -176,6 +284,16 @@ export default {
   border-radius: 999rpx;
   font-size: 26rpx;
   margin-right: 16rpx;
+}
+.chip.more {
+  background: #e5e7eb;
+  color: #374151;
+}
+/* 下方更多标签容器：允许换行 */
+.chips-more {
+  margin-top: 12rpx;
+  display: flex;
+  flex-wrap: wrap;
 }
 .chip.active {
   color: #fff;
@@ -293,5 +411,7 @@ export default {
   color: #fff;
   box-shadow: 0 8rpx 20rpx rgba(255,122,0,0.35);
 }
+
+/* 右上角卡通图样式（统一） */
 
 </style>

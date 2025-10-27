@@ -217,6 +217,8 @@ exports.default = void 0;
 //
 //
 //
+//
+//
 var _default = {
   data: function data() {
     return {
@@ -245,6 +247,12 @@ var _default = {
       uni.showToast({
         title: t,
         icon: 'none'
+      });
+    },
+    goChatGenRecipe: function goChatGenRecipe() {
+      // 跳转到 AI 对话页，触发生成菜谱
+      uni.navigateTo({
+        url: '/pages/chat/index?intent=generate_recipe&source=profile'
       });
     }
   }

@@ -5,7 +5,9 @@
     "pages/recipes/index",
     "pages/recipes/detail",
     "pages/social/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/recipes/daily",
+    "pages/recipes/random"
   ],
   "subPackages": [],
   "window": {

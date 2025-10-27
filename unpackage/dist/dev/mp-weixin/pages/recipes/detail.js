@@ -105,10 +105,10 @@ var render = function () {
   var g0 = _vm.steps.length
   if (!_vm._isMounted) {
     _vm.e0 = function ($event) {
-      _vm.timerRunning ? _vm.pauseTimer() : _vm.startTimer()
+      _vm.customPresetVisible = !_vm.customPresetVisible
     }
     _vm.e1 = function ($event) {
-      _vm.timerRunning ? _vm.pauseTimer() : _vm.startCook()
+      _vm.timerRunning ? _vm.pauseTimer() : _vm.startTimer()
     }
   }
   _vm.$mp.data = Object.assign(
@@ -243,11 +243,12 @@ exports.default = void 0;
 //
 //
 //
-//
 var _default = {
   data: function data() {
     return {
       fallbackImg: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+      selection: [],
+      currentIndex: 0,
       recipe: {
         id: null,
         typeId: null,
@@ -260,11 +261,13 @@ var _default = {
       },
       favorites: [],
       todayPlan: [],
-      timerPreset: 600,
-      // 默认10分钟
-      timerSeconds: 600,
+      timerPreset: 0,
+      // 初始不选预设
+      timerSeconds: 0,
       timerRunning: false,
-      timerTick: null
+      timerTick: null,
+      customPresetVisible: false,
+      customPresetMinutes: ''
     };
   },
   computed: {
@@ -299,7 +302,8 @@ var _default = {
       return "".concat(mm, ":").concat(ss);
     },
     progressPct: function progressPct() {
-      var total = this.timerPreset || 1;
+      var total = this.timerPreset || 0;
+      if (!total || total <= 0) return 0;
       var done = Math.min(total, Math.max(0, total - (this.timerSeconds || 0)));
       return Math.round(done / total * 100);
     }
@@ -354,7 +358,23 @@ var _default = {
     if (!isNaN(preset) && preset > 0) {
       this.timerPreset = preset;
     }
-    this.timerSeconds = this.timerPreset;
+    this.timerSeconds = 0;
+
+    // 加载四个随机菜谱选择列表
+    try {
+      var sel = uni.getStorageSync('random_selection_data') || [];
+      if (Array.isArray(sel) && sel.length) {
+        this.selection = sel;
+        // 当前索引：根据传入的 id 定位
+        var curId = this.recipe.id;
+        var idx = sel.findIndex(function (x) {
+          return String(x.id) === String(curId);
+        });
+        this.currentIndex = idx >= 0 ? idx : 0;
+        // 统一当前展示为索引项（确保字段映射）
+        this.applySelection(this.currentIndex);
+      }
+    } catch (e) {}
   },
   methods: {
     goBack: function goBack() {
@@ -371,6 +391,44 @@ var _default = {
         });
       }
     },
+    cancelAndBack: function cancelAndBack() {
+      var pages = getCurrentPages && getCurrentPages();
+      if (pages && pages.length > 1) {
+        uni.navigateBack({
+          delta: 1
+        });
+      } else {
+        uni.reLaunch({
+          url: '/pages/index/index'
+        });
+      }
+    },
+    // 应用选择项到详情
+    applySelection: function applySelection(i) {
+      if (!Array.isArray(this.selection) || !this.selection.length) return;
+      var n = (i % this.selection.length + this.selection.length) % this.selection.length;
+      this.currentIndex = n;
+      var s = this.selection[n] || {};
+      this.recipe = {
+        id: s.id || null,
+        typeId: s.typeId || null,
+        name: s.name || '',
+        method: s.method || '',
+        condiments: s.condiments || '',
+        ingredients: s.ingredients || '',
+        feature: s.feature || '',
+        imageUrl: s.cover || s.imageUrl || this.fallbackImg
+      };
+    },
+    // 上一个/下一个
+    prevSelection: function prevSelection() {
+      if (!this.selection.length) return;
+      this.applySelection(this.currentIndex - 1);
+    },
+    nextSelection: function nextSelection() {
+      if (!this.selection.length) return;
+      this.applySelection(this.currentIndex + 1);
+    },
     // 收藏/计划本地存储
     saveStorage: function saveStorage() {
       uni.setStorageSync('favorites_recipes', this.favorites || []);
@@ -384,16 +442,41 @@ var _default = {
         return String(x);
       });
       var idx = arr.indexOf(key);
+
+      // 读取收藏时间元数据与名片
+      var meta = {};
+      var cards = {};
+      try {
+        meta = uni.getStorageSync('favorites_meta') || {};
+        cards = uni.getStorageSync('favorites_cards') || {};
+      } catch (e) {
+        meta = {};
+        cards = {};
+      }
       if (idx >= 0) {
+        // 取消收藏
         this.favorites.splice(idx, 1);
+        if (meta[key]) delete meta[key];
+        if (cards[key]) delete cards[key];
+        uni.setStorageSync('favorites_meta', meta);
+        uni.setStorageSync('favorites_cards', cards);
         uni.showToast({
           title: '已取消收藏',
           icon: 'none'
         });
       } else {
+        // 添加收藏并记录时间戳与名片
         this.favorites.push(key);
+        meta[key] = Date.now();
+        cards[key] = {
+          id: key,
+          name: this.recipe.name || '',
+          imageUrl: this.recipe.imageUrl || this.fallbackImg
+        };
+        uni.setStorageSync('favorites_meta', meta);
+        uni.setStorageSync('favorites_cards', cards);
         uni.showToast({
-          title: '已收藏',
+          title: '已收藏到每日菜谱',
           icon: 'none'
         });
       }
@@ -453,7 +536,24 @@ var _default = {
     },
     resetTimer: function resetTimer() {
       this.pauseTimer();
-      this.timerSeconds = this.timerPreset;
+      this.timerSeconds = 0;
+    },
+    applyCustomPreset: function applyCustomPreset() {
+      var n = parseInt(this.customPresetMinutes, 10);
+      if (isNaN(n) || n <= 0) {
+        uni.showToast({
+          title: '请输入有效分钟数',
+          icon: 'none'
+        });
+        return;
+      }
+      var sec = n * 60;
+      this.selectPreset(sec);
+      this.customPresetVisible = false;
+      uni.showToast({
+        title: "\u5DF2\u8BBE\u5B9A".concat(n, "\u5206\u949F"),
+        icon: 'none'
+      });
     },
     startCook: function startCook() {
       // 开始烹饪即启动计时

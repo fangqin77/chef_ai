@@ -102,6 +102,15 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
+  var g0 = _vm.recommendedRecipes.length
+  _vm.$mp.data = Object.assign(
+    {},
+    {
+      $root: {
+        g0: g0,
+      },
+    }
+  )
 }
 var recyclableRender = false
 var staticRenderFns = []
@@ -169,7 +178,57 @@ exports.default = void 0;
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 var _default = {
+  data: function data() {
+    return {
+      recommendedRecipes: [{
+        id: 'yuxiang-rousi',
+        name: '鱼香肉丝',
+        image: '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
+      }, {
+        id: 'r1',
+        name: '宫保鸡丁',
+        image: ''
+      }, {
+        id: 'r2',
+        name: '红烧肉',
+        image: ''
+      }, {
+        id: 'r3',
+        name: '麻婆豆腐',
+        image: ''
+      }, {
+        id: 'r4',
+        name: '清蒸鲈鱼',
+        image: ''
+      }],
+      currentIndex: 0
+    };
+  },
   methods: {
     goChat: function goChat() {
       uni.navigateTo({
@@ -177,16 +236,30 @@ var _default = {
       });
     },
     goRandomRecipe: function goRandomRecipe() {
-      // 跳到菜谱页的推荐模式
+      // 随机菜谱：跳转到独立随机页面
       uni.navigateTo({
-        url: '/pages/recipes/index?recommend=1'
+        url: '/pages/recipes/random'
       });
     },
     goPlan: function goPlan() {
-      // 跳到个人页（收藏/计划）
+      // 跳到“每日菜谱”（购物车样式）
       uni.navigateTo({
-        url: '/pages/profile/index'
+        url: '/pages/recipes/daily'
       });
+    },
+    goRecipeDetail: function goRecipeDetail(item) {
+      // 跳到菜谱详情（按你的路由规则调整）
+      uni.navigateTo({
+        url: "/pages/recipes/index?detailId=".concat(item.id)
+      });
+    },
+    prevSlide: function prevSlide() {
+      if (!this.recommendedRecipes.length) return;
+      this.currentIndex = (this.currentIndex - 1 + this.recommendedRecipes.length) % this.recommendedRecipes.length;
+    },
+    nextSlide: function nextSlide() {
+      if (!this.recommendedRecipes.length) return;
+      this.currentIndex = (this.currentIndex + 1) % this.recommendedRecipes.length;
     }
   }
 };

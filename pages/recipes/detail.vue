@@ -6,50 +6,52 @@
       <view class="hero-mask" />
       <view class="hero-title">
         <text class="name">{{ recipe.name || '菜谱详情' }}</text>
-        <view class="meta">
-          <view v-if="recipe.typeId" class="tag tag-orange">类型 {{ recipe.typeId }}</view>
-          <view v-if="recipe.id" class="tag tag-green">ID {{ recipe.id }}</view>
-          <view v-if="recipe.feature" class="tag tag-blue">{{ recipe.feature }}</view>
+      </view>
+      <!-- 收藏星标（右上角） -->
+      <view class="fav-btn" @click="toggleFavorite">
+        <text class="star">{{ isFavorited ? '★' : '☆' }}</text>
+      </view>
+    </view>
+
+    <!-- 详情大卡片：原料 / 调料 / 做法 / 基本信息（合并为一个白色方框） -->
+    <view class="card big-card">
+      <view class="section">
+        <view class="card-title">原料</view>
+        <view class="card-body section-body">
+          <text class="para">{{ recipe.ingredients || '—' }}</text>
         </view>
       </view>
-      <!-- 卡通云朵元素 -->
-      <view class="cloud">
-        <view class="b1"></view>
-        <view class="b2"></view>
-        <view class="b3"></view>
-        <text class="cloud-text">开饭啦～</text>
+      <view class="section">
+        <view class="card-title">调料</view>
+        <view class="card-body section-body">
+          <text class="para">{{ recipe.condiments || '—' }}</text>
+        </view>
       </view>
-    </view>
-
-    <!-- 内容卡片 -->
-    <view class="card">
-      <view class="card-title">原料</view>
-      <view class="card-body">
-        <text class="para">{{ recipe.ingredients || '—' }}</text>
-      </view>
-    </view>
-
-    <view class="card">
-      <view class="card-title">调料</view>
-      <view class="card-body">
-        <text class="para">{{ recipe.condiments || '—' }}</text>
-      </view>
-    </view>
-
-    <view class="card">
-      <view class="card-title">做法</view>
-      <view class="card-body">
-        <view v-if="steps.length" class="steps">
-          <view v-for="(s, i) in steps" :key="i" class="step-item">
-            <view class="step-index">{{ i + 1 }}</view>
-            <text class="step-text">{{ s }}</text>
+      <view class="section">
+        <view class="card-title">做法</view>
+        <view class="card-body section-body">
+          <view v-if="steps.length" class="steps">
+            <view v-for="(s, i) in steps" :key="i" class="step-item">
+              <view class="step-index">{{ i + 1 }}</view>
+              <text class="step-text">{{ s }}</text>
+            </view>
           </view>
+          <text v-else class="para">{{ recipe.method || '—' }}</text>
         </view>
-        <text v-else class="para">{{ recipe.method || '—' }}</text>
+      </view>
+      <view class="section">
+        <view class="card-title">基本信息</view>
+        <view class="card-body info-list section-body">
+          <view class="info-item"><text class="info-label">菜谱ID：</text><text class="info-value">{{ recipe.id || '—' }}</text></view>
+          <view class="info-item"><text class="info-label">菜谱类型号：</text><text class="info-value">{{ recipe.typeId || '—' }}</text></view>
+          <view class="info-item"><text class="info-label">特性：</text><text class="info-value">{{ recipe.feature || '—' }}</text></view>
+        </view>
       </view>
     </view>
 
     <!-- 计时卡片 -->
+
+
     <view class="card timer-card">
       <view class="card-title">烹饪计时</view>
       <view class="card-body">
@@ -58,11 +60,15 @@
           <view class="preset-group">
             <button class="chip-btn" :class="{active: timerPreset===300}" @click="selectPreset(300)">5分钟</button>
             <button class="chip-btn" :class="{active: timerPreset===600}" @click="selectPreset(600)">10分钟</button>
-            <button class="chip-btn" :class="{active: timerPreset===900}" @click="selectPreset(900)">15分钟</button>
+            <button class="chip-btn" @click="customPresetVisible = !customPresetVisible">自定义</button>
+          </view>
+          <view v-if="customPresetVisible" class="custom-row">
+            <input class="custom-input" type="number" placeholder="分钟数" v-model="customPresetMinutes" />
+            <button class="chip-btn set-btn" @click="applyCustomPreset">设定</button>
           </view>
         </view>
         <view class="progress">
-          <view class="bar" :style="{ width: progressPct + '%' }"></view>
+          <view class="bar" :style="{ width: progressPct + '%', background: (progressPct > 0 ? 'linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%)' : 'transparent') }"></view>
         </view>
         <view class="timer-actions">
           <button class="btn ghost small" @click="resetTimer">重置</button>
@@ -74,13 +80,6 @@
     </view>
 
     <view style="height: 120rpx" />
-
-    <!-- 底部操作条（与首页同色系） -->
-    <view class="bottom-bar">
-      <button class="btn ghost" @click="toggleFavorite">{{ isFavorited ? '已收藏' : '收藏' }}</button>
-      <button class="btn ghost" @click="togglePlan">{{ isInPlan ? '已加入计划' : '加入计划' }}</button>
-      <button class="btn primary" @click="timerRunning ? pauseTimer() : startCook()">{{ timerRunning ? '暂停' : '开始烹饪' }}</button>
-    </view>
   </view>
 </template>
 
@@ -89,6 +88,8 @@ export default {
   data() {
     return {
       fallbackImg: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+      selection: [],
+      currentIndex: 0,
       recipe: {
         id: null,
         typeId: null,
@@ -101,10 +102,12 @@ export default {
       },
       favorites: [],
       todayPlan: [],
-      timerPreset: 600,   // 默认10分钟
-      timerSeconds: 600,
+      timerPreset: 0,   // 初始不选预设
+      timerSeconds: 0,
       timerRunning: false,
-      timerTick: null
+      timerTick: null,
+      customPresetVisible: false,
+      customPresetMinutes: ''
     }
   },
   computed: {
@@ -135,7 +138,8 @@ export default {
       return `${mm}:${ss}`
     },
     progressPct() {
-      const total = this.timerPreset || 1
+      const total = this.timerPreset || 0
+      if (!total || total <= 0) return 0
       const done = Math.min(total, Math.max(0, total - (this.timerSeconds || 0)))
       return Math.round((done / total) * 100)
     }
@@ -191,7 +195,21 @@ export default {
     if (!isNaN(preset) && preset > 0) {
       this.timerPreset = preset
     }
-    this.timerSeconds = this.timerPreset
+    this.timerSeconds = 0
+
+    // 加载四个随机菜谱选择列表
+    try {
+      const sel = uni.getStorageSync('random_selection_data') || []
+      if (Array.isArray(sel) && sel.length) {
+        this.selection = sel
+        // 当前索引：根据传入的 id 定位
+        const curId = this.recipe.id
+        const idx = sel.findIndex(x => String(x.id) === String(curId))
+        this.currentIndex = idx >= 0 ? idx : 0
+        // 统一当前展示为索引项（确保字段映射）
+        this.applySelection(this.currentIndex)
+      }
+    } catch(e) {}
   },
   methods: {
     goBack() {
@@ -201,6 +219,40 @@ export default {
       } else {
         uni.switchTab ? uni.switchTab({ url: '/pages/index/index' }) : uni.reLaunch({ url: '/pages/index/index' })
       }
+    },
+    cancelAndBack() {
+      const pages = getCurrentPages && getCurrentPages()
+      if (pages && pages.length > 1) {
+        uni.navigateBack({ delta: 1 })
+      } else {
+        uni.reLaunch({ url: '/pages/index/index' })
+      }
+    },
+    // 应用选择项到详情
+    applySelection(i) {
+      if (!Array.isArray(this.selection) || !this.selection.length) return
+      const n = ((i % this.selection.length) + this.selection.length) % this.selection.length
+      this.currentIndex = n
+      const s = this.selection[n] || {}
+      this.recipe = {
+        id: s.id || null,
+        typeId: s.typeId || null,
+        name: s.name || '',
+        method: s.method || '',
+        condiments: s.condiments || '',
+        ingredients: s.ingredients || '',
+        feature: s.feature || '',
+        imageUrl: s.cover || s.imageUrl || this.fallbackImg
+      }
+    },
+    // 上一个/下一个
+    prevSelection() {
+      if (!this.selection.length) return
+      this.applySelection(this.currentIndex - 1)
+    },
+    nextSelection() {
+      if (!this.selection.length) return
+      this.applySelection(this.currentIndex + 1)
     },
     // 收藏/计划本地存储
     saveStorage() {
@@ -213,13 +265,40 @@ export default {
       const key = String(id)
       const arr = (this.favorites || []).map(x => String(x))
       const idx = arr.indexOf(key)
+
+      // 读取收藏时间元数据与名片
+      let meta = {}
+      let cards = {}
+      try {
+        meta = uni.getStorageSync('favorites_meta') || {}
+        cards = uni.getStorageSync('favorites_cards') || {}
+      } catch(e) {
+        meta = {}
+        cards = {}
+      }
+
       if (idx >= 0) {
+        // 取消收藏
         this.favorites.splice(idx, 1)
+        if (meta[key]) delete meta[key]
+        if (cards[key]) delete cards[key]
+        uni.setStorageSync('favorites_meta', meta)
+        uni.setStorageSync('favorites_cards', cards)
         uni.showToast({ title: '已取消收藏', icon: 'none' })
       } else {
+        // 添加收藏并记录时间戳与名片
         this.favorites.push(key)
-        uni.showToast({ title: '已收藏', icon: 'none' })
+        meta[key] = Date.now()
+        cards[key] = {
+          id: key,
+          name: this.recipe.name || '',
+          imageUrl: this.recipe.imageUrl || this.fallbackImg
+        }
+        uni.setStorageSync('favorites_meta', meta)
+        uni.setStorageSync('favorites_cards', cards)
+        uni.showToast({ title: '已收藏到每日菜谱', icon: 'none' })
       }
+
       this.saveStorage()
     },
     togglePlan() {
@@ -264,7 +343,18 @@ export default {
     },
     resetTimer() {
       this.pauseTimer()
-      this.timerSeconds = this.timerPreset
+      this.timerSeconds = 0
+    },
+    applyCustomPreset() {
+      const n = parseInt(this.customPresetMinutes, 10)
+      if (isNaN(n) || n <= 0) {
+        uni.showToast({ title: '请输入有效分钟数', icon: 'none' })
+        return
+      }
+      const sec = n * 60
+      this.selectPreset(sec)
+      this.customPresetVisible = false
+      uni.showToast({ title: `已设定${n}分钟`, icon: 'none' })
     },
     startCook() {
       // 开始烹饪即启动计时
@@ -326,38 +416,33 @@ export default {
 .tag-green { background: #27ae60; }
 .tag-blue { background: #3b82f6; }
 
-/* 卡通云朵（与首页云朵呼应） */
-.cloud {
+/* 顶部收藏星标 */
+.fav-btn {
   position: absolute;
-  right: 24rpx;
-  bottom: 100rpx;
-  width: 200rpx;
-  height: 100rpx;
-  background: #fff;
-  border-radius: 50rpx;
-  box-shadow: 0 12rpx 30rpx rgba(0,0,0,0.12);
-  opacity: 0.95;
+  right: 20rpx;
+  top: 20rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 32rpx;
+  background: rgba(255,255,255,0.22);
+  backdrop-filter: blur(4rpx);
+  box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.18);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.cloud .b1, .cloud .b2, .cloud .b3 {
-  position: absolute;
-  background: #fff;
-  border-radius: 50%;
+.star {
+  font-size: 40rpx;
+  line-height: 1;
+  color: #ffd700; /* 金色星标 */
 }
-.cloud .b1 { width: 60rpx; height: 60rpx; left: -12rpx; top: -8rpx; }
-.cloud .b2 { width: 80rpx; height: 80rpx; left: 40rpx; top: -30rpx; }
-.cloud .b3 { width: 56rpx; height: 56rpx; right: -10rpx; top: -6rpx; }
-.cloud-text {
-  position: relative;
-  font-size: 24rpx;
-  color: #374151;
-}
+.fav-btn:active { transform: scale(0.96); }
+
+/* 云朵元素样式已移除 */
 
 /* 卡片通用 */
 .card {
-  margin: -40rpx 24rpx 16rpx;
+  margin: 12rpx 24rpx 16rpx; /* 下移避免与顶部图片重叠 */
   background: #fff;
   border-radius: 24rpx;
   box-shadow: 0 16rpx 36rpx rgba(0,0,0,0.08);
@@ -462,6 +547,25 @@ export default {
   background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
   box-shadow: 0 6rpx 14rpx rgba(255,122,0,0.28);
 }
+/* 自定义计时样式 */
+.custom-row {
+  margin-top: 12rpx;
+  display: flex;
+  gap: 12rpx;
+  align-items: center;
+}
+.custom-input {
+  flex: 1;
+  height: 64rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 0 16rpx;
+  font-size: 26rpx;
+  box-shadow: 0 6rpx 14rpx rgba(0,0,0,0.06);
+}
+.set-btn {
+  padding: 10rpx 18rpx;
+}
 .progress {
   margin-top: 16rpx;
   height: 12rpx;
@@ -484,4 +588,71 @@ export default {
   line-height: 72rpx;
   font-size: 26rpx;
 }
+/* 选择条样式 */
+.selection-strip {
+  margin: 12rpx 24rpx;
+  display: flex;
+  white-space: nowrap;
+}
+.sel-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200rpx;
+  margin-right: 16rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
+  overflow: hidden;
+  border: 2rpx solid transparent;
+}
+.sel-item.active {
+  border-color: #ff8a34;
+}
+.sel-cover {
+  width: 200rpx;
+  height: 140rpx;
+  background: #eee;
+}
+.sel-name {
+  padding: 10rpx 12rpx 14rpx;
+  font-size: 24rpx;
+  color: #1f2937;
+  max-width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 合并大卡片分区样式（与随机页一致） */
+.big-card .section + .section {
+  border-top: 1rpx solid #f1f5f9;
+  margin-top: 8rpx;
+  padding-top: 8rpx;
+}
+.section-body { padding-top: 10rpx; }
+
+/* 基本信息样式 */
+.info-list {
+  padding-top: 6rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8rpx;
+  line-height: 1.6;
+}
+.info-label {
+  color: #6b7280;
+  font-size: 26rpx;
+}
+.info-value {
+  color: #1f2937;
+  font-size: 26rpx;
+  flex: 1;
+}
+
 </style>

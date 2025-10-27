@@ -1,5 +1,6 @@
 <template>
   <view class="page">
+
     <!-- 顶部栏 -->
     <view class="header">
       <text class="title">美食圈</text>
@@ -115,7 +116,8 @@ export default {
 
 <style>
 .page {
-  background: #f7f8fa;
+  background: #f7f2e7;
+  position: relative;
   min-height: 100vh;
 }
 
@@ -233,5 +235,7 @@ export default {
 .heart.liked {
   color: #ff4d4f;
 }
+
+/* 右上角卡通图样式（统一） */
 
 </style>

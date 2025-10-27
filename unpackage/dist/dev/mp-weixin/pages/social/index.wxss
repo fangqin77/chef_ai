@@ -1,6 +1,7 @@
 
 .page {
-  background: #f7f8fa;
+  background: #f7f2e7;
+  position: relative;
   min-height: 100vh;
 }
 
@@ -119,5 +120,7 @@
 .heart.liked {
   color: #ff4d4f;
 }
+
+/* 右上角卡通图样式（统一） */
 
 

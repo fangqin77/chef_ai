@@ -1,6 +1,7 @@
 
-.page { background: #f7f8fa; min-height: 100vh;
+.page { background: #f7f2e7; min-height: 100vh; position: relative;
 }
+/* AI 对话气泡（位于右上角卡通图左侧） */
 .debug-visible { height: 2rpx; background: transparent;
 }
 /* 顶部 */
@@ -67,4 +68,6 @@
 }
 .arrow { font-size: 36rpx; color: #c7cdd3;
 }
+/* 右上角卡通图样式（统一） */
+
 

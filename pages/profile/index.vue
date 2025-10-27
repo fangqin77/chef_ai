@@ -1,5 +1,7 @@
 <template>
   <view class="page">
+
+
     <view class="debug-visible" />
     <!-- 顶部 -->
     <view class="header">
@@ -85,13 +87,21 @@ export default {
   methods: {
     onSettings() { uni.showToast({ title: '设置入口预留', icon: 'none' }) },
     tapQuick(q) { uni.showToast({ title: q.text, icon: 'none' }) },
-    toast(t) { uni.showToast({ title: t, icon: 'none' }) }
+    toast(t) { uni.showToast({ title: t, icon: 'none' }) },
+    goChatGenRecipe() {
+      // 跳转到 AI 对话页，触发生成菜谱
+      uni.navigateTo({ url: '/pages/chat/index?intent=generate_recipe&source=profile' })
+    }
   }
 }
 </script>
 
 <style>
-.page { background: #f7f8fa; min-height: 100vh; }
+.page { background: #f7f2e7; min-height: 100vh; position: relative; }
+/* AI 对话气泡（位于右上角卡通图左侧） */
+
+
+
 .debug-visible { height: 2rpx; background: transparent; }
 
 /* 顶部 */
@@ -138,4 +148,6 @@ export default {
 .cell-icon { width: 48rpx; text-align: center; font-size: 30rpx; color: #ff6a00; }
 .cell-text { flex: 1; font-size: 28rpx; color: #1f2937; }
 .arrow { font-size: 36rpx; color: #c7cdd3; }
+/* 右上角卡通图样式（统一） */
+
 </style>
