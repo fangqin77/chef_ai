@@ -31,4 +31,9 @@ public class RecipeService {
     public List<Recipe> searchRecipes(String keyword) {
         return recipeMapper.searchRecipes(keyword);
     }
+    
+    // 根据ID获取菜谱详情
+    public Recipe getRecipeById(Integer id) {
+        return recipeMapper.selectById(id);
+    }
 }

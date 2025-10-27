@@ -12,6 +12,7 @@
     <result property="ingredients" column="原料"/>
     <result property="coverImg" column="图片URL"/>
     <result property="difficulty" column="特性"/>
+    <result property="cookTime" column="cookTime"/>
   </resultMap>
 
   <!-- 分类结果集映射 -->
@@ -50,5 +51,10 @@
        OR 原料 LIKE CONCAT('%', #{keyword}, '%')
        OR 做法 LIKE CONCAT('%', #{keyword}, '%')
     ORDER BY 菜谱ID DESC
+  </select>
+  
+  <!-- 根据ID获取菜谱详情 -->
+  <select id="selectById" resultMap="RecipeMap">
+    SELECT * FROM recipes WHERE 菜谱ID = #{id}
   </select>
 </mapper>

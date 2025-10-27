@@ -4,13 +4,14 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.chef_ai_backend.mapper.RecipeTypeMapper">
   <resultMap id="RecipeTypeMap" type="com.example.chef_ai_backend.model.RecipeType">
-    <id property="typeId" column="type_id"/>
-    <result property="typeName" column="type_name"/>
-    <result property="parentId" column="parent_id"/>
-    <result property="sortOrder" column="sort_order"/>
+    <id property="nodeId" column="节点ID"/>
+    <result property="ftype" column="ftype"/>
+    <result property="typeName" column="类型名称"/>
+    <result property="parentNode" column="父节点"/>
+    <result property="sortOrder" column="顺序"/>
   </resultMap>
 
   <select id="selectAll" resultMap="RecipeTypeMap">
-    SELECT * FROM recipe_type ORDER BY sort_order
+    SELECT * FROM recipe_types ORDER BY 顺序
   </select>
 </mapper>

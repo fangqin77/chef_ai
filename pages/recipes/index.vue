@@ -54,6 +54,8 @@
 </template>
 
 <script>
+import BASE_URL from '../../config/api.js';
+
 export default {
   data() {
     return {
@@ -95,8 +97,9 @@ export default {
   methods: {
     // 加载分类（排除根节点）
     loadCategories() {
+      console.log('请求分类URL:', `${BASE_URL}/api/recipes/categories`);
       uni.request({
-        url: 'http://localhost:8080/api/recipes/categories',
+        url: `${BASE_URL}/api/recipes/categories`,
         method: 'GET',
         success: (res) => {
           if (res.statusCode === 200 && res.data) {
@@ -119,8 +122,9 @@ export default {
     // 加载菜谱数据
     loadRecipes() {
       const categoryId = this.activeCat === 'all' ? '' : this.activeCat;
+      console.log('请求菜谱URL:', `${BASE_URL}/api/recipes?categoryId=${categoryId}`);
       uni.request({
-        url: `http://localhost:8080/api/recipes?categoryId=${categoryId}`,
+        url: `${BASE_URL}/api/recipes?categoryId=${categoryId}`,
         method: 'GET',
         success: (res) => {
           if (res.statusCode === 200 && res.data) {
@@ -157,7 +161,7 @@ export default {
       }
       
       uni.request({
-        url: `http://localhost:8080/api/recipes/search?keyword=${encodeURIComponent(this.searchKeyword)}`,
+        url: `${BASE_URL}/api/recipes/search?keyword=${encodeURIComponent(this.searchKeyword)}`,
         method: 'GET',
         success: (res) => {
           if (res.statusCode === 200 && res.data) {

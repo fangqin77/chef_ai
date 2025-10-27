@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS `recipes` (
     `调料` TEXT,
     `原料` TEXT,
     `特性` VARCHAR(255),
-    `图片URL` VARCHAR(500)
+    `图片URL` VARCHAR(500),
+    `cookTime` INT
 );
 
 CREATE TABLE IF NOT EXISTS `recipe_types` (

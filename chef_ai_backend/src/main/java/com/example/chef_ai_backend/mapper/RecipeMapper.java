@@ -17,4 +17,7 @@ public interface RecipeMapper {
     
     // 搜索菜谱（模糊匹配名称、原料、做法）
     List<Recipe> searchRecipes(@Param("keyword") String keyword);
+    
+    // 根据ID获取菜谱详情
+    Recipe selectById(@Param("id") Integer id);
 }
