@@ -15,7 +15,7 @@
     </scroll-view>
 
     <!-- 顶部图 + 标题 -->
-    <view class="hero">
+    <view class="hero" @tap="openDetail" @click="openDetail">
       <image class="hero-img" :src="recipe.imageUrl || fallbackImg" mode="aspectFill" />
       <view class="hero-mask" />
       <view class="hero-title">
@@ -29,7 +29,7 @@
 
 
     <!-- 详情大卡片：原料 / 调料 / 做法 / 基本信息（合并为一个白色方框） -->
-    <view class="card big-card">
+    <view class="card big-card" @tap="openDetail" @click="openDetail">
       <view class="section">
         <view class="card-title">原料</view>
         <view class="card-body section-body">
@@ -84,7 +84,7 @@ export default {
   },
   data() {
     return {
-      fallbackImg: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
       selection: [],
       currentIndex: 0,
       // 当前展示的菜谱详情
@@ -120,6 +120,13 @@ export default {
     }
   },
   methods: {
+    openDetail() {
+      const r = this.recipe || {}
+      const id = r.id
+      uni.showToast({ title: '打开详情...', icon: 'none', duration: 600 })
+      const url = id ? `/pages/recipes/detail?id=${encodeURIComponent(id)}` : '/pages/recipes/detail'
+      uni.navigateTo({ url })
+    },
     // 随机挑选四个菜谱
     pickFour() {
       const src = this.list || [];
@@ -164,7 +171,7 @@ export default {
 
 <style>
 .random-page {
-  background: #f8fafc;
+  background: #f7f2e7;
   min-height: 100vh;
 }
 
@@ -190,7 +197,7 @@ export default {
   border: 2rpx solid transparent;
 }
 .sel-item.active {
-  border-color: #ff8a34;
+  border-color: #FFC107;
 }
 .sel-cover {
   width: 200rpx;
@@ -223,6 +230,7 @@ export default {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.45) 100%);
+  pointer-events: none;
 }
 .hero-title {
   position: absolute;
@@ -230,6 +238,7 @@ export default {
   right: 24rpx;
   bottom: 12rpx;
   color: #fff;
+  pointer-events: none;
 }
 .name {
   font-size: 40rpx;
@@ -247,7 +256,7 @@ export default {
   background: rgba(255,255,255,0.2);
   color: #fff;
 }
-.tag-orange { background: linear-gradient(90deg, #ff8a34, #ff6a00); }
+.tag-orange { background: linear-gradient(90deg, #FFE27A, #FFC107); }
 .tag-green { background: #27ae60; }
 .tag-blue { background: #3b82f6; }
 
@@ -293,9 +302,9 @@ export default {
   line-height: 40rpx;
   font-size: 24rpx;
   font-weight: 700;
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
   color: #fff;
-  box-shadow: 0 6rpx 16rpx rgba(255,122,0,0.3);
+  box-shadow: 0 6rpx 16rpx rgba(255,193,7,0.3);
 }
 .step-text {
   flex: 1;
@@ -326,9 +335,9 @@ export default {
   color: #374151;
 }
 .btn.primary {
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
   color: #fff;
-  box-shadow: 0 8rpx 22rpx rgba(255,122,0,0.32);
+  box-shadow: 0 8rpx 22rpx rgba(255,193,7,0.32);
 }
 /* 基本信息样式 */
 .info-list {

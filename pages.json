@@ -33,6 +33,30 @@
       "style": {
         "navigationBarTitleText": "随机菜谱"
       }
+    },
+    {
+      "path": "pages/social/publish",
+      "style": { "navigationBarTitleText": "发布作品" }
+    },
+    {
+      "path": "pages/profile/favorites",
+      "style": { "navigationBarTitleText": "我的收藏" }
+    },
+    {
+      "path": "pages/profile/myworks",
+      "style": { "navigationBarTitleText": "我的作品" }
+    },
+    {
+      "path": "pages/profile/myinfo",
+      "style": { "navigationBarTitleText": "我的信息" }
+    },
+    {
+      "path": "pages/profile/comments",
+      "style": { "navigationBarTitleText": "我的评论" }
+    },
+    {
+      "path": "pages/profile/history",
+      "style": { "navigationBarTitleText": "浏览历史" }
     }
   ],
   "tabBar": {
@@ -51,6 +75,6 @@
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "uni-app",
     "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "backgroundColor": "#f7f2e7"
   }
 }

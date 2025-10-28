@@ -243,10 +243,21 @@ exports.default = void 0;
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 var _default = {
   data: function data() {
     return {
-      fallbackImg: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
       selection: [],
       currentIndex: 0,
       recipe: {
@@ -266,8 +277,13 @@ var _default = {
       timerSeconds: 0,
       timerRunning: false,
       timerTick: null,
+      timerStarted: false,
       customPresetVisible: false,
-      customPresetMinutes: ''
+      customPresetMinutes: '',
+      datePickerVisible: false,
+      dateOptions: [],
+      dateIso: [],
+      _favKey: ''
     };
   },
   computed: {
@@ -304,8 +320,9 @@ var _default = {
     progressPct: function progressPct() {
       var total = this.timerPreset || 0;
       if (!total || total <= 0) return 0;
-      var done = Math.min(total, Math.max(0, total - (this.timerSeconds || 0)));
-      return Math.round(done / total * 100);
+      if (!this.timerStarted) return 0;
+      var elapsed = Math.max(0, Math.min(total, total - (this.timerSeconds || 0)));
+      return Math.round(elapsed / total * 100);
     }
   },
   onLoad: function onLoad(options) {
@@ -344,6 +361,9 @@ var _default = {
       };
     }
 
+    // 若缺字段，尝试用本地收藏卡片/随机列表补齐
+    this.hydrateById(this.recipe.id);
+
     // 读取本地存储
     try {
       this.favorites = uni.getStorageSync('favorites_recipes') || [];
@@ -377,6 +397,34 @@ var _default = {
     } catch (e) {}
   },
   methods: {
+    // 根据 id 从本地收藏/随机列表补齐详情字段
+    hydrateById: function hydrateById(id) {
+      if (!id) return;
+      var key = String(id);
+      try {
+        var cards = uni.getStorageSync('favorites_cards') || {};
+        var c = cards[key] || {};
+        // 收藏卡片：补齐名称与封面
+        if (!this.recipe.name && c.name) this.recipe.name = c.name;
+        if (!this.recipe.imageUrl && c.imageUrl) this.recipe.imageUrl = c.imageUrl;
+      } catch (e) {}
+      try {
+        var sel = uni.getStorageSync('random_selection_data') || [];
+        if (Array.isArray(sel) && sel.length) {
+          var s = sel.find(function (x) {
+            return String(x.id) === key;
+          }) || {};
+          // 随机列表：尽量补齐更多字段
+          if (!this.recipe.typeId && s.typeId != null) this.recipe.typeId = s.typeId;
+          if (!this.recipe.name && s.name) this.recipe.name = s.name;
+          if (!this.recipe.method && s.method) this.recipe.method = s.method;
+          if (!this.recipe.condiments && s.condiments) this.recipe.condiments = s.condiments;
+          if (!this.recipe.ingredients && s.ingredients) this.recipe.ingredients = s.ingredients;
+          if (!this.recipe.feature && s.feature) this.recipe.feature = s.feature;
+          if (!this.recipe.imageUrl && (s.cover || s.imageUrl)) this.recipe.imageUrl = s.cover || s.imageUrl;
+        }
+      } catch (e) {}
+    },
     goBack: function goBack() {
       var pages = getCurrentPages && getCurrentPages();
       if (pages && pages.length > 1) {
@@ -458,29 +506,23 @@ var _default = {
         this.favorites.splice(idx, 1);
         if (meta[key]) delete meta[key];
         if (cards[key]) delete cards[key];
+        // 同时去掉计划日期
+        var planned = uni.getStorageSync('favorites_planned') || {};
+        if (planned[key]) {
+          delete planned[key];
+          uni.setStorageSync('favorites_planned', planned);
+        }
         uni.setStorageSync('favorites_meta', meta);
         uni.setStorageSync('favorites_cards', cards);
         uni.showToast({
           title: '已取消收藏',
           icon: 'none'
         });
+        this.saveStorage();
       } else {
-        // 添加收藏并记录时间戳与名片
-        this.favorites.push(key);
-        meta[key] = Date.now();
-        cards[key] = {
-          id: key,
-          name: this.recipe.name || '',
-          imageUrl: this.recipe.imageUrl || this.fallbackImg
-        };
-        uni.setStorageSync('favorites_meta', meta);
-        uni.setStorageSync('favorites_cards', cards);
-        uni.showToast({
-          title: '已收藏到每日菜谱',
-          icon: 'none'
-        });
+        // 先选择日期，再加入收藏
+        this.planSelectDate(key);
       }
-      this.saveStorage();
     },
     togglePlan: function togglePlan() {
       var id = this.recipe.id;
@@ -510,11 +552,13 @@ var _default = {
       if (this.timerRunning) this.pauseTimer();
       this.timerPreset = sec;
       this.timerSeconds = sec;
+      this.timerStarted = false;
     },
     startTimer: function startTimer() {
       var _this = this;
       if (this.timerRunning) return;
       this.timerRunning = true;
+      this.timerStarted = true;
       this.timerTick = setInterval(function () {
         if (_this.timerSeconds > 0) {
           _this.timerSeconds -= 1;
@@ -537,6 +581,7 @@ var _default = {
     resetTimer: function resetTimer() {
       this.pauseTimer();
       this.timerSeconds = 0;
+      this.timerStarted = false;
     },
     applyCustomPreset: function applyCustomPreset() {
       var n = parseInt(this.customPresetMinutes, 10);
@@ -552,6 +597,72 @@ var _default = {
       this.customPresetVisible = false;
       uni.showToast({
         title: "\u5DF2\u8BBE\u5B9A".concat(n, "\u5206\u949F"),
+        icon: 'none'
+      });
+    },
+    // 选择待做日期（未来7天，自定义弹层）
+    planSelectDate: function planSelectDate(key) {
+      var today = new Date();
+      var options = [];
+      var isoDates = [];
+      for (var i = 0; i < 7; i++) {
+        var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        var iso = "".concat(y, "-").concat(m, "-").concat(day);
+        var label = "".concat(m, "\u6708").concat(day, "\u65E5");
+        if (i === 0) label = "".concat(m, "\u6708").concat(day, "\u65E5\uFF08\u4ECA\u65E5\uFF09");else if (i === 1) label = "".concat(m, "\u6708").concat(day, "\u65E5\uFF08\u660E\u65E5\uFF09");else if (i === 2) label = "".concat(m, "\u6708").concat(day, "\u65E5\uFF08\u540E\u65E5\uFF09");
+        options.push(label);
+        isoDates.push(iso);
+      }
+      this._favKey = String(key);
+      this.dateOptions = options;
+      this.dateIso = isoDates;
+      this.datePickerVisible = true;
+    },
+    // 选择某个日期
+    chooseDate: function chooseDate(pick) {
+      var key = this._favKey;
+      if (!key || pick == null) return;
+      var dateStr = this.dateIso[pick];
+      // 写入收藏与名片
+      if (!this.favorites.map(String).includes(String(key))) {
+        this.favorites.push(String(key));
+      }
+      var cards = {};
+      try {
+        cards = uni.getStorageSync('favorites_cards') || {};
+      } catch (e) {
+        cards = {};
+      }
+      cards[key] = {
+        id: String(key),
+        name: this.recipe.name || '',
+        imageUrl: this.recipe.imageUrl || this.fallbackImg
+      };
+      uni.setStorageSync('favorites_cards', cards);
+      // 写入计划日期
+      var planned = {};
+      try {
+        planned = uni.getStorageSync('favorites_planned') || {};
+      } catch (e) {
+        planned = {};
+      }
+      planned[key] = dateStr;
+      uni.setStorageSync('favorites_planned', planned);
+      this.saveStorage();
+      this.datePickerVisible = false;
+      uni.showToast({
+        title: "\u5DF2\u52A0\u5165".concat(dateStr, "\u5F85\u505A\u83DC\u8C31"),
+        icon: 'none'
+      });
+    },
+    // 关闭弹层
+    closeDatePicker: function closeDatePicker() {
+      this.datePickerVisible = false;
+      uni.showToast({
+        title: '已取消',
         icon: 'none'
       });
     },

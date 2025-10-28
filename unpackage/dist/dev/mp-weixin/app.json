@@ -7,14 +7,20 @@
     "pages/social/index",
     "pages/profile/index",
     "pages/recipes/daily",
-    "pages/recipes/random"
+    "pages/recipes/random",
+    "pages/social/publish",
+    "pages/profile/favorites",
+    "pages/profile/myworks",
+    "pages/profile/myinfo",
+    "pages/profile/comments",
+    "pages/profile/history"
   ],
   "subPackages": [],
   "window": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "uni-app",
     "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "backgroundColor": "#f7f2e7"
   },
   "tabBar": {
     "color": "#6b7280",

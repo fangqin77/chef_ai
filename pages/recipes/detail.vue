@@ -68,7 +68,7 @@
           </view>
         </view>
         <view class="progress">
-          <view class="bar" :style="{ width: progressPct + '%', background: (progressPct > 0 ? 'linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%)' : 'transparent') }"></view>
+          <view class="bar" :style="{ width: progressPct + '%', background: (progressPct > 0 ? 'linear-gradient(90deg, #FFE27A 0%, #FFC107 100%)' : 'transparent') }"></view>
         </view>
         <view class="timer-actions">
           <button class="btn ghost small" @click="resetTimer">重置</button>
@@ -76,6 +76,17 @@
             {{ timerRunning ? '暂停' : '开始' }}
           </button>
         </view>
+      </view>
+    </view>
+
+    <!-- 日期选择弹层 -->
+    <view v-if="datePickerVisible" class="overlay" @touchmove.stop @click="closeDatePicker">
+      <view class="sheet" @click.stop>
+        <view class="sheet-title">收藏为几日的待做菜谱</view>
+        <scroll-view scroll-y class="sheet-list">
+          <view v-for="(opt, i) in dateOptions" :key="i" class="sheet-item" @click="chooseDate(i)">{{ opt }}</view>
+        </scroll-view>
+        <button class="btn ghost small" @click="closeDatePicker">取消</button>
       </view>
     </view>
 
@@ -87,7 +98,7 @@
 export default {
   data() {
     return {
-      fallbackImg: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
       selection: [],
       currentIndex: 0,
       recipe: {
@@ -106,8 +117,13 @@ export default {
       timerSeconds: 0,
       timerRunning: false,
       timerTick: null,
+      timerStarted: false,
       customPresetVisible: false,
-      customPresetMinutes: ''
+      customPresetMinutes: '',
+      datePickerVisible: false,
+      dateOptions: [],
+      dateIso: [],
+      _favKey: ''
     }
   },
   computed: {
@@ -140,8 +156,9 @@ export default {
     progressPct() {
       const total = this.timerPreset || 0
       if (!total || total <= 0) return 0
-      const done = Math.min(total, Math.max(0, total - (this.timerSeconds || 0)))
-      return Math.round((done / total) * 100)
+      if (!this.timerStarted) return 0
+      const elapsed = Math.max(0, Math.min(total, total - (this.timerSeconds || 0)))
+      return Math.round((elapsed / total) * 100)
     }
   },
   onLoad(options) {
@@ -181,6 +198,9 @@ export default {
       }
     }
 
+    // 若缺字段，尝试用本地收藏卡片/随机列表补齐
+    this.hydrateById(this.recipe.id)
+
     // 读取本地存储
     try {
       this.favorites = uni.getStorageSync('favorites_recipes') || []
@@ -212,6 +232,33 @@ export default {
     } catch(e) {}
   },
   methods: {
+    // 根据 id 从本地收藏/随机列表补齐详情字段
+    hydrateById(id) {
+      if (!id) return
+      const key = String(id)
+      try {
+        const cards = uni.getStorageSync('favorites_cards') || {}
+        const c = cards[key] || {}
+        // 收藏卡片：补齐名称与封面
+        if (!this.recipe.name && c.name) this.recipe.name = c.name
+        if (!this.recipe.imageUrl && c.imageUrl) this.recipe.imageUrl = c.imageUrl
+      } catch(e) {}
+
+      try {
+        const sel = uni.getStorageSync('random_selection_data') || []
+        if (Array.isArray(sel) && sel.length) {
+          const s = sel.find(x => String(x.id) === key) || {}
+          // 随机列表：尽量补齐更多字段
+          if (!this.recipe.typeId && s.typeId != null) this.recipe.typeId = s.typeId
+          if (!this.recipe.name && s.name) this.recipe.name = s.name
+          if (!this.recipe.method && s.method) this.recipe.method = s.method
+          if (!this.recipe.condiments && s.condiments) this.recipe.condiments = s.condiments
+          if (!this.recipe.ingredients && s.ingredients) this.recipe.ingredients = s.ingredients
+          if (!this.recipe.feature && s.feature) this.recipe.feature = s.feature
+          if (!this.recipe.imageUrl && (s.cover || s.imageUrl)) this.recipe.imageUrl = s.cover || s.imageUrl
+        }
+      } catch(e) {}
+    },
     goBack() {
       const pages = getCurrentPages && getCurrentPages()
       if (pages && pages.length > 1) {
@@ -282,24 +329,20 @@ export default {
         this.favorites.splice(idx, 1)
         if (meta[key]) delete meta[key]
         if (cards[key]) delete cards[key]
-        uni.setStorageSync('favorites_meta', meta)
-        uni.setStorageSync('favorites_cards', cards)
-        uni.showToast({ title: '已取消收藏', icon: 'none' })
-      } else {
-        // 添加收藏并记录时间戳与名片
-        this.favorites.push(key)
-        meta[key] = Date.now()
-        cards[key] = {
-          id: key,
-          name: this.recipe.name || '',
-          imageUrl: this.recipe.imageUrl || this.fallbackImg
+        // 同时去掉计划日期
+        const planned = uni.getStorageSync('favorites_planned') || {}
+        if (planned[key]) {
+          delete planned[key]
+          uni.setStorageSync('favorites_planned', planned)
         }
         uni.setStorageSync('favorites_meta', meta)
         uni.setStorageSync('favorites_cards', cards)
-        uni.showToast({ title: '已收藏到每日菜谱', icon: 'none' })
+        uni.showToast({ title: '已取消收藏', icon: 'none' })
+        this.saveStorage()
+      } else {
+        // 先选择日期，再加入收藏
+        this.planSelectDate(key)
       }
-
-      this.saveStorage()
     },
     togglePlan() {
       const id = this.recipe.id
@@ -321,10 +364,12 @@ export default {
       if (this.timerRunning) this.pauseTimer()
       this.timerPreset = sec
       this.timerSeconds = sec
+      this.timerStarted = false
     },
     startTimer() {
       if (this.timerRunning) return
       this.timerRunning = true
+      this.timerStarted = true
       this.timerTick = setInterval(() => {
         if (this.timerSeconds > 0) {
           this.timerSeconds -= 1
@@ -344,6 +389,7 @@ export default {
     resetTimer() {
       this.pauseTimer()
       this.timerSeconds = 0
+      this.timerStarted = false
     },
     applyCustomPreset() {
       const n = parseInt(this.customPresetMinutes, 10)
@@ -355,6 +401,60 @@ export default {
       this.selectPreset(sec)
       this.customPresetVisible = false
       uni.showToast({ title: `已设定${n}分钟`, icon: 'none' })
+    },
+    // 选择待做日期（未来7天，自定义弹层）
+    planSelectDate(key) {
+      const today = new Date()
+      const options = []
+      const isoDates = []
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i)
+        const y = d.getFullYear()
+        const m = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        const iso = `${y}-${m}-${day}`
+        let label = `${m}月${day}日`
+        if (i === 0) label = `${m}月${day}日（今日）`
+        else if (i === 1) label = `${m}月${day}日（明日）`
+        else if (i === 2) label = `${m}月${day}日（后日）`
+        options.push(label)
+        isoDates.push(iso)
+      }
+      this._favKey = String(key)
+      this.dateOptions = options
+      this.dateIso = isoDates
+      this.datePickerVisible = true
+    },
+    // 选择某个日期
+    chooseDate(pick) {
+      const key = this._favKey
+      if (!key || pick == null) return
+      const dateStr = this.dateIso[pick]
+      // 写入收藏与名片
+      if (!this.favorites.map(String).includes(String(key))) {
+        this.favorites.push(String(key))
+      }
+      let cards = {}
+      try { cards = uni.getStorageSync('favorites_cards') || {} } catch(e) { cards = {} }
+      cards[key] = {
+        id: String(key),
+        name: this.recipe.name || '',
+        imageUrl: this.recipe.imageUrl || this.fallbackImg
+      }
+      uni.setStorageSync('favorites_cards', cards)
+      // 写入计划日期
+      let planned = {}
+      try { planned = uni.getStorageSync('favorites_planned') || {} } catch(e) { planned = {} }
+      planned[key] = dateStr
+      uni.setStorageSync('favorites_planned', planned)
+      this.saveStorage()
+      this.datePickerVisible = false
+      uni.showToast({ title: `已加入${dateStr}待做菜谱`, icon: 'none' })
+    },
+    // 关闭弹层
+    closeDatePicker() {
+      this.datePickerVisible = false
+      uni.showToast({ title: '已取消', icon: 'none' })
     },
     startCook() {
       // 开始烹饪即启动计时
@@ -369,7 +469,7 @@ export default {
 
 <style>
 .detail-page {
-  background: #f8fafc;
+  background: #f7f2e7;
   min-height: 100vh;
 }
 
@@ -412,7 +512,7 @@ export default {
   background: rgba(255,255,255,0.2);
   color: #fff;
 }
-.tag-orange { background: linear-gradient(90deg, #ff8a34, #ff6a00); }
+.tag-orange { background: linear-gradient(90deg, #FFE27A, #FFC107); }
 .tag-green { background: #27ae60; }
 .tag-blue { background: #3b82f6; }
 
@@ -482,7 +582,7 @@ export default {
   line-height: 40rpx;
   font-size: 24rpx;
   font-weight: 700;
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
   color: #fff;
   box-shadow: 0 6rpx 16rpx rgba(255,122,0,0.3);
 }
@@ -515,9 +615,9 @@ export default {
   color: #374151;
 }
 .btn.primary {
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
   color: #fff;
-  box-shadow: 0 8rpx 22rpx rgba(255,122,0,0.32);
+  box-shadow: 0 8rpx 22rpx rgba(255,193,7,0.32);
 }
 
 /* 计时UI */
@@ -544,8 +644,8 @@ export default {
 }
 .chip-btn.active {
   color: #fff;
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
-  box-shadow: 0 6rpx 14rpx rgba(255,122,0,0.28);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
+  box-shadow: 0 6rpx 14rpx rgba(255,193,7,0.28);
 }
 /* 自定义计时样式 */
 .custom-row {
@@ -575,7 +675,7 @@ export default {
 }
 .progress .bar {
   height: 100%;
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  background: transparent;
   width: 0%;
 }
 .timer-actions {
@@ -653,6 +753,43 @@ export default {
   color: #1f2937;
   font-size: 26rpx;
   flex: 1;
+}
+
+/* 自定义日期弹层样式 */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 9999;
+}
+.sheet {
+  width: 100%;
+  background: #fff;
+  border-top-left-radius: 20rpx;
+  border-top-right-radius: 20rpx;
+  padding: 16rpx 16rpx 24rpx;
+}
+.sheet-title {
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #111827;
+  padding: 8rpx 0 12rpx;
+}
+.sheet-list {
+  max-height: 420rpx;
+}
+.sheet-item {
+  padding: 22rpx 16rpx;
+  border-bottom: 1rpx solid #f3f4f6;
+  font-size: 28rpx;
+  color: #111827;
+}
+.sheet-item:last-child {
+  border-bottom: 0;
 }
 
 </style>

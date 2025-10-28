@@ -219,6 +219,8 @@ exports.default = void 0;
 //
 //
 //
+//
+//
 var _default = {
   data: function data() {
     return {
@@ -231,6 +233,11 @@ var _default = {
     };
   },
   methods: {
+    goHistory: function goHistory() {
+      uni.navigateTo({
+        url: '/pages/profile/history'
+      });
+    },
     onSettings: function onSettings() {
       uni.showToast({
         title: '设置入口预留',
@@ -249,10 +256,30 @@ var _default = {
         icon: 'none'
       });
     },
+    goFavorites: function goFavorites() {
+      uni.navigateTo({
+        url: '/pages/profile/favorites'
+      });
+    },
     goChatGenRecipe: function goChatGenRecipe() {
       // 跳转到 AI 对话页，触发生成菜谱
       uni.navigateTo({
         url: '/pages/chat/index?intent=generate_recipe&source=profile'
+      });
+    },
+    goMyWorks: function goMyWorks() {
+      uni.navigateTo({
+        url: '/pages/profile/myworks'
+      });
+    },
+    goMyInfo: function goMyInfo() {
+      uni.navigateTo({
+        url: '/pages/profile/myinfo'
+      });
+    },
+    goMyComments: function goMyComments() {
+      uni.navigateTo({
+        url: '/pages/profile/comments'
       });
     }
   }

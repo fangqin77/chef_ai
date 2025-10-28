@@ -14,9 +14,8 @@
           <image class="avatar" :src="p.avatar" mode="aspectFill" />
           <view class="author">
             <text class="name">{{ p.name }}</text>
-            <text class="time">{{ p.time }}</text>
           </view>
-          <text class="more">···</text>
+          <text class="more" v-if="!hasImages(p)" @click="toggleMenu(p)">···</text>
         </view>
 
         <view class="content">{{ p.text }}</view>
@@ -26,20 +25,54 @@
                  :key="idx"
                  :src="img"
                  class="img"
-                 mode="aspectFill" />
+                 mode="aspectFill"
+                 @tap="onImageTap(p, idx)" />
+        </view>
+        <!-- 图片下方一行：左时间，右省略号 -->
+        <view v-if="hasImages(p)" class="img-footer">
+          <text class="time-badge">{{ displayTime(p) }}</text>
+          <text class="menu-dot" @click.stop="toggleMenu(p)">···</text>
         </view>
 
-        <view class="actions">
+        <view class="menu-mask" v-if="p._menuOpen" @click="closeOverlayFor(p)"></view>
+        <view class="actions-menu" v-if="p._menuOpen">
+          <view class="am-item" @click="toggleLike(p)">{{ p.liked ? ('取消收藏（' + p.likes + '）') : ('收藏（' + p.likes + '）') }}</view>
+          <view class="am-item" @click="focusComment(p)">评论（{{ getCommentCount(p.id) }}）</view>
+          <view class="am-item" @click="share(p)">分享</view>
+        </view>
+        <view class="actions" v-if="false">
           <view class="action" @click="toggleLike(p)">
             <text :class="['heart', p.liked ? 'liked' : '']">❤</text>
             <text class="num">{{ p.likes }}</text>
           </view>
-          <view class="action" @click="comment(p)"><text>💬</text><text class="num">{{ p.comments }}</text></view>
+          <view class="action" @click="focusComment(p)"><text>💬</text><text class="num">{{ getCommentCount(p.id) }}</text></view>
           <view class="action" @click="share(p)"><text>🔗</text><text class="num">分享</text></view>
+        </view>
+
+        <!-- 评论区 -->
+        <view class="comments">
+          <view class="c-list" v-if="getComments(p.id).length">
+            <view class="c-item" v-for="(c,i) in getComments(p.id)" :key="i">
+              <text class="c-name">{{ c.name }}：</text>
+              <text class="c-text">{{ c.text }}</text>
+              <text class="c-time">{{ c.time }}</text>
+            </view>
+          </view>
+          <!-- 评论输入仅在点击“评论”时显示，并自动聚焦，失焦且无内容时收起 -->
+          <view class="c-input compact" v-if="p._commenting">
+            <input class="input compact"
+                   :focus="focusMap[p.id]"
+                   :placeholder="'评论 @' + p.name"
+                   v-model="inputMap[p.id]"
+                   @confirm="submitComment(p)"
+                   @blur="endComment(p)" />
+            <button class="btn micro" @click="submitComment(p)">发送</button>
+          </view>
         </view>
       </view>
     </view>
 
+    <view class="page-mask" v-if="anyMenuOpen" @click="closeAllMenus"></view>
     <view style="height: 24rpx;" />
   </view>
 </template>
@@ -48,41 +81,101 @@
 export default {
   data() {
     return {
-      posts: [
+      seed: [
         {
           id: 'p1',
           name: '小雅厨房',
           time: '2 小时前',
-          avatar: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+          avatar: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
           text: '今天尝试做了传说中的网红芝士蛋糕，第一次做就成功了！奶香浓郁、入口即化，太满足了～',
-          images: ['https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'],
-          likes: 128,
-          comments: 24
+          images: ['/static/yuan_97e57f821c79b841651df5b413309328.jpg'],
+          likes: 128
         },
         {
           id: 'p2',
           name: '老八的美食',
           time: '5 小时前',
-          avatar: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+          avatar: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
           text: '周末在家做了一锅香喷喷的红烧肉，肥而不腻、瘦而不柴。秘诀就是要用冰糖炒糖色，火候掌握好！',
-          images: ['https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png','https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'],
-          likes: 256,
-          comments: 18
+          images: ['/static/yuan_97e57f821c79b841651df5b413309328.jpg','/static/yuan_97e57f821c79b841651df5b413309328.jpg'],
+          likes: 256
         },
         {
           id: 'p3',
           name: '美食达人小丽',
           time: '1 天前',
-          avatar: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
+          avatar: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
           text: '分享一个超简单的早餐食谱！牛油果吐司配煎蛋，营养丰富又美味，5 分钟就能搞定～',
-          images: ['https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png'],
-          likes: 173,
-          comments: 31
+          images: ['/static/yuan_97e57f821c79b841651df5b413309328.jpg'],
+          likes: 173
         }
-      ]
+      ],
+      posts: [],
+      commentsMap: {},   // { [postId]: [{name,text,time}] }
+      inputMap: {},      // { [postId]: 'input text' }
+      focusMap: {}       // { [postId]: boolean }
+    }
+  },
+  onShow() {
+    const local = uni.getStorageSync('social_posts') || []
+    const likedSet = new Set(uni.getStorageSync('social_likes') || [])
+    const merged = [...local, ...this.seed].map(p => ({
+      ...p,
+      liked: likedSet.has(String(p.id)),
+      likes: Number(p.likes || 0),
+      _menuOpen: false,
+      _commenting: false
+    }))
+    this.posts = merged
+    const cm = uni.getStorageSync('social_comments') || {}
+    this.commentsMap = cm
+    const im = {}
+    const fm = {}
+    merged.forEach(p => { im[p.id] = ''; fm[p.id] = false })
+    this.inputMap = im
+    this.focusMap = fm
+  },
+  onShareAppMessage(res) {
+    return {
+      title: '分享一篇美食圈作品',
+      path: '/pages/social/index'
+    }
+  },
+  computed: {
+    anyMenuOpen() {
+      return (this.posts || []).some(p => p && p._menuOpen)
+    },
+    anyOverlayOpen() {
+      return (this.posts || []).some(p => p && (p._menuOpen || p._commenting))
     }
   },
   methods: {
+    onImageTap(p, idx) {
+      const urls = Array.isArray(p.images) ? p.images : []
+      const current = urls[idx] || ''
+      // 写入浏览历史
+      try {
+        const list = uni.getStorageSync('social_history') || []
+        const entry = {
+          key: Date.now() + '_' + String(p.id || idx),
+          postId: String(p.id || ''),
+          title: String(p.text || p.name || '').slice(0, 60),
+          cover: current || (urls[0] || ''),
+          time: '刚刚'
+        }
+        const next = [entry, ...list].slice(0, 200)
+        uni.setStorageSync('social_history', next)
+      } catch (e) {}
+      // 预览图片（支持缩放）
+      if (urls.length) {
+        uni.previewImage({
+          current,
+          urls,
+          indicator: 'number',
+          loop: true
+        })
+      }
+    },
     hasImages(p) {
       return !!(p && Array.isArray(p.images) && p.images.length > 0)
     },
@@ -93,22 +186,139 @@ export default {
       return 3
     },
     onCreate() {
-      uni.showToast({ title: '发布入口预留', icon: 'none' })
+      uni.navigateTo({ url: '/pages/social/publish' })
+    },
+    closeAllMenus() {
+      (this.posts || []).forEach(item => {
+        if (item && item._menuOpen) this.$set(item, '_menuOpen', false)
+      })
+    },
+    closeAllOverlays() {
+      (this.posts || []).forEach(item => {
+        if (!item) return
+        if (item._menuOpen) this.$set(item, '_menuOpen', false)
+        if (item._commenting) this.$set(item, '_commenting', false)
+        const id = String(item.id)
+        this.$set(this.focusMap, id, false)
+      })
+    },
+    closeOverlayFor(p) {
+      if (!p) return
+      // 只关闭菜单，不影响评论框
+      this.$set(p, '_menuOpen', false)
+    },
+    toggleMenu(p) {
+      // 先关闭其他帖子的菜单与评论框
+      (this.posts || []).forEach(item => {
+        if (!item) return
+        if (item._menuOpen) this.$set(item, '_menuOpen', false)
+        if (item._commenting) this.$set(item, '_commenting', false)
+        const id = String(item.id)
+        this.$set(this.focusMap, id, false)
+      })
+      // 切换当前帖子的操作菜单（使用 $set 确保响应式），并收起当前帖子的评论框
+      const next = !(p && p._menuOpen)
+      this.$set(p, '_menuOpen', next)
+      const pid = String(p.id)
+      this.$set(this.focusMap, pid, false)
+      this.$set(p, '_commenting', false)
+    },
+    displayTime(p) {
+      const t = p && p.time
+      if (!t) return '刚刚'
+      const s = String(t).trim().toLowerCase()
+      if (!s || s === 'null' || s === 'undefined') return '刚刚'
+      return t
+    },
+    startComment(p) {
+      if (!p) return
+      this.$set(p, '_menuOpen', false)
+      this.$set(p, '_commenting', true)
+      const id = String(p.id)
+      this.$set(this.focusMap, id, true)
+    },
+    endComment(p) {
+      if (!p) return
+      const id = String(p.id)
+      // 失焦时仅取消焦点，不收起评论框
+      this.$set(this.focusMap, id, false)
     },
     toggleLike(p) {
-      const liked = !!p.liked
-      p.liked = !liked
-      if (p.liked) {
-        p.likes = (p.likes || 0) + 1
-      } else {
+      if (p) p._menuOpen = false
+      const key = 'social_likes'
+      const favKey = 'my_fav_posts'
+      const id = String(p.id)
+      let arr = uni.getStorageSync(key) || []
+      const set = new Set(arr.map(String))
+      const before = set.has(id)
+      let fav = {}
+      try { fav = uni.getStorageSync(favKey) || {} } catch(e) { fav = {} }
+      if (before) {
+        set.delete(id)
+        p.liked = false
         p.likes = Math.max((p.likes || 0) - 1, 0)
+        if (fav[id]) delete fav[id]
+        uni.showToast({ title: '已取消收藏', icon: 'none' })
+      } else {
+        set.add(id)
+        p.liked = true
+        p.likes = (p.likes || 0) + 1
+        fav[id] = {
+          id,
+          name: p.name,
+          time: p.time,
+          avatar: p.avatar,
+          text: p.text,
+          cover: Array.isArray(p.images) && p.images.length ? p.images[0] : ''
+        }
+        uni.showToast({ title: '已收藏', icon: 'none' })
       }
+      arr = Array.from(set)
+      uni.setStorageSync(key, arr)
+      uni.setStorageSync(favKey, fav)
     },
-    comment(p) {
-      uni.showToast({ title: '评论入口预留', icon: 'none' })
+    getComments(pid) {
+      const cm = this.commentsMap || {}
+      const list = cm[String(pid)] || []
+      return Array.isArray(list) ? list : []
+    },
+    getCommentCount(pid) {
+      return this.getComments(pid).length
+    },
+    focusComment(p) {
+      this.startComment(p)
+    },
+    submitComment(p) {
+      const pid = String(p.id)
+      const text = (this.inputMap[pid] || '').trim()
+      if (!text) {
+        uni.showToast({ title: '请输入评论', icon: 'none' })
+        return
+      }
+      const one = { name: '我', text, time: '刚刚' }
+      const cm = { ...(this.commentsMap || {}) }
+      const list = Array.isArray(cm[pid]) ? cm[pid].slice() : []
+      list.push(one)
+      cm[pid] = list
+      this.commentsMap = cm
+      uni.setStorageSync('social_comments', cm)
+      this.$set(this.inputMap, pid, '')
+      uni.showToast({ title: '已评论', icon: 'none' })
     },
     share(p) {
-      uni.showToast({ title: '已复制分享链接', icon: 'none' })
+      if (p) p._menuOpen = false
+      const link = `${this.baseUrl()}/#/pages/social/index?postId=${encodeURIComponent(p.id)}`
+      uni.setClipboardData({
+        data: link,
+        success: () => uni.showToast({ title: '链接已复制', icon: 'none' }),
+        fail: () => uni.showToast({ title: '复制失败', icon: 'none' })
+      })
+    },
+    baseUrl() {
+      try {
+        if (typeof location !== 'undefined' && location.origin) return location.origin
+      } catch(e) {}
+      return 'https://example.com'
     }
   }
 }
@@ -151,6 +361,7 @@ export default {
   margin-bottom: 20rpx;
   box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
 }
+.post { position: relative; }
 .post-top {
   display: flex;
   align-items: center;
@@ -209,7 +420,7 @@ export default {
   background: #eee;
 }
 
-/* 操作栏 */
+/* 操作栏（隐藏旧的底部按钮，仅保留折叠菜单） */
 .actions {
   margin-top: 16rpx;
   display: flex;
@@ -226,7 +437,6 @@ export default {
 .action .num {
   margin-left: 8rpx;
 }
-/* 点赞样式 */
 .heart {
   font-size: 28rpx;
   color: #9ca3af;
@@ -236,6 +446,73 @@ export default {
   color: #ff4d4f;
 }
 
-/* 右上角卡通图样式（统一） */
+/* 评论区 */
+.comments { margin-top: 12rpx; }
+.c-list { display: flex; flex-direction: column; gap: 6rpx; background: #fafafa; border-radius: 12rpx; padding: 10rpx; }
+.c-item { font-size: 24rpx; color: #374151; line-height: 1.4; }
+.c-name { color: #1f2937; font-weight: 600; margin-right: 6rpx; }
+.c-time { margin-left: 8rpx; color: #9ca3af; font-size: 22rpx; }
+.c-input { margin-top: 8rpx; display: flex; gap: 8rpx; align-items: center; }
+.c-input.compact { margin-top: 6rpx; }
+.input { flex: 1; height: 56rpx; background: #fff; border-radius: 10rpx; padding: 0 12rpx; font-size: 24rpx; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.06); }
+.input.compact { height: 52rpx; font-size: 24rpx; }
+.btn.micro { height: 52rpx; line-height: 52rpx; padding: 0 14rpx; border-radius: 10rpx; background: #f3f4f6; color: #374151; font-size: 24rpx; }
 
+/* 折叠菜单（类似朋友圈） */
+.actions-menu {
+  position: absolute;
+  right: 16rpx;
+  bottom: 120rpx;
+  background: #fff;
+  border-radius: 14rpx;
+  box-shadow: 0 12rpx 28rpx rgba(0,0,0,0.12);
+  overflow: hidden;
+  min-width: 200rpx;
+  z-index: 5;
+}
+.am-item {
+  padding: 14rpx 22rpx;
+  font-size: 26rpx;
+  color: #1f2937;
+}
+.am-item + .am-item { border-top: 1rpx solid #f0f2f5; }
+
+/* 页面级遮罩：任一菜单展开时出现，点击可关闭所有菜单；低于菜单的 z-index */
+.page-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 4; /* actions-menu 是 5 */
+  background: transparent;
+}
+
+/* 菜单遮罩：覆盖整张卡片，点击可收起菜单 */
+.menu-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* 低于 actions-menu 的 z-index:5，高于卡片内容 */
+  background: transparent;
+}
+
+/* 图片下方信息行：左时间、右省略号 */
+.img-footer {
+  margin-top: 8rpx;
+  padding: 0 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.time-badge {
+  background: transparent;
+  color: #9ca3af;
+  font-size: 24rpx;
+  padding: 0;
+}
+.menu-dot {
+  color: #9ca3af;
+  font-size: 32rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+}
+
+/* 右上角卡通图样式（统一） */
 </style>

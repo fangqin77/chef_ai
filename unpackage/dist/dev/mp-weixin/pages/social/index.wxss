@@ -35,6 +35,8 @@
   margin-bottom: 20rpx;
   box-shadow: 0 10rpx 24rpx rgba(0,0,0,0.06);
 }
+.post { position: relative;
+}
 .post-top {
   display: flex;
   align-items: center;
@@ -93,7 +95,7 @@
   background: #eee;
 }
 
-/* 操作栏 */
+/* 操作栏（隐藏旧的底部按钮，仅保留折叠菜单） */
 .actions {
   margin-top: 16rpx;
   display: flex;
@@ -110,8 +112,6 @@
 .action .num {
   margin-left: 8rpx;
 }
-
-/* 点赞样式 */
 .heart {
   font-size: 28rpx;
   color: #9ca3af;
@@ -121,6 +121,84 @@
   color: #ff4d4f;
 }
 
-/* 右上角卡通图样式（统一） */
+/* 评论区 */
+.comments { margin-top: 12rpx;
+}
+.c-list { display: flex; flex-direction: column; gap: 6rpx; background: #fafafa; border-radius: 12rpx; padding: 10rpx;
+}
+.c-item { font-size: 24rpx; color: #374151; line-height: 1.4;
+}
+.c-name { color: #1f2937; font-weight: 600; margin-right: 6rpx;
+}
+.c-time { margin-left: 8rpx; color: #9ca3af; font-size: 22rpx;
+}
+.c-input { margin-top: 8rpx; display: flex; gap: 8rpx; align-items: center;
+}
+.c-input.compact { margin-top: 6rpx;
+}
+.input { flex: 1; height: 56rpx; background: #fff; border-radius: 10rpx; padding: 0 12rpx; font-size: 24rpx; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.06);
+}
+.input.compact { height: 52rpx; font-size: 24rpx;
+}
+.btn.micro { height: 52rpx; line-height: 52rpx; padding: 0 14rpx; border-radius: 10rpx; background: #f3f4f6; color: #374151; font-size: 24rpx;
+}
 
+/* 折叠菜单（类似朋友圈） */
+.actions-menu {
+  position: absolute;
+  right: 16rpx;
+  bottom: 120rpx;
+  background: #fff;
+  border-radius: 14rpx;
+  box-shadow: 0 12rpx 28rpx rgba(0,0,0,0.12);
+  overflow: hidden;
+  min-width: 200rpx;
+  z-index: 5;
+}
+.am-item {
+  padding: 14rpx 22rpx;
+  font-size: 26rpx;
+  color: #1f2937;
+}
+.am-item + .am-item { border-top: 1rpx solid #f0f2f5;
+}
+
+/* 页面级遮罩：任一菜单展开时出现，点击可关闭所有菜单；低于菜单的 z-index */
+.page-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 4; /* actions-menu 是 5 */
+  background: transparent;
+}
+
+/* 菜单遮罩：覆盖整张卡片，点击可收起菜单 */
+.menu-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* 低于 actions-menu 的 z-index:5，高于卡片内容 */
+  background: transparent;
+}
+
+/* 图片下方信息行：左时间、右省略号 */
+.img-footer {
+  margin-top: 8rpx;
+  padding: 0 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.time-badge {
+  background: transparent;
+  color: #9ca3af;
+  font-size: 24rpx;
+  padding: 0;
+}
+.menu-dot {
+  color: #9ca3af;
+  font-size: 32rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+}
+
+/* 右上角卡通图样式（统一） */
 

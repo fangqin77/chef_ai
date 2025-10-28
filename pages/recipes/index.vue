@@ -253,7 +253,7 @@ export default {
   align-items: center;
   gap: 10rpx;
   padding: 10rpx 18rpx;
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
   color: #fff;
   border-radius: 999rpx;
   box-shadow: 0 8rpx 20rpx rgba(255,122,0,0.28);
@@ -297,8 +297,8 @@ export default {
 }
 .chip.active {
   color: #fff;
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
-  box-shadow: 0 6rpx 16rpx rgba(255, 122, 0, 0.3);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
+  box-shadow: 0 6rpx 16rpx rgba(255, 193, 7, 0.3);
 }
 
 /* 网格 */
@@ -347,7 +347,7 @@ export default {
 }
 .tag-orange {
   background: #fff3e6;
-  color: #ff8a34;
+  color: #FFC107;
 }
 .time {
   font-size: 24rpx;
@@ -407,9 +407,9 @@ export default {
   color: #374151;
 }
 .btn.change {
-  background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%);
+  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
   color: #fff;
-  box-shadow: 0 8rpx 20rpx rgba(255,122,0,0.35);
+  box-shadow: 0 8rpx 20rpx rgba(255,193,7,0.35);
 }
 
 /* 右上角卡通图样式（统一） */

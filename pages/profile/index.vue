@@ -43,23 +43,25 @@
     <!-- 我的（放在工具与服务前） -->
     <view class="group">
       <view class="group-title">我的内容</view>
-      <view class="cell" @click="toast('我的收藏')">
+      <view class="cell" @click="goFavorites">
         <text class="cell-icon">❤</text><text class="cell-text">我的收藏</text><text class="arrow">›</text>
       </view>
-      <view class="cell" @click="toast('浏览历史')">
-        <text class="cell-icon">↻</text><text class="cell-text">浏览历史</text><text class="arrow">›</text>
+      <view class="cell" @click="goMyComments">
+        <text class="cell-icon">💬</text><text class="cell-text">我的评论</text><text class="arrow">›</text>
       </view>
     </view>
 
     <view class="group">
-      <view class="group-title">工具与服务</view>
-      <view class="cell" @click="toast('营养计算器')">
-        <text class="cell-icon">🧮</text><text class="cell-text">营养计算器</text><text class="arrow">›</text>
+      <view class="group-title">我的</view>
+      <view class="cell" @click="goMyWorks">
+        <text class="cell-icon">🖼</text><text class="cell-text">我的作品</text><text class="arrow">›</text>
       </view>
-      <view class="cell" @click="toast('烹饪计时器')">
-        <text class="cell-icon">⏱</text><text class="cell-text">烹饪计时器</text><text class="arrow">›</text>
+      <view class="cell" @click="goHistory">
+        <text class="cell-icon">🕘</text><text class="cell-text">浏览历史</text><text class="arrow">›</text>
       </view>
-
+      <view class="cell" @click="goMyInfo">
+        <text class="cell-icon">👤</text><text class="cell-text">我的信息</text><text class="arrow">›</text>
+      </view>
     </view>
 
     <view class="group">
@@ -85,13 +87,18 @@ export default {
     }
   },
   methods: {
+    goHistory() { uni.navigateTo({ url: '/pages/profile/history' }) },
     onSettings() { uni.showToast({ title: '设置入口预留', icon: 'none' }) },
     tapQuick(q) { uni.showToast({ title: q.text, icon: 'none' }) },
     toast(t) { uni.showToast({ title: t, icon: 'none' }) },
+    goFavorites() { uni.navigateTo({ url: '/pages/profile/favorites' }) },
     goChatGenRecipe() {
       // 跳转到 AI 对话页，触发生成菜谱
       uni.navigateTo({ url: '/pages/chat/index?intent=generate_recipe&source=profile' })
-    }
+    },
+    goMyWorks() { uni.navigateTo({ url: '/pages/profile/myworks' }) },
+    goMyInfo() { uni.navigateTo({ url: '/pages/profile/myinfo' }) },
+    goMyComments() { uni.navigateTo({ url: '/pages/profile/comments' }) }
   }
 }
 </script>

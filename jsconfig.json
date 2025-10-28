@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["*"]
+    },
+    "checkJs": false
+  },
+  "include": [
+    "**/*.vue",
+    "**/*.js",
+    "**/*.ts",
+    "types/**/*.d.ts"
+  ],
+  "vueCompilerOptions": {
+    "globalTypesPath": "./types/vue-global.d.ts",
+    "strictTemplates": false
+  },
+  "exclude": ["node_modules", "unpackage", "dist"]
+}

@@ -1,5 +1,5 @@
 
-.daily-page { background: #f8fafc; min-height: 100vh;
+.daily-page { background: #f7f2e7; min-height: 100vh;
 }
 .header {
   display: flex;
@@ -12,6 +12,13 @@
 .actions { display: flex; gap: 12rpx;
 }
 .list { max-height: calc(100vh - 120rpx);
+}
+.date-section { margin-bottom: 12rpx;
+}
+.date-header {
+  padding: 8rpx 24rpx;
+  font-size: 26rpx;
+  color: #6b7280;
 }
 .cart-row {
   position: relative;
@@ -52,6 +59,7 @@
   bottom: 0;
   display: flex;
   align-items: center;
+  z-index: 2;
 }
 .btn { height: 72rpx; line-height: 72rpx; text-align: center; border-radius: 14rpx; font-size: 28rpx;
 }
@@ -61,7 +69,7 @@
 }
 .btn.ghost { background: #f3f4f6; color: #374151;
 }
-.btn.primary { background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%); color: #fff;
+.btn.primary { background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%); color: #fff;
 }
 .empty {
   padding: 60rpx 24rpx;

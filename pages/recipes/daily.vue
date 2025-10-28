@@ -13,23 +13,23 @@
     </view>
 
     <scroll-view scroll-y class="list">
-      <view v-for="(it, idx) in items" :key="it.id" class="cart-row">
-        <view class="row-content"
-              :style="{ transform: 'translateX(' + (it._dx || 0) + 'px)' }"
-              @touchstart="onTouchStart($event, idx)"
-              @touchmove="onTouchMove($event, idx)"
-              @touchend="onTouchEnd($event, idx)"
-              @click="goDetail(it)">
-          <image class="cover" :src="it.imageUrl || fallbackImg" mode="aspectFill" />
-          <view class="info">
-            <view class="name">{{ it.name || ('菜谱 ' + it.id) }}</view>
-            <view class="meta">
-              <text class="meta-text">收藏时间：{{ formatTime(it.favTs) }}</text>
+      <view v-for="g in groups" :key="g.date" class="date-section">
+        <view class="date-header">{{ g.date }}</view>
+        <view v-for="(it, idx) in g.items" :key="it.id" class="cart-row">
+          <view class="row-content"
+                :style="{ transform: 'translateX(' + (it._dx || 0) + 'px)' }"
+                @touchstart.stop="onTouchStart($event, it._gIndex)"
+                @touchmove="onTouchMove($event, it._gIndex)"
+                @touchend="onTouchEnd($event, it._gIndex)"
+                @tap="handleTap(it)">
+            <image class="cover" :src="it.imageUrl || fallbackImg" mode="aspectFill" />
+            <view class="info">
+              <view class="name">{{ it.name || ('菜谱 ' + it.id) }}</view>
             </view>
           </view>
-        </view>
-        <view class="ops" v-if="it._open">
-          <button class="btn ghost tiny" @click.stop="remove(it)">删除</button>
+          <view class="ops" v-if="it._open">
+            <button class="btn ghost tiny" @click.stop="remove(it)">删除</button>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -40,8 +40,11 @@
 export default {
   data() {
     return {
-      fallbackImg: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png',
-      items: []
+      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
+      items: [],
+      groups: [],
+      _startX: 0,
+      _pendingTapTimer: null
     }
   },
   onShow() {
@@ -49,67 +52,90 @@ export default {
   },
   methods: {
     loadData() {
-      // 读取收藏ID列表与时间元数据
+      // 读取收藏ID列表
       let ids = []
-      let meta = {}
       try {
         ids = uni.getStorageSync('favorites_recipes') || []
-        meta = uni.getStorageSync('favorites_meta') || {}
       } catch(e) {
         ids = []
-        meta = {}
       }
-      // 读取最近随机页的选择（兜底）与收藏名片
+      // 读取名片与计划日期
       let recent = []
       let cards = {}
-      try {
-        recent = uni.getStorageSync('random_selection_data') || []
-      } catch(e) { recent = [] }
-      try {
-        cards = uni.getStorageSync('favorites_cards') || {}
-      } catch(e) { cards = {} }
+      let planned = {}
+      try { recent = uni.getStorageSync('random_selection_data') || [] } catch(e) { recent = [] }
+      try { cards = uni.getStorageSync('favorites_cards') || {} } catch(e) { cards = {} }
+      try { planned = uni.getStorageSync('favorites_planned') || {} } catch(e) { planned = {} }
 
-      // 组装显示项（优先用收藏名片，其次用最近随机页）
+      // 组装显示项
       const items = (ids || []).map(id => {
         const key = String(id)
         const fromCard = cards[key] || {}
         const fromRecent = (recent || []).find(x => String(x.id) === key) || {}
-        const favTs = meta && meta[key] ? meta[key] : 0
+        const dateStr = planned[key] || '未安排'
         return {
           id,
-          name: fromCard.name || fromRecent.name || '',
+          name: this.safeDecode(fromCard.name || fromRecent.name || ''),
           imageUrl: fromCard.imageUrl || fromRecent.cover || fromRecent.imageUrl || '',
-          favTs,
+          plannedDate: dateStr,
           _dx: 0,
           _open: false
         }
       })
-      // 最新优先
-      items.sort((a, b) => (b.favTs || 0) - (a.favTs || 0))
       this.items = items
+
+      // 分组：按日期倒序，未安排置底
+      const map = {}
+      items.forEach((it, idx) => {
+        const d = it.plannedDate || '未安排'
+        if (!map[d]) map[d] = []
+        // 记录一份全局索引，供滑动行用（引用原对象，保持 _open/_dx 响应）
+        const idx0 = this.findIndexById(it.id)
+        if (idx0 >= 0) this.items[idx0]._gIndex = idx0
+        map[d].push(this.items[idx0])
+      })
+      // 按与今天的“接近程度”排序，最近的在上；“未安排”置底
+      const todayBase = new Date()
+      const base = new Date(todayBase.getFullYear(), todayBase.getMonth(), todayBase.getDate())
+      const diffDays = (ds) => {
+        if (!ds || ds === '未安排') return Number.POSITIVE_INFINITY
+        const parts = String(ds).split('-').map(Number)
+        if (parts.length !== 3 || parts.some(isNaN)) return Number.POSITIVE_INFINITY
+        const d = new Date(parts[0], parts[1] - 1, parts[2])
+        return Math.abs((d - base) / 86400000)
+      }
+      const keys = Object.keys(map).sort((a, b) => {
+        const da = diffDays(a)
+        const db = diffDays(b)
+        if (da !== db) return da - db
+        // 若接近度相同，则按日期先后排序（“未安排”已在无穷大末尾）
+        return a > b ? 1 : -1
+      })
+      this.groups = keys.map(k => ({ date: k, items: map[k] }))
     },
-    formatTime(ts) {
-      if (!ts) return '未知'
-      const d = new Date(ts)
-      const y = d.getFullYear()
-      const m = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      const hh = String(d.getHours()).padStart(2, '0')
-      const mm = String(d.getMinutes()).padStart(2, '0')
-      return `${y}-${m}-${day} ${hh}:${mm}`
+    findIndexById(id) {
+      return (this.items || []).findIndex(x => String(x.id) === String(id))
     },
     remove(it) {
       // 从收藏中移除
+      const key = String(it.id)
       const ids = (uni.getStorageSync('favorites_recipes') || []).map(x => String(x))
-      const idx = ids.indexOf(String(it.id))
+      const idx = ids.indexOf(key)
       if (idx >= 0) {
         ids.splice(idx, 1)
         uni.setStorageSync('favorites_recipes', ids)
       }
+      // 兼容旧的收藏时间元数据（若存在则清理）
       const meta = uni.getStorageSync('favorites_meta') || {}
-      if (meta[it.id]) {
-        delete meta[it.id]
+      if (meta[key]) {
+        delete meta[key]
         uni.setStorageSync('favorites_meta', meta)
+      }
+      // 移除计划日期
+      const planned = uni.getStorageSync('favorites_planned') || {}
+      if (planned[key]) {
+        delete planned[key]
+        uni.setStorageSync('favorites_planned', planned)
       }
       uni.showToast({ title: '已删除', icon: 'none' })
       this.loadData()
@@ -124,20 +150,32 @@ export default {
       const x = (e.touches && e.touches[0] ? e.touches[0].clientX : 0)
       const dx = x - (this._startX || 0)
       // 仅允许向左滑动显示删除
-      const clamped = Math.max(-160, Math.min(0, dx))
+      const clamped = Math.max(-200, Math.min(0, dx))
       const it = this.items[idx]
       if (it) {
         this.$set(this.items[idx], '_dx', clamped)
-        this.$set(this.items[idx], '_open', clamped < -80)
+        // 降低展开阈值，提升易用性
+        this.$set(this.items[idx], '_open', clamped < -48)
       }
     },
     onTouchEnd(e, idx) {
       const it = this.items[idx]
       if (!it) return
+      // 轻点判定：横向位移很小视为点击
+      const endX = (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : (this._startX || 0))
+      const distance = Math.abs(endX - (this._startX || 0))
+      if (distance < 8) {
+        // 收起展开，避免 .ops 覆盖导致点不到
+        this.$set(this.items[idx], '_dx', 0)
+        this.$set(this.items[idx], '_open', false)
+        // 微任务触发点击，避免与触摸流竞争
+        Promise.resolve().then(() => this.handleTap ? this.handleTap(it) : this.onRowTap(it))
+        return
+      }
       const dx = it._dx || 0
       // 左滑超过阈值：固定展开删除按钮；否则收回
-      if (dx < -80) {
-        this.$set(this.items[idx], '_dx', -120)
+      if (dx < -48) {
+        this.$set(this.items[idx], '_dx', -140)
         this.$set(this.items[idx], '_open', true)
       } else {
         this.$set(this.items[idx], '_dx', 0)
@@ -152,15 +190,70 @@ export default {
         }
       })
     },
+    // 收回当前项（用于“取消”按钮）
+    closeOne(it) {
+      const idx = this.findIndexById(it.id)
+      if (idx >= 0) {
+        this.$set(this.items[idx], '_dx', 0)
+        this.$set(this.items[idx], '_open', false)
+      }
+    },
     clearAll() {
       uni.removeStorageSync('favorites_recipes')
       uni.removeStorageSync('favorites_meta')
+      uni.removeStorageSync('favorites_planned')
       uni.showToast({ title: '已清空', icon: 'none' })
       this.loadData()
     },
+    // 统一 tap 点击入口（由模板 @tap 调用）
+    handleTap(it) {
+      this.onRowTap(it)
+    },
+    onRowTap(it) {
+      // 若该行处于展开，先收回，不跳转
+      const idx = this.findIndexById(it.id)
+      if (idx >= 0) {
+        const row = this.items[idx]
+        if (row && row._open) {
+          this.$set(this.items[idx], '_dx', 0)
+          this.$set(this.items[idx], '_open', false)
+          return
+        }
+      }
+      // 保险地收起其它滑开的行后再跳转
+      this.closeAll()
+      this.goDetail(it)
+    },
     goDetail(it) {
-      // 跳转详情（仅传递 id，详情页自行回填）
-      uni.navigateTo({ url: `/pages/recipes/detail?id=${it.id}` })
+      const rawId = it && it.id != null ? this.safeDecode(String(it.id)) : ''
+      const encodedId = rawId ? encodeURIComponent(rawId) : ''
+      const url = encodedId ? `/pages/recipes/detail?id=${encodedId}` : '/pages/recipes/detail'
+      uni.navigateTo({
+        url,
+        fail: () => {
+          uni.showToast({ title: '跳转失败，请检查 pages.json 是否已注册 detail 页面', icon: 'none' })
+          // 兜底一次，避免极端环境 navigateTo 失败
+          uni.redirectTo({ url })
+        }
+      })
+    },
+    safeDecode(val) {
+      if (typeof val !== 'string') return val
+      let result = val
+      for (let i = 0; i < 2; i++) {
+        if (typeof result === 'string' && result.includes('%')) {
+          try {
+            const decoded = decodeURIComponent(result)
+            if (decoded === result) break
+            result = decoded
+            continue
+          } catch(e) {
+            break
+          }
+        }
+        break
+      }
+      return result
     },
     goExplore() {
       uni.switchTab ? uni.switchTab({ url: '/pages/recipes/index' }) : uni.reLaunch({ url: '/pages/recipes/index' })
@@ -170,7 +263,7 @@ export default {
 </script>
 
 <style>
-.daily-page { background: #f8fafc; min-height: 100vh; }
+.daily-page { background: #f7f2e7; min-height: 100vh; }
 .header {
   display: flex;
   align-items: center;
@@ -180,6 +273,12 @@ export default {
 .title { font-size: 36rpx; font-weight: 800; color: #111827; }
 .actions { display: flex; gap: 12rpx; }
 .list { max-height: calc(100vh - 120rpx); }
+.date-section { margin-bottom: 12rpx; }
+.date-header {
+  padding: 8rpx 24rpx;
+  font-size: 26rpx;
+  color: #6b7280;
+}
 
 .cart-row {
   position: relative;
@@ -215,12 +314,13 @@ export default {
   bottom: 0;
   display: flex;
   align-items: center;
+  z-index: 2;
 }
 .btn { height: 72rpx; line-height: 72rpx; text-align: center; border-radius: 14rpx; font-size: 28rpx; }
 .btn.small { height: 64rpx; line-height: 64rpx; font-size: 26rpx; }
 .btn.tiny { height: 56rpx; line-height: 56rpx; font-size: 24rpx; }
 .btn.ghost { background: #f3f4f6; color: #374151; }
-.btn.primary { background: linear-gradient(90deg, #ff8a34 0%, #ff6a00 100%); color: #fff; }
+.btn.primary { background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%); color: #fff; }
 .empty {
   padding: 60rpx 24rpx;
   display: flex; flex-direction: column; align-items: center; gap: 16rpx;
