@@ -27,43 +27,55 @@
   </view>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      items: [],
-      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
-    }
-  },
-  onShow() {
-    this.load()
-  },
-  methods: {
-    load() {
-      try {
-        const arr = uni.getStorageSync('social_history') || []
-        this.items = Array.isArray(arr) ? arr : []
-      } catch(e) { this.items = [] }
-    },
-    save(list) {
-      uni.setStorageSync('social_history', list)
-    },
-    goSocial() {
-      uni.switchTab ? uni.switchTab({ url: '/pages/social/index' }) : uni.navigateTo({ url: '/pages/social/index' })
-    },
-    open(it) {
-      if (!it || !it.postId) return
-      uni.navigateTo({ url: '/pages/social/index?postId=' + encodeURIComponent(String(it.postId)) })
-    },
-    remove(it) {
-      const key = it && it.key
-      const next = this.items.filter(x => x.key !== key)
-      this.items = next
-      this.save(next)
-      uni.showToast({ title: '已删除', icon: 'none' })
-    }
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+
+type HistoryItem = {
+  key: string
+  postId?: string | number
+  cover?: string
+  title?: string
+  time?: string
+}
+
+const items = ref<HistoryItem[]>([])
+const fallbackImg = '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
+
+function load() {
+  try {
+    const arr = (uni.getStorageSync && uni.getStorageSync('social_history')) || []
+    items.value = Array.isArray(arr) ? (arr as HistoryItem[]) : []
+  } catch (e) {
+    items.value = []
   }
 }
+
+function save(list: HistoryItem[]) {
+  uni.setStorageSync && uni.setStorageSync('social_history', list)
+}
+
+function goSocial() {
+  if (uni.switchTab) {
+    uni.switchTab({ url: '/pages/social/index' })
+  } else {
+    uni.navigateTo && uni.navigateTo({ url: '/pages/social/index' })
+  }
+}
+
+function open(it: HistoryItem | undefined) {
+  if (!it || !it.postId) return
+  uni.navigateTo && uni.navigateTo({ url: '/pages/social/index?postId=' + encodeURIComponent(String(it.postId)) })
+}
+
+function remove(it: HistoryItem | undefined) {
+  const key = it && it.key
+  const next = items.value.filter(x => x.key !== key)
+  items.value = next
+  save(next)
+  uni.showToast && uni.showToast({ title: '已删除', icon: 'none' })
+}
+
+onMounted(load)
 </script>
 
 <style>

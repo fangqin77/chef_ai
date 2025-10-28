@@ -1,8 +1,14 @@
 {
   "compilerOptions": {
+    "target": "ES2018",
+    "lib": ["ES2018", "DOM"],
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["*"],
+      "vue": ["./types/vue-module-shim.d.ts"]
     },
     "checkJs": true
   },
