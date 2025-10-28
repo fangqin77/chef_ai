@@ -29,6 +29,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+declare const uni: any
 
 type HistoryItem = {
   key: string

@@ -2,17 +2,6 @@
 export {};
 
 ; declare global {
-  // uni-app global API typings (minimal surface used in this project)
-  const uni: {
-    getStorageSync?: (key: string) => any
-    setStorageSync?: (key: string, data: any) => void
-    showToast?: (opts: { title: string; icon?: 'none' | 'success' | 'error' }) => void
-    switchTab?: (opts: { url: string; fail?: (err: any) => void; success?: (res: any) => void; complete?: (res: any) => void }) => void
-    navigateTo?: (opts: { url: string; fail?: (err: any) => void; success?: (res: any) => void; complete?: (res: any) => void }) => void
-    redirectTo?: (opts: { url: string; fail?: (err: any) => void; success?: (res: any) => void; complete?: (res: any) => void }) => void
-    reLaunch?: (opts: { url: string; fail?: (err: any) => void; success?: (res: any) => void; complete?: (res: any) => void }) => void
-    removeStorageSync?: (key: string) => void
-  }
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('vue').unref;
 	const __VLS_placeholder: any;
@@ -145,11 +134,4 @@ export {};
 	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-}
-
-// Minimal shims for 'vue' to satisfy TS in uni-app editor env
-declare module 'vue' {
-  export const ref: any
-  export const computed: any
-  export const onMounted: any
 }
