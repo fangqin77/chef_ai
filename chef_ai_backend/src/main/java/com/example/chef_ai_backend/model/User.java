@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public class User {
     private Integer userId;
     private String openid;
+    private String sessionKey;
     private String username;
     private String avatar;
     private String signature;
@@ -19,6 +20,9 @@ public class User {
     
     public String getOpenid() { return openid; }
     public void setOpenid(String openid) { this.openid = openid; }
+
+    public String getSessionKey() { return sessionKey; }
+    public void setSessionKey(String sessionKey) { this.sessionKey = sessionKey; }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }

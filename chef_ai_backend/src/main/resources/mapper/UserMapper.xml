@@ -6,6 +6,7 @@
   <resultMap id="UserMap" type="com.example.chef_ai_backend.model.User">
     <id property="userId" column="user_id"/>
     <result property="openid" column="openid"/>
+    <result property="sessionKey" column="session_key"/>
     <result property="username" column="username"/>
     <result property="avatar" column="avatar"/>
     <result property="signature" column="signature"/>
@@ -19,20 +20,21 @@
   <!-- 推荐作者：按粉丝数、获赞数倒序 -->
   <select id="selectRecommended" resultMap="UserMap">
     SELECT *
-    FROM user
+    FROM `userss`
     ORDER BY fan_count DESC, like_count DESC, create_time DESC
     LIMIT #{limit}
   </select>
   
   <!-- 根据openid查询用户 -->
   <select id="selectByOpenid" resultMap="UserMap" parameterType="string">
-    SELECT * FROM user WHERE openid = #{openid}
+    SELECT * FROM `userss` WHERE openid = #{openid}
   </select>
   
   <!-- 更新用户信息 -->
   <update id="updateById" parameterType="com.example.chef_ai_backend.model.User">
-    UPDATE user 
+    UPDATE `userss`
     SET username = #{username},
+        session_key = #{sessionKey},
         avatar = #{avatar},
         signature = #{signature},
         follow_count = #{followCount},
@@ -44,7 +46,7 @@
   
   <!-- 插入新用户 -->
   <insert id="insert" parameterType="com.example.chef_ai_backend.model.User" useGeneratedKeys="true" keyProperty="userId">
-    INSERT INTO user (openid, username, avatar, signature, follow_count, fan_count, like_count, create_time, update_time)
-    VALUES (#{openid}, #{username}, #{avatar}, #{signature}, #{followCount}, #{fanCount}, #{likeCount}, #{createTime}, #{updateTime})
+    INSERT INTO `userss` (openid, session_key, username, avatar, signature, follow_count, fan_count, like_count, create_time, update_time)
+    VALUES (#{openid}, #{sessionKey}, #{username}, #{avatar}, #{signature}, #{followCount}, #{fanCount}, #{likeCount}, #{createTime}, #{updateTime})
   </insert>
 </mapper>

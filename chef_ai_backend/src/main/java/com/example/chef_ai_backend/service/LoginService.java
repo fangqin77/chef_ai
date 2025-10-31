@@ -2,6 +2,7 @@ package com.example.chef_ai_backend.service;
 
 import com.example.chef_ai_backend.mapper.UserMapper;
 import com.example.chef_ai_backend.model.User;
+import com.example.chef_ai_backend.util.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class LoginService {
 
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private TokenUtil tokenUtil;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -56,8 +60,8 @@ public class LoginService {
             // 2. 根据openid查找或创建用户
             User user = getUserByOpenid(openid);
             
-            // 3. 生成自定义登录态token
-            String token = generateToken(openid);
+            // 3. 生成自定义登录态token并存储到Redis
+            String token = tokenUtil.generateToken(user.getUserId().longValue());
             
             // 4. 返回结果
             Map<String, Object> result = new HashMap<>();
@@ -100,15 +104,5 @@ public class LoginService {
         
         userMapper.insert(newUser);
         return newUser;
-    }
-    
-    /**
-     * 生成自定义登录态token（简化实现）
-     * @param openid 用户的openid
-     * @return token
-     */
-    private String generateToken(String openid) {
-        // 实际项目中应该使用JWT或其他更安全的方式生成token
-        return Base64.getEncoder().encodeToString((openid + System.currentTimeMillis()).getBytes());
     }
 }
