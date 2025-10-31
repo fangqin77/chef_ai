@@ -28,7 +28,7 @@ public class LoginController {
      * @param request 包含code的请求体
      * @return 登录结果，包含token和用户信息
      */
-    @PostMapping("/login")
+    @PostMapping("/user/login")
     public Map<String, Object> login(@RequestBody Map<String, String> request) {
         String code = request.get("code");
         if (code == null || code.isEmpty()) {

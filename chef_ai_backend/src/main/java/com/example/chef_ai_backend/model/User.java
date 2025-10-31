@@ -3,20 +3,16 @@ package com.example.chef_ai_backend.model;
 import java.time.LocalDateTime;
 
 public class User {
-    private Integer userId;
+    private Long id;
     private String openid;
     private String sessionKey;
-    private String username;
-    private String avatar;
-    private String signature;
-    private Integer followCount;
-    private Integer fanCount;
-    private Integer likeCount;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private String nickname;
+    private String avatarUrl;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public Integer getUserId() { return userId; }
-    public void setUserId(Integer userId) { this.userId = userId; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
     public String getOpenid() { return openid; }
     public void setOpenid(String openid) { this.openid = openid; }
@@ -24,27 +20,15 @@ public class User {
     public String getSessionKey() { return sessionKey; }
     public void setSessionKey(String sessionKey) { this.sessionKey = sessionKey; }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
 
-    public String getAvatar() { return avatar; }
-    public void setAvatar(String avatar) { this.avatar = avatar; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
-    public String getSignature() { return signature; }
-    public void setSignature(String signature) { this.signature = signature; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public Integer getFollowCount() { return followCount; }
-    public void setFollowCount(Integer followCount) { this.followCount = followCount; }
-
-    public Integer getFanCount() { return fanCount; }
-    public void setFanCount(Integer fanCount) { this.fanCount = fanCount; }
-
-    public Integer getLikeCount() { return likeCount; }
-    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
-
-    public LocalDateTime getCreateTime() { return createTime; }
-    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
-
-    public LocalDateTime getUpdateTime() { return updateTime; }
-    public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

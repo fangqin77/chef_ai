@@ -4,24 +4,20 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.chef_ai_backend.mapper.UserMapper">
   <resultMap id="UserMap" type="com.example.chef_ai_backend.model.User">
-    <id property="userId" column="user_id"/>
+    <id property="id" column="id"/>
     <result property="openid" column="openid"/>
     <result property="sessionKey" column="session_key"/>
-    <result property="username" column="username"/>
-    <result property="avatar" column="avatar"/>
-    <result property="signature" column="signature"/>
-    <result property="followCount" column="follow_count"/>
-    <result property="fanCount" column="fan_count"/>
-    <result property="likeCount" column="like_count"/>
-    <result property="createTime" column="create_time"/>
-    <result property="updateTime" column="update_time"/>
+    <result property="nickname" column="nickname"/>
+    <result property="avatarUrl" column="avatar_url"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
   </resultMap>
 
   <!-- 推荐作者：按粉丝数、获赞数倒序 -->
   <select id="selectRecommended" resultMap="UserMap">
     SELECT *
     FROM `userss`
-    ORDER BY fan_count DESC, like_count DESC, create_time DESC
+    ORDER BY created_at DESC
     LIMIT #{limit}
   </select>
   
@@ -33,20 +29,16 @@
   <!-- 更新用户信息 -->
   <update id="updateById" parameterType="com.example.chef_ai_backend.model.User">
     UPDATE `userss`
-    SET username = #{username},
+    SET nickname = #{nickname},
         session_key = #{sessionKey},
-        avatar = #{avatar},
-        signature = #{signature},
-        follow_count = #{followCount},
-        fan_count = #{fanCount},
-        like_count = #{likeCount},
-        update_time = #{updateTime}
-    WHERE user_id = #{userId}
+        avatar_url = #{avatarUrl},
+        updated_at = #{updatedAt}
+    WHERE id = #{id}
   </update>
   
   <!-- 插入新用户 -->
-  <insert id="insert" parameterType="com.example.chef_ai_backend.model.User" useGeneratedKeys="true" keyProperty="userId">
-    INSERT INTO `userss` (openid, session_key, username, avatar, signature, follow_count, fan_count, like_count, create_time, update_time)
-    VALUES (#{openid}, #{sessionKey}, #{username}, #{avatar}, #{signature}, #{followCount}, #{fanCount}, #{likeCount}, #{createTime}, #{updateTime})
+  <insert id="insert" parameterType="com.example.chef_ai_backend.model.User" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO `userss` (openid, session_key, nickname, avatar_url, created_at, updated_at)
+    VALUES (#{openid}, #{sessionKey}, #{nickname}, #{avatarUrl}, #{createdAt}, #{updatedAt})
   </insert>
 </mapper>

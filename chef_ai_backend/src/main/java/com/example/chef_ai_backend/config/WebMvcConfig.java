@@ -18,9 +18,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/api/**") // 拦截所有 /api 开头的接口（需要登录的接口）
-                .excludePathPatterns("/api/login") // 放行登录接口（无需 Token）
+                .excludePathPatterns("/api/user/login") // 放行登录接口（无需 Token）
                 .excludePathPatterns("/api/logout") // 放行退出登录接口（虽然需要Token，但由业务逻辑处理）
                 .excludePathPatterns("/api/user/register") // 放行注册接口（如有）
-                .excludePathPatterns("/api/common/**"); // 放行公共接口（如验证码、图片上传等）
+                .excludePathPatterns("/api/common/**") // 放行公共接口（如验证码、图片上传等）
+                .excludePathPatterns("/api/recipes/**") // 放行菜谱相关接口（允许未登录用户查看菜谱）
+                .excludePathPatterns("/api/home"); // 放行首页接口（允许未登录用户查看首页内容）
     }
 }
