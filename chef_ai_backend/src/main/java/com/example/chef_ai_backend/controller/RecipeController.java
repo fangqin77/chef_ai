@@ -2,6 +2,7 @@ package com.example.chef_ai_backend.controller;
 
 import com.example.chef_ai_backend.model.Recipe;
 import com.example.chef_ai_backend.model.RecipeType;
+import com.example.chef_ai_backend.model.RecipeCategory;
 import com.example.chef_ai_backend.service.RecipeService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,12 @@ public class RecipeController {
         return recipeService.getNonRootCategories();
     }
 
+    // 获取所有分类
+    @GetMapping("/all-categories")
+    public List<RecipeCategory> getAllCategories() {
+        return recipeService.getAllCategories();
+    }
+
     // 根据分类获取菜谱
     @GetMapping
     public List<Recipe> getRecipes(
@@ -47,4 +54,3 @@ public class RecipeController {
         return recipeService.getRecipeById(id);
     }
 }
-

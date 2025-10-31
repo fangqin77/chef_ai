@@ -3,6 +3,7 @@ package com.example.chef_ai_backend.service;
 import com.example.chef_ai_backend.mapper.RecipeMapper;
 import com.example.chef_ai_backend.model.Recipe;
 import com.example.chef_ai_backend.model.RecipeType;
+import com.example.chef_ai_backend.model.RecipeCategory;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -35,5 +36,10 @@ public class RecipeService {
     // 根据ID获取菜谱详情
     public Recipe getRecipeById(Integer id) {
         return recipeMapper.selectById(id);
+    }
+    
+    // 获取所有分类
+    public List<RecipeCategory> getAllCategories() {
+        return recipeMapper.selectAllCategories();
     }
 }

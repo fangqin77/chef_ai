@@ -2,6 +2,7 @@ package com.example.chef_ai_backend.mapper;
 
 import com.example.chef_ai_backend.model.Recipe;
 import com.example.chef_ai_backend.model.RecipeType;
+import com.example.chef_ai_backend.model.RecipeCategory;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -20,4 +21,7 @@ public interface RecipeMapper {
     
     // 根据ID获取菜谱详情
     Recipe selectById(@Param("id") Integer id);
+    
+    // 获取所有分类
+    List<RecipeCategory> selectAllCategories();
 }

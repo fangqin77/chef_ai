@@ -23,6 +23,16 @@
     <result property="parentNode" column="父节点"/>
     <result property="sortOrder" column="顺序"/>
   </resultMap>
+  
+  <!-- 新的分类结果集映射 -->
+  <resultMap id="RecipeCategoryMap" type="com.example.chef_ai_backend.model.RecipeCategory">
+    <id property="categoryId" column="category_id"/>
+    <result property="categoryName" column="category_name"/>
+    <result property="categoryType" column="category_type"/>
+    <result property="categoryDesc" column="category_desc"/>
+    <result property="createTime" column="create_time"/>
+    <result property="updateTime" column="update_time"/>
+  </resultMap>
 
   <!-- 热门菜谱查询 -->
   <select id="selectHotRecipes" resultMap="RecipeMap">
@@ -56,5 +66,11 @@
   <!-- 根据ID获取菜谱详情 -->
   <select id="selectById" resultMap="RecipeMap">
     SELECT * FROM recipes WHERE 菜谱ID = #{id}
+  </select>
+  
+  <!-- 获取所有分类 -->
+  <select id="selectAllCategories" resultMap="RecipeCategoryMap">
+    SELECT * FROM recipe_categories
+    ORDER BY category_id ASC
   </select>
 </mapper>
