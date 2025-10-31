@@ -47,3 +47,4 @@ public class RecipeController {
         return recipeService.getRecipeById(id);
     }
 }
+
