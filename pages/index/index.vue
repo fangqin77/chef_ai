@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import { getRecipes } from '../../api/recipes.js'
 export default {
   data() {
     return {
@@ -63,6 +64,20 @@ export default {
       ],
       currentIndex: 0
     }
+  },
+  onShow() {
+    // 从后端拉取首页数据，填充推荐菜谱
+      getRecipes({ recipeLimit: 6 }).then((res) => {
+      const list = Array.isArray(res.recipes) ? res.recipes : []
+      this.recommendedRecipes = list.map((r) => ({
+        id: r.id || r.recipeId || r.key || String(Math.random()).slice(2),
+        name: r.name || r.title || '菜谱',
+        image: r.imageUrl || r.cover || r.image || ''
+      }))
+      this.currentIndex = 0
+    }).catch(() => {
+      // 静默失败，保留本地默认展示
+    })
   },
   methods: {
     goChat() {

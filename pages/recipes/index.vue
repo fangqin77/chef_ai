@@ -65,7 +65,6 @@
           <text class="name">{{ r.name }}</text>
           <view class="meta">
             <view class="tag" :class="r.level === '简单' ? 'tag-green' : 'tag-orange'">{{ r.level }}</view>
-            <text class="time">{{ r.time }}min</text>
           </view>
         </view>
       </view>
@@ -76,6 +75,7 @@
 </template>
 
 <script>
+import {getRecipes, mapTypeIdToCat, DEFAULT_COVER} from '../../api/recipes.js' 
 export default {
   onLoad(options) {
     if (options && options.cat) {
@@ -106,6 +106,33 @@ export default {
       this.activeCat = cat;
       uni.removeStorageSync('recipes_cat');
     }
+    // 调用 /api/recipes/list 接口
+    console.log('开始请求菜谱数据...')
+    getRecipes()
+      .then(res => {
+        console.log('菜谱接口响应数据:', res)
+        const arr = Array.isArray(res) ? res : []
+        this.list = arr.map(r => ({
+          id: r.id,                 // Recipe.id
+          name: r.name || '菜谱',   // Recipe.name
+          cat: mapTypeIdToCat(r.typeId),   // 将后端typeId映射到前端分类key
+          cover: r.feature || DEFAULT_COVER,     // 使用后端返回的feature字段或默认封面
+          // 保留后端原始数据，方便后续使用
+          originalData: r
+        }))
+        console.log('成功加载菜谱数量:', this.list.length)
+      })
+      .catch(err => {
+        console.error('获取菜谱列表失败：', err)
+        console.log('错误详情:', JSON.stringify(err))
+        // 使用模拟数据作为后备方案
+        this.list = this.getMockData()
+        uni.showToast({
+          title: '后端服务不可用，使用模拟数据',
+          icon: 'none',
+          duration: 2000
+        })
+      })
   },
   data() {
     return {
@@ -132,15 +159,8 @@ export default {
       showAllCats: false,
       maxCats: 8,
       topCount: 6,
-      // 示例数据：可替换为接口返回
-      list: [
-        { id: 'mapo-tofu', name: '麻婆豆腐', level: '简单', time: 20, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'egg-fried-rice', name: '蛋炒饭', level: '简单', time: 15, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'hongshao-rou', name: '红烧肉', level: '中等', time: 45, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'tangcu-liji', name: '糖醋里脊', level: '中等', time: 35, cat: 'cn', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'sushi', name: '寿司拼盘', level: '中等', time: 40, cat: 'jp', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' },
-        { id: 'bibimbap', name: '石锅拌饭', level: '简单', time: 25, cat: 'kr', cover: 'https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png' }
-      ]
+      // 接口返回数据列表
+      list: []
     }
   },
   computed: {

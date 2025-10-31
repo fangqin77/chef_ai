@@ -93,14 +93,31 @@ module.exports = _defineProperty, module.exports.__esModule = true, module.expor
 
 /***/ }),
 
-/***/ 119:
+/***/ 12:
+/*!**************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/toPropertyKey.js ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var _typeof = __webpack_require__(/*! ./typeof.js */ 13)["default"];
+var toPrimitive = __webpack_require__(/*! ./toPrimitive.js */ 14);
+function toPropertyKey(t) {
+  var i = toPrimitive(t, "string");
+  return "symbol" == _typeof(i) ? i : i + "";
+}
+module.exports = toPropertyKey, module.exports.__esModule = true, module.exports["default"] = module.exports;
+
+/***/ }),
+
+/***/ 122:
 /*!************************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/objectWithoutProperties.js ***!
   \************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var objectWithoutPropertiesLoose = __webpack_require__(/*! ./objectWithoutPropertiesLoose.js */ 120);
+var objectWithoutPropertiesLoose = __webpack_require__(/*! ./objectWithoutPropertiesLoose.js */ 123);
 function _objectWithoutProperties(source, excluded) {
   if (source == null) return {};
   var target = objectWithoutPropertiesLoose(source, excluded);
@@ -120,24 +137,7 @@ module.exports = _objectWithoutProperties, module.exports.__esModule = true, mod
 
 /***/ }),
 
-/***/ 12:
-/*!**************************************************************!*\
-  !*** ./node_modules/@babel/runtime/helpers/toPropertyKey.js ***!
-  \**************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var _typeof = __webpack_require__(/*! ./typeof.js */ 13)["default"];
-var toPrimitive = __webpack_require__(/*! ./toPrimitive.js */ 14);
-function toPropertyKey(t) {
-  var i = toPrimitive(t, "string");
-  return "symbol" == _typeof(i) ? i : i + "";
-}
-module.exports = toPropertyKey, module.exports.__esModule = true, module.exports["default"] = module.exports;
-
-/***/ }),
-
-/***/ 120:
+/***/ 123:
 /*!*****************************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/objectWithoutPropertiesLoose.js ***!
   \*****************************************************************************/
@@ -9649,6 +9649,106 @@ function normalizeComponent (
 
 /***/ }),
 
+/***/ 39:
+/*!********************************************!*\
+  !*** C:/myprojects/chef_ai/api/recipes.js ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.DEFAULT_COVER = void 0;
+exports.getCategories = getCategories;
+exports.getRandomRecipes = getRandomRecipes;
+exports.getRecipeDetail = getRecipeDetail;
+exports.getRecipes = getRecipes;
+exports.getRecipesByCategory = getRecipesByCategory;
+exports.mapTypeIdToCat = mapTypeIdToCat;
+exports.searchRecipes = searchRecipes;
+var _request = __webpack_require__(/*! ./request */ 40);
+// 获取所有菜谱
+function getRecipes() {
+  return (0, _request.request)('/api/recipes/list', {}, 'GET');
+}
+
+// 获取菜谱详情
+function getRecipeDetail(id) {
+  return (0, _request.request)("/api/recipes/".concat(id), {}, 'GET');
+}
+
+// 获取分类列表
+function getCategories() {
+  return (0, _request.request)('/api/recipes/categories', {}, 'GET');
+}
+
+// 根据分类获取菜谱
+function getRecipesByCategory(categoryId, limit) {
+  return (0, _request.request)('/api/recipes', {
+    categoryId: categoryId,
+    limit: limit
+  }, 'GET');
+}
+
+// 搜索菜谱
+function searchRecipes(keyword) {
+  return (0, _request.request)('/api/recipes/search', {
+    keyword: keyword
+  }, 'GET');
+}
+
+// 随机获取菜谱
+function getRandomRecipes(count) {
+  return (0, _request.request)('/api/recipes/random', {
+    count: count
+  }, 'GET');
+}
+
+// 根据后端返回的菜谱类型ID映射到前端分类key
+function mapTypeIdToCat(typeId) {
+  var typeMap = {
+    1: 'cn',
+    // 中式
+    2: 'west',
+    // 西式
+    3: 'jp',
+    // 日式
+    4: 'kr',
+    // 韩式
+    5: 'chuancai',
+    // 川菜
+    6: 'yuecai',
+    // 粤菜
+    7: 'xianggai',
+    // 湘菜
+    8: 'zhecai',
+    // 浙菜
+    9: 'dongbei',
+    // 东北
+    10: 'xibei',
+    // 西北
+    11: 'jiachang',
+    // 家常
+    12: 'sushi',
+    // 素食
+    13: 'shaokao',
+    // 烧烤
+    14: 'tianpin' // 甜品
+  };
+
+  return typeMap[typeId] || 'all';
+}
+
+// 默认封面图片URL（可以根据需要替换）
+var DEFAULT_COVER = '/static/default-recipe-cover.jpg';
+exports.DEFAULT_COVER = DEFAULT_COVER;
+
+/***/ }),
+
 /***/ 4:
 /*!**********************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/interopRequireDefault.js ***!
@@ -9662,6 +9762,96 @@ function _interopRequireDefault(obj) {
   };
 }
 module.exports = _interopRequireDefault, module.exports.__esModule = true, module.exports["default"] = module.exports;
+
+/***/ }),
+
+/***/ 40:
+/*!********************************************!*\
+  !*** C:/myprojects/chef_ai/api/request.js ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.request = request;
+var _config = __webpack_require__(/*! ./config */ 41);
+/**
+ * 通用请求封装
+ * @param {string} path - 接口路径（可以是相对路径或完整URL）
+ * @param {Object} data - 请求数据
+ * @param {string} method - 请求方法（GET/POST/PUT/DELETE）
+ * @returns Promise
+ */
+function request(path) {
+  var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var method = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'GET';
+  return new Promise(function (resolve, reject) {
+    // 拼接完整 URL
+    var url = path.startsWith('http') ? path : "".concat(_config.BASE_URL).concat(path);
+    console.log('请求URL:', url); // 调试日志
+
+    uni.request({
+      url: url,
+      method: method,
+      data: data,
+      header: {
+        'Content-Type': 'application/json'
+        // 如果需要 token，可在此处加上 Authorization
+        // 'Authorization': uni.getStorageSync('token') || ''
+      },
+      success: function success(res) {
+        console.log('请求响应:', res.statusCode, res.data); // 调试日志
+        if (res.statusCode === 200) {
+          resolve(res.data);
+        } else {
+          console.error('请求错误：', res);
+          var errorMsg = '服务器错误';
+          if (res.statusCode === 502) {
+            errorMsg = '后端服务不可达，请检查服务是否启动';
+          }
+          uni.showToast({
+            title: errorMsg,
+            icon: 'none'
+          });
+          reject(res);
+        }
+      },
+      fail: function fail(err) {
+        console.error('请求失败：', err);
+        uni.showToast({
+          title: '网络连接失败',
+          icon: 'none'
+        });
+        reject(err);
+      }
+    });
+  });
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
+
+/***/ }),
+
+/***/ 41:
+/*!*******************************************!*\
+  !*** C:/myprojects/chef_ai/api/config.js ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BASE_URL = void 0;
+var BASE_URL = 'http://192.168.209.125:9000';
+exports.BASE_URL = BASE_URL;
 
 /***/ }),
 

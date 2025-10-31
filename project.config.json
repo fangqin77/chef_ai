@@ -12,7 +12,16 @@
       "outputPath": ""
     },
     "useCompilerPlugins": false,
-    "minifyWXML": true
+    "minifyWXML": true,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
   "compileType": "miniprogram",
   "miniprogramRoot": "unpackage/dist/dev/mp-weixin/",
@@ -21,6 +30,7 @@
     "ignore": [],
     "include": []
   },
-  "appid": "wx62a7c994122f8fcf",
-  "editorSetting": {}
+  "appid": "wx0ac98f81e0ed6ad0",
+  "editorSetting": {},
+  "libVersion": "3.10.3"
 }

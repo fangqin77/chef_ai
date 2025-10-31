@@ -27,6 +27,8 @@
   </view>
 </template>
 
+
+import { getHome } from '@/utils/api'
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 declare const uni: any
