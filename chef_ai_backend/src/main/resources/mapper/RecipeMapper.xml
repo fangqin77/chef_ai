@@ -68,7 +68,6 @@
   <select id="searchRecipes" resultMap="RecipeMap">
     SELECT * FROM recipes
     WHERE name LIKE CONCAT('%', #{keyword}, '%')
-       OR ingredients LIKE CONCAT('%', #{keyword}, '%')
        OR method LIKE CONCAT('%', #{keyword}, '%')
     ORDER BY id DESC
   </select>
