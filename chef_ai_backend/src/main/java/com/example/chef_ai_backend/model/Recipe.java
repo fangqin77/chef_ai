@@ -1,35 +1,35 @@
 package com.example.chef_ai_backend.model;
 
 public class Recipe {
-    private Integer recipeId;
-    private Integer cuisineType;
+    private Integer id;
+    private Integer typeId;
     private String name;
-    private String steps;
+    private String method;
+    private String condiments;
     private String ingredients;
-    private String coverImg;
-    private String difficulty;
+    private String feature;
     private Integer cookTime;
 
-    public Integer getRecipeId() { return recipeId; }
-    public void setRecipeId(Integer recipeId) { this.recipeId = recipeId; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    public Integer getCuisineType() { return cuisineType; }
-    public void setCuisineType(Integer cuisineType) { this.cuisineType = cuisineType; }
+    public Integer getTypeId() { return typeId; }
+    public void setTypeId(Integer typeId) { this.typeId = typeId; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public String getSteps() { return steps; }
-    public void setSteps(String steps) { this.steps = steps; }
+    public String getMethod() { return method; }
+    public void setMethod(String method) { this.method = method; }
+
+    public String getCondiments() { return condiments; }
+    public void setCondiments(String condiments) { this.condiments = condiments; }
 
     public String getIngredients() { return ingredients; }
     public void setIngredients(String ingredients) { this.ingredients = ingredients; }
 
-    public String getCoverImg() { return coverImg; }
-    public void setCoverImg(String coverImg) { this.coverImg = coverImg; }
-
-    public String getDifficulty() { return difficulty; }
-    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+    public String getFeature() { return feature; }
+    public void setFeature(String feature) { this.feature = feature; }
 
     public Integer getCookTime() { return cookTime; }
     public void setCookTime(Integer cookTime) { this.cookTime = cookTime; }

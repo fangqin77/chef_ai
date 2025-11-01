@@ -21,9 +21,17 @@ public class RecipeService {
     }
 
     // 根据分类获取菜谱
-    public List<Recipe> getRecipesByCategory(Integer categoryId, int limit) {
+    public List<Recipe> getRecipesByCategory(Integer categoryId, Integer limit) {
+        // 如果limit为null，表示不设限制，返回所有匹配的菜谱
         if (categoryId == null) {
+            if (limit == null) {
+                return recipeMapper.selectAllRecipes();
+            }
             return recipeMapper.selectHotRecipes(limit);
+        }
+        
+        if (limit == null) {
+            return recipeMapper.selectByCategoryId(categoryId, null);
         }
         return recipeMapper.selectByCategoryId(categoryId, limit);
     }

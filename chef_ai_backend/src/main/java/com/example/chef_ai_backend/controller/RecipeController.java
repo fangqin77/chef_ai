@@ -38,7 +38,7 @@ public class RecipeController {
     @GetMapping
     public List<Recipe> getRecipes(
             @RequestParam(required = false) Integer categoryId,
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(required = false) Integer limit) {
         return recipeService.getRecipesByCategory(categoryId, limit);
     }
 
@@ -52,5 +52,12 @@ public class RecipeController {
     @GetMapping("/{id}")
     public Recipe getRecipeById(@PathVariable Integer id) {
         return recipeService.getRecipeById(id);
+    }
+    
+    // 获取菜谱列表（新增接口）
+    @GetMapping("/list")
+    public List<Recipe> listRecipes(@RequestParam(required = false) Integer categoryId,
+                                    @RequestParam(required = false) Integer limit) {
+        return recipeService.getRecipesByCategory(categoryId, limit);
     }
 }

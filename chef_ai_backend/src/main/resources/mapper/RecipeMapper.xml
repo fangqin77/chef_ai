@@ -5,13 +5,13 @@
 <mapper namespace="com.example.chef_ai_backend.mapper.RecipeMapper">
   <!-- 菜谱结果集映射 -->
   <resultMap id="RecipeMap" type="com.example.chef_ai_backend.model.Recipe">
-    <id property="recipeId" column="菜谱ID"/>
-    <result property="cuisineType" column="菜谱类型号"/>
-    <result property="name" column="菜谱名称"/>
-    <result property="steps" column="做法"/>
-    <result property="ingredients" column="原料"/>
-    <result property="coverImg" column="图片URL"/>
-    <result property="difficulty" column="特性"/>
+    <id property="id" column="id"/>
+    <result property="typeId" column="type_id"/>
+    <result property="name" column="name"/>
+    <result property="method" column="method"/>
+    <result property="condiments" column="condiments"/>
+    <result property="ingredients" column="ingredients"/>
+    <result property="feature" column="feature"/>
     <result property="cookTime" column="cookTime"/>
   </resultMap>
 
@@ -37,7 +37,12 @@
   <!-- 热门菜谱查询 -->
   <select id="selectHotRecipes" resultMap="RecipeMap">
     SELECT * FROM recipes
-    ORDER BY 菜谱ID DESC LIMIT #{limit}
+    <if test="limit != null">
+      ORDER BY id DESC LIMIT #{limit}
+    </if>
+    <if test="limit == null">
+      ORDER BY id DESC
+    </if>
   </select>
 
   <!-- 获取非根节点分类（排除parentNode为0或null的节点） -->
@@ -50,27 +55,38 @@
   <!-- 根据分类ID查询菜谱 -->
   <select id="selectByCategoryId" resultMap="RecipeMap">
     SELECT * FROM recipes
-    WHERE 菜谱类型号 = #{categoryId}
-    ORDER BY 菜谱ID DESC LIMIT #{limit}
+    WHERE type_id = #{categoryId}
+    <if test="limit != null">
+      ORDER BY id DESC LIMIT #{limit}
+    </if>
+    <if test="limit == null">
+      ORDER BY id DESC
+    </if>
   </select>
 
   <!-- 搜索菜谱（模糊匹配） -->
   <select id="searchRecipes" resultMap="RecipeMap">
     SELECT * FROM recipes
-    WHERE 菜谱名称 LIKE CONCAT('%', #{keyword}, '%')
-       OR 原料 LIKE CONCAT('%', #{keyword}, '%')
-       OR 做法 LIKE CONCAT('%', #{keyword}, '%')
-    ORDER BY 菜谱ID DESC
+    WHERE name LIKE CONCAT('%', #{keyword}, '%')
+       OR ingredients LIKE CONCAT('%', #{keyword}, '%')
+       OR method LIKE CONCAT('%', #{keyword}, '%')
+    ORDER BY id DESC
   </select>
   
   <!-- 根据ID获取菜谱详情 -->
   <select id="selectById" resultMap="RecipeMap">
-    SELECT * FROM recipes WHERE 菜谱ID = #{id}
+    SELECT * FROM recipes WHERE id = #{id}
   </select>
   
   <!-- 获取所有分类 -->
   <select id="selectAllCategories" resultMap="RecipeCategoryMap">
     SELECT * FROM recipe_categories
     ORDER BY category_id ASC
+  </select>
+  
+  <!-- 获取所有菜谱 -->
+  <select id="selectAllRecipes" resultMap="RecipeMap">
+    SELECT * FROM recipes
+    ORDER BY id DESC
   </select>
 </mapper>
