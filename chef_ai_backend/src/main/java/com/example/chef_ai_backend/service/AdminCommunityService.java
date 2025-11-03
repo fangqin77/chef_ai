@@ -21,7 +21,7 @@ public class AdminCommunityService {
 
     public Map<String, Object> listPosts(String keyword, String auditStatus, String status, Long userId, int page, int pageSize) {
         int offset = (Math.max(page, 1) - 1) * Math.max(pageSize, 1);
-        List<Post> list = communityMapper.listAdminPosts(keyword, auditStatus, status, userId, offset, pageSize);
+        java.util.List<java.util.Map<String, Object>> list = communityMapper.listAdminPostsView(keyword, auditStatus, status, userId, offset, pageSize);
         int total = communityMapper.countAdminPosts(keyword, auditStatus, status, userId);
         Map<String, Object> data = new HashMap<>();
         data.put("list", list);

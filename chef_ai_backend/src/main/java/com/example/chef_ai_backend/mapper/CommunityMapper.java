@@ -70,6 +70,13 @@ public interface CommunityMapper {
                               @Param("userId") Long userId,
                               @Param("offset") int offset,
                               @Param("limit") int limit);
+    // 视图：联表返回昵称等附加信息（Map）
+    List<java.util.Map<String, Object>> listAdminPostsView(@Param("keyword") String keyword,
+                              @Param("auditStatus") String auditStatus,
+                              @Param("status") String status,
+                              @Param("userId") Long userId,
+                              @Param("offset") int offset,
+                              @Param("limit") int limit);
     int countAdminPosts(@Param("keyword") String keyword,
                         @Param("auditStatus") String auditStatus,
                         @Param("status") String status,
@@ -81,6 +88,13 @@ public interface CommunityMapper {
 
     // 评论（Admin）
     List<Comment> listAdminComments(@Param("postId") Long postId,
+                                    @Param("keyword") String keyword,
+                                    @Param("auditStatus") String auditStatus,
+                                    @Param("status") String status,
+                                    @Param("offset") int offset,
+                                    @Param("limit") int limit);
+    // 视图：评论联表返回昵称、帖子信息（Map）
+    List<java.util.Map<String, Object>> listAdminCommentsView(@Param("postId") Long postId,
                                     @Param("keyword") String keyword,
                                     @Param("auditStatus") String auditStatus,
                                     @Param("status") String status,

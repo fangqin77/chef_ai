@@ -21,7 +21,7 @@ public class AdminCommentService {
 
     public Map<String, Object> listComments(Long postId, String keyword, String auditStatus, String status, int page, int pageSize) {
         int offset = (Math.max(page, 1) - 1) * Math.max(pageSize, 1);
-        List<Comment> list = communityMapper.listAdminComments(postId, keyword, auditStatus, status, offset, pageSize);
+        java.util.List<java.util.Map<String, Object>> list = communityMapper.listAdminCommentsView(postId, keyword, auditStatus, status, offset, pageSize);
         int total = communityMapper.countAdminComments(postId, keyword, auditStatus, status);
         Map<String, Object> data = new HashMap<>();
         data.put("list", list);

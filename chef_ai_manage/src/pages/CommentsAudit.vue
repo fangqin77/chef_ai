@@ -5,13 +5,12 @@
       <a-select v-model:value="auditStatus" style="width:160px" :options="auditOptions" />
       <a-button type="primary" @click="loadData(1)">查询</a-button>
       <a-button @click="reset">重置</a-button>
-      <div style="flex:1"></div>
     </div>
 
     <a-table :data-source="list" :columns="columns" :pagination="pagination" row-key="id" @change="onTableChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key==='content'">
-          <span>{{ (record.content || '').slice(0, 50) }}</span>
+          <span>{{ (record.content || '').slice(0, 80) }}</span>
         </template>
         <template v-else-if="column.key==='audit'">
           <a-space>
@@ -26,7 +25,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { fetchAuditPosts, auditPost } from '../services/adminApi';
+import { fetchAdminComments, auditComment } from '../services/adminApi';
 import { message, Modal } from 'ant-design-vue';
 
 const list = ref<any[]>([]);
@@ -45,6 +44,7 @@ const auditOptions = [
 
 const columns = [
   { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
+  { title: '帖子ID', dataIndex: 'post_id', key: 'post_id', width: 120 },
   { title: '用户', dataIndex: 'user_nickname', key: 'user_nickname', width: 160 },
   { title: '内容', dataIndex: 'content', key: 'content' },
   { title: '状态', dataIndex: 'audit_status', key: 'audit_status', width: 120 },
@@ -58,7 +58,7 @@ const loadData = async (p?: number) => {
   try {
     const params: any = { page: page.value, pageSize: pageSize.value, keyword: keyword.value };
     if (auditStatus.value !== 'all') params.audit_status = auditStatus.value;
-    const { data } = await fetchAuditPosts(params);
+    const { data } = await fetchAdminComments(params);
     if (data?.success) {
       list.value = data?.data?.list || data?.list || [];
       total.value = data?.data?.total ?? data?.total ?? 0;
@@ -73,10 +73,10 @@ const loadData = async (p?: number) => {
 
 const doAudit = async (id: number, action: 'approve' | 'reject') => {
   Modal.confirm({
-    title: action === 'approve' ? '确认通过该帖子？' : '确认驳回该帖子？',
+    title: action === 'approve' ? '确认通过该评论？' : '确认驳回该评论？',
     async onOk() {
       try {
-        const { data } = await auditPost(id, action);
+        const { data } = await auditComment(id, action);
         if (data?.success) {
           message.success(action === 'approve' ? '已通过' : '已驳回');
           loadData();
@@ -100,11 +100,6 @@ const reset = () => {
   keyword.value = '';
   auditStatus.value = 'pending';
   loadData(1);
-};
-
-const logout = () => {
-  localStorage.removeItem('ADMIN_TOKEN');
-  location.href = '/login';
 };
 
 onMounted(() => loadData(1));

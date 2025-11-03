@@ -102,6 +102,45 @@
     ORDER BY id DESC
   </select>
   
+  <!-- 管理端：分页查询/计数 -->
+  <select id="adminListRecipes" resultMap="RecipeMap">
+    SELECT * FROM recipes
+    WHERE 1=1
+    <if test="keyword != null and keyword != ''">
+      AND (name LIKE CONCAT('%', #{keyword}, '%') OR feature LIKE CONCAT('%', #{keyword}, '%'))
+    </if>
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="adminCountRecipes" resultType="int">
+    SELECT COUNT(1) FROM recipes
+    WHERE 1=1
+    <if test="keyword != null and keyword != ''">
+      AND (name LIKE CONCAT('%', #{keyword}, '%') OR feature LIKE CONCAT('%', #{keyword}, '%'))
+    </if>
+  </select>
+
+  <!-- 基本 CRUD -->
+  <insert id="insertRecipe" parameterType="com.example.chef_ai_backend.model.Recipe" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO recipes (type_id, name, method, condiments, ingredients, feature)
+    VALUES (#{typeId}, #{name}, #{method}, #{condiments}, #{ingredients}, #{feature})
+  </insert>
+  <update id="updateRecipe" parameterType="com.example.chef_ai_backend.model.Recipe">
+    UPDATE recipes
+    <set>
+      <if test="typeId != null">type_id = #{typeId},</if>
+      <if test="name != null and name != ''">name = #{name},</if>
+      <if test="method != null">method = #{method},</if>
+      <if test="condiments != null">condiments = #{condiments},</if>
+      <if test="ingredients != null">ingredients = #{ingredients},</if>
+      <if test="feature != null">feature = #{feature},</if>
+    </set>
+    WHERE id = #{id}
+  </update>
+  <delete id="deleteRecipe">
+    DELETE FROM recipes WHERE id = #{id}
+  </delete>
+
   <!-- 随机获取菜谱 -->
   <select id="selectRandomRecipes" resultMap="RecipeMap">
     SELECT * FROM recipes

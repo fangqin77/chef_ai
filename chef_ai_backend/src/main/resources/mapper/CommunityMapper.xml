@@ -97,7 +97,7 @@
     <if test="userId != null">
       AND user_id = #{userId}
     </if>
-    ORDER BY id DESC
+    ORDER BY p.id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
@@ -134,11 +134,19 @@
   <select id="listAdminComments" resultMap="CommentMap">
     SELECT * FROM comments
     WHERE 1=1
+  </select>
+
+  <!-- 管理端评论视图：联表用户昵称、保留帖子ID -->
+  <select id="listAdminCommentsView" resultType="map">
+    SELECT c.*, u.nickname AS user_nickname
+    FROM comments c
+    LEFT JOIN userss u ON u.id = c.user_id
+    WHERE 1=1
     <if test="postId != null">AND post_id = #{postId}</if>
     <if test="keyword != null and keyword != ''">AND content LIKE CONCAT('%', #{keyword}, '%')</if>
     <if test="auditStatus != null and auditStatus != '' and auditStatus != 'all'">AND audit_status = #{auditStatus}</if>
     <if test="status != null and status != '' and status != 'all'">AND status = #{status}</if>
-    ORDER BY id DESC
+    ORDER BY c.id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
   <select id="countAdminComments" resultType="int">

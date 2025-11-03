@@ -33,4 +33,15 @@ public interface RecipeMapper {
     
     // 随机获取菜谱
     List<Recipe> selectRandomRecipes(@Param("limit") Integer limit);
+
+    // ===== 管理端分页查询 =====
+    List<Recipe> adminListRecipes(@Param("keyword") String keyword,
+                                  @Param("offset") int offset,
+                                  @Param("limit") int limit);
+    int adminCountRecipes(@Param("keyword") String keyword);
+
+    // ===== 基本 CRUD =====
+    int insertRecipe(Recipe recipe);
+    int updateRecipe(Recipe recipe);
+    int deleteRecipe(@Param("id") Integer id);
 }
