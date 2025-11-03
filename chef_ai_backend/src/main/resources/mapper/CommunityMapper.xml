@@ -81,6 +81,101 @@
     VALUES (#{userId}, #{content}, #{mediaJson}, #{visibility}, 'normal', 'pending')
   </insert>
 
+  <!-- 管理端：分页查询帖子（任意状态） -->
+  <select id="listAdminPosts" resultMap="PostMap">
+    SELECT * FROM posts
+    WHERE 1=1
+    <if test="keyword != null and keyword != ''">
+      AND content LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+    <if test="auditStatus != null and auditStatus != '' and auditStatus != 'all'">
+      AND audit_status = #{auditStatus}
+    </if>
+    <if test="status != null and status != '' and status != 'all'">
+      AND status = #{status}
+    </if>
+    <if test="userId != null">
+      AND user_id = #{userId}
+    </if>
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countAdminPosts" resultType="int">
+    SELECT COUNT(1) FROM posts
+    WHERE 1=1
+    <if test="keyword != null and keyword != ''">
+      AND content LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+    <if test="auditStatus != null and auditStatus != '' and auditStatus != 'all'">
+      AND audit_status = #{auditStatus}
+    </if>
+    <if test="status != null and status != '' and status != 'all'">
+      AND status = #{status}
+    </if>
+    <if test="userId != null">
+      AND user_id = #{userId}
+    </if>
+  </select>
+
+  <select id="getPostById" resultMap="PostMap">
+    SELECT * FROM posts WHERE id = #{postId} LIMIT 1
+  </select>
+
+  <update id="updatePostAuditStatus">
+    UPDATE posts SET audit_status = #{toStatus}
+    WHERE id = #{postId}
+    <if test="fromStatus != null and fromStatus != ''">
+      AND audit_status = #{fromStatus}
+    </if>
+  </update>
+
+  <!-- 管理端：评论分页查询 -->
+  <select id="listAdminComments" resultMap="CommentMap">
+    SELECT * FROM comments
+    WHERE 1=1
+    <if test="postId != null">AND post_id = #{postId}</if>
+    <if test="keyword != null and keyword != ''">AND content LIKE CONCAT('%', #{keyword}, '%')</if>
+    <if test="auditStatus != null and auditStatus != '' and auditStatus != 'all'">AND audit_status = #{auditStatus}</if>
+    <if test="status != null and status != '' and status != 'all'">AND status = #{status}</if>
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="countAdminComments" resultType="int">
+    SELECT COUNT(1) FROM comments
+    WHERE 1=1
+    <if test="postId != null">AND post_id = #{postId}</if>
+    <if test="keyword != null and keyword != ''">AND content LIKE CONCAT('%', #{keyword}, '%')</if>
+    <if test="auditStatus != null and auditStatus != '' and auditStatus != 'all'">AND audit_status = #{auditStatus}</if>
+    <if test="status != null and status != '' and status != 'all'">AND status = #{status}</if>
+  </select>
+  <update id="updateCommentAuditStatus">
+    UPDATE comments SET audit_status = #{toStatus}
+    WHERE id = #{commentId}
+    <if test="fromStatus != null and fromStatus != ''">
+      AND audit_status = #{fromStatus}
+    </if>
+  </update>
+
+  <!-- 管理端：举报分页查询与状态更新 -->
+  <select id="listAdminReports" resultType="map">
+    SELECT id, target_type, target_id, reporter_id, reason_code, text, status, created_at FROM reports
+    WHERE 1=1
+    <if test="targetType != null and targetType != '' and targetType != 'all'">AND target_type = #{targetType}</if>
+    <if test="status != null and status != '' and status != 'all'">AND status = #{status}</if>
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="countAdminReports" resultType="int">
+    SELECT COUNT(1) FROM reports
+    WHERE 1=1
+    <if test="targetType != null and targetType != '' and targetType != 'all'">AND target_type = #{targetType}</if>
+    <if test="status != null and status != '' and status != 'all'">AND status = #{status}</if>
+  </select>
+  <update id="updateReportStatus">
+    UPDATE reports SET status = #{toStatus} WHERE id = #{reportId}
+  </update>
+
   <update id="softDeletePost">
     UPDATE posts
     SET status = 'deleted'

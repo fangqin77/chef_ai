@@ -30,4 +30,7 @@ public interface RecipeMapper {
     
     // 获取所有菜谱（无限制）
     List<Recipe> selectAllRecipes();
+    
+    // 随机获取菜谱
+    List<Recipe> selectRandomRecipes(@Param("limit") Integer limit);
 }

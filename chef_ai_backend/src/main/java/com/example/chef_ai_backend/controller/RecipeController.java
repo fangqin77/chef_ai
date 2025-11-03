@@ -68,4 +68,10 @@ public class RecipeController {
             @RequestParam(required = false) Integer limit) {
         return recipeService.getRecipesByNewCategory(categoryId, limit);
     }
+    
+    // 随机获取菜谱
+    @GetMapping("/random")
+    public List<Recipe> getRandomRecipes(@RequestParam(required = false) Integer limit) {
+        return recipeService.getRandomRecipes(limit);
+    }
 }

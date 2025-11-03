@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chef_ai_backend.mapper.AdminUserMapper">
+  <resultMap id="AdminUserMap" type="com.example.chef_ai_backend.model.AdminUser">
+    <id property="id" column="id" />
+    <result property="username" column="username" />
+    <result property="passwordHash" column="password_hash" />
+    <result property="role" column="role" />
+    <result property="status" column="status" />
+  </resultMap>
+
+  <select id="selectByUsername" resultMap="AdminUserMap">
+    SELECT * FROM admin_users WHERE username = #{username} AND status = 1
+  </select>
+</mapper>

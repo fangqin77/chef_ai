@@ -4,6 +4,7 @@ import com.example.chef_ai_backend.model.Post;
 import com.example.chef_ai_backend.model.Comment;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
+import java.util.Map;
 
 public interface CommunityMapper {
 
@@ -23,7 +24,7 @@ public interface CommunityMapper {
 
     int countMyPosts(@Param("ownerId") Long ownerId);
 
-    // 帖子详情（若非作者，仅返回 approved+normal）
+    // 帖子详情（若非作者，仅返回 approved+normal；作者可见自己的任何状态）
     Post getPostForViewer(@Param("postId") Long postId,
                           @Param("viewerId") Long viewerId);
 
@@ -61,4 +62,45 @@ public interface CommunityMapper {
                      @Param("reporterId") Long reporterId,
                      @Param("reasonCode") String reasonCode,
                      @Param("text") String text);
+
+    // ===== 管理端（Admin） =====
+    List<Post> listAdminPosts(@Param("keyword") String keyword,
+                              @Param("auditStatus") String auditStatus,
+                              @Param("status") String status,
+                              @Param("userId") Long userId,
+                              @Param("offset") int offset,
+                              @Param("limit") int limit);
+    int countAdminPosts(@Param("keyword") String keyword,
+                        @Param("auditStatus") String auditStatus,
+                        @Param("status") String status,
+                        @Param("userId") Long userId);
+    Post getPostById(@Param("postId") Long postId);
+    int updatePostAuditStatus(@Param("postId") Long postId,
+                              @Param("fromStatus") String fromStatus,
+                              @Param("toStatus") String toStatus);
+
+    // 评论（Admin）
+    List<Comment> listAdminComments(@Param("postId") Long postId,
+                                    @Param("keyword") String keyword,
+                                    @Param("auditStatus") String auditStatus,
+                                    @Param("status") String status,
+                                    @Param("offset") int offset,
+                                    @Param("limit") int limit);
+    int countAdminComments(@Param("postId") Long postId,
+                           @Param("keyword") String keyword,
+                           @Param("auditStatus") String auditStatus,
+                           @Param("status") String status);
+    int updateCommentAuditStatus(@Param("commentId") Long commentId,
+                                 @Param("fromStatus") String fromStatus,
+                                 @Param("toStatus") String toStatus);
+
+    // 举报（Admin）
+    List<Map<String, Object>> listAdminReports(@Param("targetType") String targetType,
+                                              @Param("status") String status,
+                                              @Param("offset") int offset,
+                                              @Param("limit") int limit);
+    int countAdminReports(@Param("targetType") String targetType,
+                          @Param("status") String status);
+    int updateReportStatus(@Param("reportId") Long reportId,
+                           @Param("toStatus") String toStatus);
 }

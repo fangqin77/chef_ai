@@ -101,4 +101,11 @@
     SELECT * FROM recipes
     ORDER BY id DESC
   </select>
+  
+  <!-- 随机获取菜谱 -->
+  <select id="selectRandomRecipes" resultMap="RecipeMap">
+    SELECT * FROM recipes
+    ORDER BY RAND()
+    LIMIT #{limit}
+  </select>
 </mapper>

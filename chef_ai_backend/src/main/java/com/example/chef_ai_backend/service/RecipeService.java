@@ -66,4 +66,12 @@ public class RecipeService {
     public List<RecipeCategory> getAllCategories() {
         return recipeMapper.selectAllCategories();
     }
+    
+    // 随机获取菜谱
+    public List<Recipe> getRandomRecipes(Integer limit) {
+        if (limit == null) {
+            limit = 3; // 默认返回3个
+        }
+        return recipeMapper.selectRandomRecipes(limit);
+    }
 }
