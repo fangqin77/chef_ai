@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chef_ai_backend.mapper.CommunityMapper">
+
+  <resultMap id="PostMap" type="com.example.chef_ai_backend.model.Post">
+    <id property="id" column="id"/>
+    <result property="userId" column="user_id"/>
+    <result property="content" column="content"/>
+    <result property="mediaJson" column="media_json"/>
+    <result property="visibility" column="visibility"/>
+    <result property="status" column="status"/>
+    <result property="auditStatus" column="audit_status"/>
+    <result property="likeCount" column="like_count"/>
+    <result property="commentCount" column="comment_count"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+  </resultMap>
+
+  <resultMap id="CommentMap" type="com.example.chef_ai_backend.model.Comment">
+    <id property="id" column="id"/>
+    <result property="postId" column="post_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="parentId" column="parent_id"/>
+    <result property="content" column="content"/>
+    <result property="status" column="status"/>
+    <result property="auditStatus" column="audit_status"/>
+    <result property="likeCount" column="like_count"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+
+  <!-- 列表：仅展示审核通过且正常的帖子 -->
+  <select id="listApprovedPosts" resultMap="PostMap">
+    SELECT * FROM posts
+    WHERE audit_status = 'approved' AND status = 'normal'
+    <if test="keyword != null and keyword != ''">
+      AND content LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+    <if test="userId != null">
+      AND user_id = #{userId}
+    </if>
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countApprovedPosts" resultType="int">
+    SELECT COUNT(1) FROM posts
+    WHERE audit_status = 'approved' AND status = 'normal'
+    <if test="keyword != null and keyword != ''">
+      AND content LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+    <if test="userId != null">
+      AND user_id = #{userId}
+    </if>
+  </select>
+
+  <!-- 本人帖子（含待审/驳回） -->
+  <select id="listMyPosts" resultMap="PostMap">
+    SELECT * FROM posts
+    WHERE user_id = #{ownerId}
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="countMyPosts" resultType="int">
+    SELECT COUNT(1) FROM posts WHERE user_id = #{ownerId}
+  </select>
+
+  <!-- 详情：非作者只能看 approved+normal；作者可见自己的任何状态 -->
+  <select id="getPostForViewer" resultMap="PostMap">
+    SELECT p.* FROM posts p
+    WHERE p.id = #{postId}
+      AND (
+        p.user_id = #{viewerId}
+        OR (p.audit_status = 'approved' AND p.status = 'normal')
+      )
+    LIMIT 1
+  </select>
+
+  <insert id="insertPost" parameterType="com.example.chef_ai_backend.model.Post" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO posts (user_id, content, media_json, visibility, status, audit_status)
+    VALUES (#{userId}, #{content}, #{mediaJson}, #{visibility}, 'normal', 'pending')
+  </insert>
+
+  <update id="softDeletePost">
+    UPDATE posts
+    SET status = 'deleted'
+    WHERE id = #{postId} AND user_id = #{ownerId} AND status = 'normal'
+  </update>
+
+  <!-- 评论：仅展示通过+正常；parentId 为空查一级 -->
+  <select id="listApprovedComments" resultMap="CommentMap">
+    SELECT * FROM comments
+    WHERE post_id = #{postId}
+      AND audit_status = 'approved' AND status = 'normal'
+    <if test="parentId == null">
+      AND parent_id IS NULL
+    </if>
+    <if test="parentId != null">
+      AND parent_id = #{parentId}
+    </if>
+    ORDER BY id ASC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countApprovedComments" resultType="int">
+    SELECT COUNT(1) FROM comments
+    WHERE post_id = #{postId}
+      AND audit_status = 'approved' AND status = 'normal'
+    <if test="parentId == null">
+      AND parent_id IS NULL
+    </if>
+    <if test="parentId != null">
+      AND parent_id = #{parentId}
+    </if>
+  </select>
+
+  <insert id="insertComment" parameterType="com.example.chef_ai_backend.model.Comment" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO comments (post_id, user_id, parent_id, content, status, audit_status)
+    VALUES (#{postId}, #{userId}, #{parentId}, #{content}, 'normal', 'pending')
+  </insert>
+
+  <update id="softDeleteComment">
+    UPDATE comments
+    SET status = 'deleted'
+    WHERE id = #{commentId} AND user_id = #{ownerId} AND status = 'normal'
+  </update>
+
+  <!-- 点赞/收藏：幂等（唯一索引） -->
+  <insert id="insertPostLike">
+    INSERT IGNORE INTO post_likes (post_id, user_id) VALUES (#{postId}, #{userId})
+  </insert>
+  <delete id="deletePostLike">
+    DELETE FROM post_likes WHERE post_id = #{postId} AND user_id = #{userId}
+  </delete>
+  <insert id="insertFavorite">
+    INSERT IGNORE INTO favorites (post_id, user_id) VALUES (#{postId}, #{userId})
+  </insert>
+  <delete id="deleteFavorite">
+    DELETE FROM favorites WHERE post_id = #{postId} AND user_id = #{userId}
+  </delete>
+
+  <!-- 计数：按增量更新 -->
+  <update id="incrPostLikeCount">
+    UPDATE posts SET like_count = like_count + #{delta} WHERE id = #{postId}
+  </update>
+  <update id="incrPostCommentCount">
+    UPDATE posts SET comment_count = comment_count + #{delta} WHERE id = #{postId}
+  </update>
+
+  <!-- 举报 -->
+  <insert id="insertReport">
+    INSERT INTO reports (target_type, target_id, reporter_id, reason_code, text, status)
+    VALUES (#{targetType}, #{targetId}, #{reporterId}, #{reasonCode}, #{text}, 'pending')
+  </insert>
+</mapper>
