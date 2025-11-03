@@ -2,11 +2,11 @@ package com.example.chef_ai_backend.controller;
 
 import com.example.chef_ai_backend.service.LoginService;
 import com.example.chef_ai_backend.util.TokenUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,14 +39,22 @@ public class LoginController {
     
     /**
      * 退出登录：注销 Token
-     * @param token 请求头中的 Token
+     * @param request HTTP请求对象
      * @return 退出结果
      */
     @PostMapping("/logout")
-    public Map<String, Object> logout(@RequestHeader("Token") String token) {
-        tokenUtil.invalidateToken(token);
-        // 构造返回结果
-        Map<String, Object> result = Map.of("success", true, "msg", "退出登录成功");
-        return result;
+    public Map<String, Object> logout(HttpServletRequest request) {
+        try {
+            // 从请求头获取 Token
+            String token = request.getHeader("Token");
+            if (token != null && !token.isEmpty()) {
+                tokenUtil.invalidateToken(token);
+            }
+            // 清除 Session（如果使用 Session 认证）
+            request.getSession().invalidate();
+            return Map.of("success", true, "msg", "退出登录成功", "code", 200);
+        } catch (Exception e) {
+            return Map.of("success", false, "msg", "退出登录失败：" + e.getMessage(), "code", 500);
+        }
     }
 }
