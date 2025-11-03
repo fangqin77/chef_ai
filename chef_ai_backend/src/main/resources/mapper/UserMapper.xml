@@ -41,4 +41,29 @@
     INSERT INTO `userss` (openid, session_key, nickname, avatar_url, created_at, updated_at)
     VALUES (#{openid}, #{sessionKey}, #{nickname}, #{avatarUrl}, #{createdAt}, #{updatedAt})
   </insert>
+  
+  <!-- 根据ID查询 -->
+  <select id="selectById" parameterType="long" resultMap="UserMap">
+    SELECT * FROM `userss` WHERE id = #{id}
+  </select>
+
+  <!-- 动态选择性更新（只更新非空字段） -->
+  <update id="updateSelective" parameterType="com.example.chef_ai_backend.model.User">
+    UPDATE `userss`
+    <set>
+      <if test="nickname != null">nickname = #{nickname},</if>
+      <if test="sessionKey != null">session_key = #{sessionKey},</if>
+      <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+      <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+      <!-- 如有 phone/province/city 等列，可继续加 -->
+    </set>
+    WHERE id = #{id}
+  </update>
+
+  <!-- 单独更新头像 -->
+  <update id="updateAvatar" parameterType="com.example.chef_ai_backend.model.User">
+    UPDATE `userss`
+    SET avatar_url = #{avatarUrl}, updated_at = NOW()
+    WHERE id = #{id}
+  </update>
 </mapper>

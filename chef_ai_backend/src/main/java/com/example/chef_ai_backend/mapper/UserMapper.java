@@ -10,4 +10,10 @@ public interface UserMapper {
     User selectByOpenid(String openid);
     void updateById(User user);
     void insert(User user);
+    
+    User selectById(@Param("id") Long id);
+
+    int updateSelective(User user);
+
+    int updateAvatar(User user);
 }

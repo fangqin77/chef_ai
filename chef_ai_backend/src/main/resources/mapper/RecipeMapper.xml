@@ -12,7 +12,6 @@
     <result property="condiments" column="condiments"/>
     <result property="ingredients" column="ingredients"/>
     <result property="feature" column="feature"/>
-    <result property="cookTime" column="cookTime"/>
   </resultMap>
 
   <!-- 分类结果集映射 -->
@@ -61,6 +60,20 @@
     </if>
     <if test="limit == null">
       ORDER BY id DESC
+    </if>
+  </select>
+
+  <!-- 根据新分类ID查询菜谱 -->
+  <select id="selectByNewCategoryId" resultMap="RecipeMap">
+    SELECT r.* 
+    FROM recipes r
+    JOIN recipe_category_relation rcr ON r.id = rcr.recipe_id
+    WHERE rcr.category_id = #{categoryId}
+    <if test="limit != null">
+      ORDER BY r.id DESC LIMIT #{limit}
+    </if>
+    <if test="limit == null">
+      ORDER BY r.id DESC
     </if>
   </select>
 

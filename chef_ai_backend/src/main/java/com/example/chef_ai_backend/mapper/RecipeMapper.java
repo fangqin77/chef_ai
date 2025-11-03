@@ -16,6 +16,9 @@ public interface RecipeMapper {
     // 根据分类ID获取菜谱
     List<Recipe> selectByCategoryId(@Param("categoryId") Integer categoryId, @Param("limit") Integer limit);
     
+    // 根据新分类ID获取菜谱
+    List<Recipe> selectByNewCategoryId(@Param("categoryId") Integer categoryId, @Param("limit") Integer limit);
+    
     // 搜索菜谱（模糊匹配名称、原料、做法）
     List<Recipe> searchRecipes(@Param("keyword") String keyword);
     

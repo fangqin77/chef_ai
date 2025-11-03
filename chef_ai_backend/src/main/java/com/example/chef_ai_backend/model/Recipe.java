@@ -8,7 +8,6 @@ public class Recipe {
     private String condiments;
     private String ingredients;
     private String feature;
-    private Integer cookTime;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -30,7 +29,4 @@ public class Recipe {
 
     public String getFeature() { return feature; }
     public void setFeature(String feature) { this.feature = feature; }
-
-    public Integer getCookTime() { return cookTime; }
-    public void setCookTime(Integer cookTime) { this.cookTime = cookTime; }
 }

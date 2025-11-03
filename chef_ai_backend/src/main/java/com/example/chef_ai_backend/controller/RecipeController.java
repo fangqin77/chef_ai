@@ -60,4 +60,12 @@ public class RecipeController {
                                     @RequestParam(required = false) Integer limit) {
         return recipeService.getRecipesByCategory(categoryId, limit);
     }
+    
+    // 根据新分类体系获取菜谱（兼容新分类）
+    @GetMapping("/by-category")
+    public List<Recipe> getRecipesByNewCategory(
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Integer limit) {
+        return recipeService.getRecipesByNewCategory(categoryId, limit);
+    }
 }

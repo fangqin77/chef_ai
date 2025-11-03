@@ -22,15 +22,14 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `recipes`;
 CREATE TABLE `recipes`  (
-  `id` int NOT NULL COMMENT '菜谱ID（对应实体类id）',
-  `type_id` int NULL DEFAULT NULL COMMENT '菜谱类型号（对应实体类typeId）',
+  `id` int NOT NULL COMMENT '菜谱ID（对应实体类id）',  `category_id` int NULL DEFAULT NULL COMMENT '菜谱分类ID（对应实体类categoryId，关联recipe_categories.category_id）',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '菜谱名称（对应实体类name）',
   `method` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '做法（对应实体类method）',
   `condiments` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '调料（对应实体类condiments）',
   `ingredients` int NULL DEFAULT NULL COMMENT '难度等级（对应实体类ingredients，1-简单，2-中等，3-困难）',
   `feature` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '图片URL（对应实体类feature）',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_type_id`(`type_id` ASC) USING BTREE COMMENT '类型号索引，优化分类查询'
+  INDEX `idx_category_id`(`category_id` ASC) USING BTREE COMMENT '分类ID索引，优化分类查询'
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '菜谱表（与Recipe实体类对齐）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------

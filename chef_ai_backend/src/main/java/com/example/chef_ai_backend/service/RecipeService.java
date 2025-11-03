@@ -36,6 +36,22 @@ public class RecipeService {
         return recipeMapper.selectByCategoryId(categoryId, limit);
     }
 
+    // 根据新分类体系获取菜谱
+    public List<Recipe> getRecipesByNewCategory(Integer categoryId, Integer limit) {
+        // 如果limit为null，表示不设限制，返回所有匹配的菜谱
+        if (categoryId == null) {
+            if (limit == null) {
+                return recipeMapper.selectAllRecipes();
+            }
+            return recipeMapper.selectHotRecipes(limit);
+        }
+        
+        if (limit == null) {
+            return recipeMapper.selectByNewCategoryId(categoryId, null);
+        }
+        return recipeMapper.selectByNewCategoryId(categoryId, limit);
+    }
+
     // 搜索菜谱
     public List<Recipe> searchRecipes(String keyword) {
         return recipeMapper.searchRecipes(keyword);
