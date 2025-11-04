@@ -115,9 +115,13 @@
 
   <!-- 管理端：联表分类名称视图（Map） -->
   <select id="adminListRecipesView" resultType="map">
-    SELECT r.*, c.category_name
+    SELECT r.*, COALESCE(c.category_name, c2.category_name) AS category_name
     FROM recipes r
-    LEFT JOIN recipe_categories c ON c.category_id = r.type_id
+    /* 方案A：分类表的 category_id 直接等于菜谱 id */
+    LEFT JOIN recipe_categories c ON c.category_id = r.id
+    /* 方案B：使用关系表 recipe_category_relation 关联分类 */
+    LEFT JOIN recipe_category_relation rcr ON rcr.recipe_id = r.id
+    LEFT JOIN recipe_categories c2 ON c2.category_id = rcr.category_id
     WHERE 1=1
     <if test="keyword != null and keyword != ''">
       AND (r.name LIKE CONCAT('%', #{keyword}, '%') OR r.feature LIKE CONCAT('%', #{keyword}, '%'))

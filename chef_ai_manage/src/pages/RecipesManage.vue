@@ -9,7 +9,8 @@
     <a-table :data-source="list" :columns="columns" :pagination="pagination" row-key="id" @change="onTableChange" bordered size="small" :scroll="{ x: 1000 }">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key==='type_id'">
-          <span>{{ record.category_name || categoryLabel(record.type_id) }}</span>
+          <!-- 当 type_id 为空时，使用当前菜谱 id 去联表得到的 category_name 展示 -->
+          <span>{{ record.category_name || categoryLabel(record.id) || categoryLabel(record.type_id) }}</span>
         </template>
         <template v-else-if="column.key==='image'">
           <a-image :src="record.feature" :width="64" :height="40" :preview="{ src: record.feature }" fallback="https://via.placeholder.com/64x40?text=img" />
