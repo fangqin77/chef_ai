@@ -101,6 +101,28 @@
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
+  <!-- 管理端帖子视图：联表用户昵称（Map） -->
+  <select id="listAdminPostsView" resultType="map">
+    SELECT p.*, u.nickname AS user_nickname
+    FROM posts p
+    LEFT JOIN userss u ON u.id = p.user_id
+    WHERE 1=1
+    <if test="keyword != null and keyword != ''">
+      AND p.content LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+    <if test="auditStatus != null and auditStatus != '' and auditStatus != 'all'">
+      AND p.audit_status = #{auditStatus}
+    </if>
+    <if test="status != null and status != '' and status != 'all'">
+      AND p.status = #{status}
+    </if>
+    <if test="userId != null">
+      AND p.user_id = #{userId}
+    </if>
+    ORDER BY p.id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
   <select id="countAdminPosts" resultType="int">
     SELECT COUNT(1) FROM posts
     WHERE 1=1

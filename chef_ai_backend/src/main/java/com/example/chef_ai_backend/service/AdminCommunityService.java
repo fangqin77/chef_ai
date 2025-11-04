@@ -20,15 +20,58 @@ public class AdminCommunityService {
     private AuditLogMapper auditLogMapper;
 
     public Map<String, Object> listPosts(String keyword, String auditStatus, String status, Long userId, int page, int pageSize) {
-        int offset = (Math.max(page, 1) - 1) * Math.max(pageSize, 1);
-        java.util.List<java.util.Map<String, Object>> list = communityMapper.listAdminPostsView(keyword, auditStatus, status, userId, offset, pageSize);
-        int total = communityMapper.countAdminPosts(keyword, auditStatus, status, userId);
+        // 规范化参数，避免非法取值触发 400
+        String normalizedAudit = normalizeAuditStatus(auditStatus);
+        String normalizedStatus = normalizeContentStatus(status);
+        int safePageSize = Math.max(pageSize, 1);
+        int offset = (Math.max(page, 1) - 1) * safePageSize;
+
+        java.util.List<java.util.Map<String, Object>> list = communityMapper.listAdminPostsView(
+                keyword,
+                normalizedAudit,
+                normalizedStatus,
+                userId,
+                offset,
+                safePageSize
+        );
+        int total = communityMapper.countAdminPosts(keyword, normalizedAudit, normalizedStatus, userId);
         Map<String, Object> data = new HashMap<>();
         data.put("list", list);
         data.put("total", total);
         data.put("page", page);
-        data.put("pageSize", pageSize);
+        data.put("pageSize", safePageSize);
         return Map.of("success", true, "data", data);
+    }
+
+    private String normalizeAuditStatus(String s) {
+        if (s == null || s.isBlank() || "all".equalsIgnoreCase(s)) return null;
+        switch (s.toLowerCase()) {
+            case "pending":
+            case "approved":
+            case "rejected":
+                return s.toLowerCase();
+            case "0":
+            case "unreviewed":
+                return "pending";
+            case "1":
+                return "approved";
+            case "2":
+                return "rejected";
+            default:
+                return null; // 不识别则忽略筛选
+        }
+    }
+
+    private String normalizeContentStatus(String s) {
+        if (s == null || s.isBlank() || "all".equalsIgnoreCase(s)) return null;
+        switch (s.toLowerCase()) {
+            case "normal":
+            case "shadow":
+            case "deleted":
+                return s.toLowerCase();
+            default:
+                return null;
+        }
     }
 
     public Map<String, Object> getPost(Long id) {

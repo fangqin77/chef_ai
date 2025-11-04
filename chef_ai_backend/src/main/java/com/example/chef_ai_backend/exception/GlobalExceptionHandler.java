@@ -21,11 +21,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST) // 返回 400 状态码（而非 500）
     public Map<String, Object> handleRuntimeException(RuntimeException e) {
-        log.error("业务异常：", e);
+        log.error("业务异常：{}", e.getMessage(), e);
         Map<String, Object> result = new HashMap<>();
         result.put("success", false);
-        result.put("code", 400); // 自定义业务错误码
-        result.put("msg", e.getMessage()); // 返回具体错误信息（如"微信 code 已过期"）
+        result.put("code", 400);
+        result.put("message", e.getMessage());
         result.put("data", null);
         return result;
     }
