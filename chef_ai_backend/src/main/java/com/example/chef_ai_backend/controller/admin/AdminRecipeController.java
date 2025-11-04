@@ -22,14 +22,28 @@ public class AdminRecipeController {
     }
 
     @PostMapping
-    public Map<String, Object> create(@RequestBody Recipe recipe) {
-        return adminRecipeService.create(recipe);
+    public Map<String, Object> create(@RequestBody Map<String, Object> body) {
+        Recipe recipe = new Recipe();
+        recipe.setName((String) body.get("name"));
+        recipe.setFeature((String) body.get("feature"));
+        recipe.setIngredients((String) body.get("ingredients"));
+        recipe.setCondiments((String) body.get("condiments"));
+        recipe.setMethod((String) body.get("method"));
+        java.util.List<Integer> categoryIds = (java.util.List<Integer>) body.get("categoryIds");
+        return adminRecipeService.create(recipe, categoryIds);
     }
 
     @PutMapping("/{id}")
-    public Map<String, Object> update(@PathVariable Integer id, @RequestBody Recipe recipe) {
+    public Map<String, Object> update(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+        Recipe recipe = new Recipe();
         recipe.setId(id);
-        return adminRecipeService.update(recipe);
+        recipe.setName((String) body.get("name"));
+        recipe.setFeature((String) body.get("feature"));
+        recipe.setIngredients((String) body.get("ingredients"));
+        recipe.setCondiments((String) body.get("condiments"));
+        recipe.setMethod((String) body.get("method"));
+        java.util.List<Integer> categoryIds = (java.util.List<Integer>) body.get("categoryIds");
+        return adminRecipeService.updateWithCategories(recipe, categoryIds);
     }
 
     @DeleteMapping("/{id}")

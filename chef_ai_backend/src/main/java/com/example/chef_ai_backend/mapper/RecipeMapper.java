@@ -49,4 +49,8 @@ public interface RecipeMapper {
     int insertRecipe(Recipe recipe);
     int updateRecipe(Recipe recipe);
     int deleteRecipe(@Param("id") Integer id);
+
+    // ===== 关系维护（多分类） =====
+    int deleteRecipeCategoryRelations(@Param("recipeId") Integer recipeId);
+    int insertRecipeCategoryRelation(@Param("recipeId") Integer recipeId, @Param("categoryId") Integer categoryId);
 }

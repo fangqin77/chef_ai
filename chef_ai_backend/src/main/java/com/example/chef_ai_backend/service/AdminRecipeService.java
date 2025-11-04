@@ -31,6 +31,17 @@ public class AdminRecipeService {
         return Map.of("success", true, "data", recipe);
     }
 
+    // 新增：支持多分类
+    public Map<String, Object> create(Recipe recipe, java.util.List<Integer> categoryIds) {
+        recipeMapper.insertRecipe(recipe);
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            for (Integer cid : categoryIds) {
+                if (cid != null) recipeMapper.insertRecipeCategoryRelation(recipe.getId(), cid);
+            }
+        }
+        return Map.of("success", true, "data", recipe);
+    }
+
     public Map<String, Object> listCategories() {
         return Map.of("success", true, "data", recipeMapper.selectAllCategories());
     }
@@ -41,7 +52,21 @@ public class AdminRecipeService {
         return Map.of("success", true);
     }
 
+    // 新增：更新时重建多分类关系
+    public Map<String, Object> updateWithCategories(Recipe recipe, java.util.List<Integer> categoryIds) {
+        if (recipe.getId() == null) return Map.of("success", false, "message", "缺少ID");
+        recipeMapper.updateRecipe(recipe);
+        recipeMapper.deleteRecipeCategoryRelations(recipe.getId());
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            for (Integer cid : categoryIds) {
+                if (cid != null) recipeMapper.insertRecipeCategoryRelation(recipe.getId(), cid);
+            }
+        }
+        return Map.of("success", true);
+    }
+
     public Map<String, Object> delete(Integer id) {
+        recipeMapper.deleteRecipeCategoryRelations(id);
         recipeMapper.deleteRecipe(id);
         return Map.of("success", true);
     }

@@ -9,7 +9,7 @@
     <a-table :data-source="list" :columns="columns" :pagination="pagination" row-key="id" @change="onTableChange" bordered size="small" :scroll="{ x: 1000 }">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key==='type_id'">
-          <!-- 当 type_id 为空时，使用当前菜谱 id 去联表得到的 category_name 展示 -->
+          <!-- 分类可能为多选：后端返回已合并的 category_name（例如“汤类、川菜”） -->
           <span>{{ record.category_name || categoryLabel(record.id) || categoryLabel(record.type_id) }}</span>
         </template>
         <template v-else-if="column.key==='image'">
@@ -35,8 +35,8 @@
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="分类 (type_id)">
-              <a-select v-model:value="editForm.typeId" :options="categoryOptions" placeholder="选择分类" allow-clear />
+            <a-form-item label="分类（可多选）">
+              <a-select v-model:value="editForm.categoryIds" :options="categoryOptions" placeholder="选择分类" mode="multiple" allow-clear />
             </a-form-item>
           </a-col>
           <a-col :span="12">
@@ -97,7 +97,7 @@ function onTableChange(pag: any) {
 }
 
 const editOpen = ref(false);
-const editForm = reactive<any>({ id: null, name: '', typeId: undefined, feature: '', ingredients: '', condiments: '', method: '' });
+const editForm = reactive<any>({ id: null, name: '', categoryIds: [], typeId: undefined, feature: '', ingredients: '', condiments: '', method: '' });
 const categoryOptions = ref<any[]>([]);
 const categoryMap = ref<Record<string, string>>({});
 function categoryLabel(id?: any) {
@@ -107,7 +107,10 @@ function categoryLabel(id?: any) {
 }
 
 function openEdit(row?: any) {
-  if (row) Object.assign(editForm, { id: row.id, name: row.name, typeId: row.type_id ?? row.typeId, feature: row.feature, ingredients: row.ingredients, condiments: row.condiments, method: row.method });
+  if (row) {
+    const ids = (row.category_ids ? String(row.category_ids).split(',').map((s:string)=> Number(s)).filter((n:number)=> !isNaN(n)) : []);
+    Object.assign(editForm, { id: row.id, name: row.name, categoryIds: ids, typeId: row.type_id ?? row.typeId, feature: row.feature, ingredients: row.ingredients, condiments: row.condiments, method: row.method });
+  }
   else Object.assign(editForm, { id: null, name: '', typeId: undefined, feature: '', ingredients: '', condiments: '', method: '' });
   editOpen.value = true;
 }
@@ -116,12 +119,12 @@ async function save() {
   try {
     if (!editForm.name) return message.warning('请输入菜名');
     if (editForm.id) {
-      const payload = { id: editForm.id, name: editForm.name, typeId: editForm.typeId, feature: editForm.feature, ingredients: editForm.ingredients, condiments: editForm.condiments, method: editForm.method };
+      const payload = { id: editForm.id, name: editForm.name, categoryIds: editForm.categoryIds, feature: editForm.feature, ingredients: editForm.ingredients, condiments: editForm.condiments, method: editForm.method };
       const { data } = await updateRecipe(editForm.id, payload);
       if (!data?.success) throw new Error(data?.message || '更新失败');
       message.success('更新成功');
     } else {
-      const payload = { name: editForm.name, typeId: editForm.typeId, feature: editForm.feature, ingredients: editForm.ingredients, condiments: editForm.condiments, method: editForm.method };
+      const payload = { name: editForm.name, categoryIds: editForm.categoryIds, feature: editForm.feature, ingredients: editForm.ingredients, condiments: editForm.condiments, method: editForm.method };
       const { data } = await createRecipe(payload);
       if (!data?.success) throw new Error(data?.message || '新增失败');
       message.success('新增成功');

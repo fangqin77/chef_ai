@@ -115,17 +115,20 @@
 
   <!-- 管理端：联表分类名称视图（Map） -->
   <select id="adminListRecipesView" resultType="map">
-    SELECT r.*, COALESCE(c.category_name, c2.category_name) AS category_name
+    SELECT r.*, 
+           /* 如果存在一对一分类则直接用之，否则合并多分类名称 */
+           COALESCE(c.category_name, GROUP_CONCAT(DISTINCT c2.category_name ORDER BY c2.category_name SEPARATOR '、')) AS category_name,
+           /* 供前端编辑回填用：以逗号字符串返回 category_id 集合 */
+           GROUP_CONCAT(DISTINCT rcr.category_id ORDER BY rcr.category_id) AS category_ids
     FROM recipes r
-    /* 方案A：分类表的 category_id 直接等于菜谱 id */
     LEFT JOIN recipe_categories c ON c.category_id = r.id
-    /* 方案B：使用关系表 recipe_category_relation 关联分类 */
     LEFT JOIN recipe_category_relation rcr ON rcr.recipe_id = r.id
     LEFT JOIN recipe_categories c2 ON c2.category_id = rcr.category_id
     WHERE 1=1
     <if test="keyword != null and keyword != ''">
       AND (r.name LIKE CONCAT('%', #{keyword}, '%') OR r.feature LIKE CONCAT('%', #{keyword}, '%'))
     </if>
+    GROUP BY r.id
     ORDER BY r.id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
@@ -159,6 +162,15 @@
   <delete id="deleteRecipe">
     DELETE FROM recipes WHERE id = #{id}
   </delete>
+
+  <!-- 多分类关系维护 -->
+  <delete id="deleteRecipeCategoryRelations">
+    DELETE FROM recipe_category_relation WHERE recipe_id = #{recipeId}
+  </delete>
+  <insert id="insertRecipeCategoryRelation">
+    INSERT INTO recipe_category_relation (recipe_id, category_id)
+    VALUES (#{recipeId}, #{categoryId})
+  </insert>
 
   <!-- 随机获取菜谱 -->
   <select id="selectRandomRecipes" resultMap="RecipeMap">
