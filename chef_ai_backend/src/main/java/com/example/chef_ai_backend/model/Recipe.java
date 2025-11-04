@@ -6,7 +6,7 @@ public class Recipe {
     private String name;
     private String method;
     private String condiments;
-    private String ingredients;
+    private Integer ingredients;
     private String feature;
 
     public Integer getId() { return id; }
@@ -24,8 +24,8 @@ public class Recipe {
     public String getCondiments() { return condiments; }
     public void setCondiments(String condiments) { this.condiments = condiments; }
 
-    public String getIngredients() { return ingredients; }
-    public void setIngredients(String ingredients) { this.ingredients = ingredients; }
+    public Integer getIngredients() { return ingredients; }
+    public void setIngredients(Integer ingredients) { this.ingredients = ingredients; }
 
     public String getFeature() { return feature; }
     public void setFeature(String feature) { this.feature = feature; }

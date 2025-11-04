@@ -18,6 +18,7 @@
         <template v-else-if="column.key==='actions'">
           <a-space>
             <a-button size="small" @click="openEdit(record)">编辑</a-button>
+            <a-button size="small" @click="doFavorite(record)">收藏</a-button>
             <a-popconfirm title="确认删除该菜谱？" @confirm="remove(record.id)">
               <a-button size="small" danger>删除</a-button>
             </a-popconfirm>
@@ -50,13 +51,13 @@
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="食材 (ingredients)">
-              <a-textarea v-model:value="editForm.ingredients" :rows="3" />
+            <a-form-item label="原料+调料 (condiments)">
+              <a-textarea v-model:value="editForm.condiments" :rows="3" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="调料 (condiments)">
-              <a-textarea v-model:value="editForm.condiments" :rows="3" />
+            <a-form-item label="难度分级">
+              <a-select v-model:value="editForm.ingredients" :options="[{label:'简单',value:1},{label:'适中',value:2},{label:'困难',value:3}]" />
             </a-form-item>
           </a-col>
           <a-col :span="24">
@@ -73,7 +74,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
-import { fetchRecipes, createRecipe, updateRecipe, deleteRecipe, fetchRecipeCategories } from '../services/adminApi';
+import { fetchRecipes, createRecipe, updateRecipe, deleteRecipe, fetchRecipeCategories, favoriteRecipe } from '../services/adminApi';
 
 const list = ref<any[]>([]);
 const total = ref(0);
@@ -97,7 +98,7 @@ function onTableChange(pag: any) {
 }
 
 const editOpen = ref(false);
-const editForm = reactive<any>({ id: null, name: '', categoryIds: [], typeId: undefined, feature: '', ingredients: '', condiments: '', method: '' });
+const editForm = reactive<any>({ id: null, name: '', categoryIds: [], typeId: undefined, feature: '', ingredients: 2, condiments: '', method: '' });
 const categoryOptions = ref<any[]>([]);
 const categoryMap = ref<Record<string, string>>({});
 function categoryLabel(id?: any) {
@@ -109,7 +110,7 @@ function categoryLabel(id?: any) {
 function openEdit(row?: any) {
   if (row) {
     const ids = (row.category_ids ? String(row.category_ids).split(',').map((s:string)=> Number(s)).filter((n:number)=> !isNaN(n)) : []);
-    Object.assign(editForm, { id: row.id, name: row.name, categoryIds: ids, typeId: row.type_id ?? row.typeId, feature: row.feature, ingredients: row.ingredients, condiments: row.condiments, method: row.method });
+    Object.assign(editForm, { id: row.id, name: row.name, categoryIds: ids, typeId: row.type_id ?? row.typeId, feature: row.feature, ingredients: Number(row.ingredients) || 2, condiments: row.condiments, method: row.method });
   }
   else Object.assign(editForm, { id: null, name: '', typeId: undefined, feature: '', ingredients: '', condiments: '', method: '' });
   editOpen.value = true;
@@ -133,6 +134,16 @@ async function save() {
     loadData();
   } catch (e:any) {
     message.error(e?.response?.data?.message || e?.message || '保存异常');
+  }
+}
+
+async function doFavorite(row:any){
+  try{
+    const { data } = await favoriteRecipe(row.id);
+    if(!data?.success) throw new Error(data?.message || '收藏失败');
+    message.success('已收藏');
+  }catch(e:any){
+    message.error(e?.response?.data?.message || e?.message || '收藏异常');
   }
 }
 

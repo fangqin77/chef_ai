@@ -11,7 +11,7 @@
  Target Server Version : 80028 (8.0.28)
  File Encoding         : 65001
 
- Date: 01/11/2025 20:25:16
+ Date: 04/11/2025 10:16:12
 */
 
 SET NAMES utf8mb4;
@@ -22,15 +22,16 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `recipes`;
 CREATE TABLE `recipes`  (
-  `id` int NOT NULL COMMENT '菜谱ID（对应实体类id）',  `category_id` int NULL DEFAULT NULL COMMENT '菜谱分类ID（对应实体类categoryId，关联recipe_categories.category_id）',
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '菜谱名称（对应实体类name）',
-  `method` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '做法（对应实体类method）',
-  `condiments` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '调料（对应实体类condiments）',
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type_id` int NULL DEFAULT NULL COMMENT '菜谱类型号（对应实体类typeId）',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `method` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+  `condiments` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
   `ingredients` int NULL DEFAULT NULL COMMENT '难度等级（对应实体类ingredients，1-简单，2-中等，3-困难）',
-  `feature` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '图片URL（对应实体类feature）',
+  `feature` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_category_id`(`category_id` ASC) USING BTREE COMMENT '分类ID索引，优化分类查询'
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '菜谱表（与Recipe实体类对齐）' ROW_FORMAT = DYNAMIC;
+  INDEX `idx_type_id`(`type_id` ASC) USING BTREE COMMENT '类型号索引，优化分类查询'
+) ENGINE = InnoDB AUTO_INCREMENT = 1007 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜谱表（与Recipe实体类对齐）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of recipes
@@ -67,7 +68,7 @@ INSERT INTO `recipes` VALUES (999, NULL, '宫保鸡丁', '1.鸡胸肉切丁，�
 INSERT INTO `recipes` VALUES (1000, NULL, '红烧排骨', '1.排骨冷水下锅，加料酒、姜片焯水，捞出沥干；2.热锅冷油，放冰糖炒至枣红色，放入排骨翻炒上色；3.加姜片、八角、酱油翻炒均匀，加足量热水没过排骨；4.大火烧开后转小火焖煮40分钟，加盐调味，大火收汁出锅', '排骨、冰糖、姜片、八角、酱油、盐、料酒', 1, 'https://ts3.tc.mm.bing.net/th/id/OIP-C.cEouZ3_mCDwmef_G4sxLQAAAAA?rs=1&pid=ImgDetMain&o=7&rm=3');
 INSERT INTO `recipes` VALUES (1001, NULL, '丝瓜毛豆', '1.丝瓜去皮切滚刀块；毛豆洗净备用；2.热锅冷油，下蒜末炒香，放入毛豆翻炒至变色；3.放入丝瓜块，加盐翻炒至丝瓜变软，撒葱花出锅', '丝瓜、毛豆、蒜末、盐、葱花', 2, 'https://pic1.zhimg.com/v2-ac396d050efab79fdda92caf6194525c_r.jpg');
 INSERT INTO `recipes` VALUES (1002, NULL, '皮蛋豆腐', '1.嫩豆腐切厚片，摆入盘中；皮蛋切丁，摆放在豆腐上；2.调汁：生抽、醋、香油混合，浇在豆腐皮蛋上；3.撒香菜碎、蒜末即可', '嫩豆腐、皮蛋、香菜、生抽、醋、香油、蒜末', 3, 'https://ts1.tc.mm.bing.net/th/id/R-C.126c71d382fa1df60c68d1908a979a54?rik=aEYsdRq1HTUxHA&riu=http%3a%2f%2fi3.meishichina.com%2fattachment%2frecipe%2f2017%2f03%2f08%2f2017030814889771636208607065.jpg%40!p800&ehk=So%2fdtk%2bWWCzyLQ82IGutL35DbJxxSJrTES8MfDUpuxY%3d&risl=&pid=ImgRaw&r=0');
-INSERT INTO `recipes` VALUES (1003, NULL, '葱油饼', '1.面粉加温水揉成光滑面团，醒发30分钟；2.面团搓条下剂，擀成薄圆饼，抹上葱油（葱花+盐+食用油）；3.从一边卷起成长条，再盘成圆饼，擀成薄饼；4.平底锅刷油，放入葱油饼，小火煎至两面金黄酥脆', '面粉、葱花、盐、食用油、温水', 1, 'https://y.zdmimg.com/202012/22/5fe19d0420c2b8315.jpg');
+INSERT INTO `recipes` VALUES (1003, NULL, '葱油饼', '1.面粉加温水揉成光滑面团，醒发30分钟；2.面团搓条下剂，擀成薄圆饼，抹上葱油（葱花+盐+食用油）；3.从一边卷起成长条，再盘成圆饼，擀成薄饼；4.平底锅刷油，放入葱油饼，小火煎至两面金黄酥脆', '面粉、葱花、盐、食用油、温水', 1, 'https://imgs.699pic.com/images/600/700/253.jpg!list1x.v2');
 INSERT INTO `recipes` VALUES (1004, NULL, '冬瓜丸子汤', '1.猪肉馅加姜末、盐、香油朝一个方向搅拌上劲；2.冬瓜去皮切片；3.锅中加水烧开，转小火，用手将肉馅挤成丸子，逐个放入锅中；4.丸子全部浮起后，放入冬瓜片，加盐调味，煮至冬瓜熟透，撒葱花出锅', '猪肉馅、冬瓜、姜末、盐、香油、葱花', 2, 'https://ts1.tc.mm.bing.net/th/id/OIP-C.geUaNFYDqmpONwkqF7RKLAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3');
 INSERT INTO `recipes` VALUES (1005, NULL, '糯米糍', '1.糯米提前浸泡4小时，沥干后蒸熟，趁热加少许白糖拌匀，捣成糯米团；2.豆沙馅搓成小球；3.取糯米团按扁，包入豆沙馅，搓圆；4.放入椰蓉中滚一圈，均匀裹上椰蓉即可', '糯米、豆沙馅、椰蓉、白糖', 3, 'https://ts4.tc.mm.bing.net/th/id/OIP-C.j_yTdvtK_U86YbBy97wgyQHaF7?rs=1&pid=ImgDetMain&o=7&rm=3');
 

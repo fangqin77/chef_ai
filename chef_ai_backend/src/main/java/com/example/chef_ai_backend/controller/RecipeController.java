@@ -4,6 +4,7 @@ import com.example.chef_ai_backend.model.Recipe;
 import com.example.chef_ai_backend.model.RecipeType;
 import com.example.chef_ai_backend.model.RecipeCategory;
 import com.example.chef_ai_backend.service.RecipeService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,11 +55,24 @@ public class RecipeController {
         return recipeService.getRecipeById(id);
     }
     
+    // 根据ID获取菜谱详情（带收藏状态）
+    @GetMapping("/{id}/detail")
+    public Object getRecipeDetailById(@PathVariable Integer id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return recipeService.getRecipeDetailById(id, userId);
+    }
+    
     // 获取菜谱列表（新增接口）
     @GetMapping("/list")
     public List<Recipe> listRecipes(@RequestParam(required = false) Integer categoryId,
                                     @RequestParam(required = false) Integer limit) {
         return recipeService.getRecipesByCategory(categoryId, limit);
+    }
+    
+    // 获取热门菜谱（支持分页）
+    @GetMapping("/hot")
+    public List<Recipe> getHotRecipes(@RequestParam(required = false, defaultValue = "10") Integer limit) {
+        return recipeService.getHotRecipes(limit);
     }
     
     // 根据新分类体系获取菜谱（兼容新分类）

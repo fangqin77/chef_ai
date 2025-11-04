@@ -23,7 +23,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/logout") // 同时放行 /logout 路径
                 .excludePathPatterns("/api/user/register") // 放行注册接口（如有）
                 .excludePathPatterns("/api/common/**") // 放行公共接口（如验证码、图片上传等）
-                .excludePathPatterns("/api/recipes/**") // 放行菜谱相关接口（允许未登录用户查看菜谱）
+                .excludePathPatterns("/api/recipes/search") // 放行菜谱搜索接口（允许未登录用户搜索菜谱）
+                .excludePathPatterns("/api/recipes/categories") // 放行菜谱分类接口（允许未登录用户查看分类）
+                .excludePathPatterns("/api/recipes/random") // 放行随机菜谱接口（允许未登录用户查看）
+                .excludePathPatterns("/api/recipes/hot") // 放行热门菜谱接口（允许未登录用户查看）
+                .excludePathPatterns("/api/recipes/**/favorite-count") // 放行菜谱收藏次数接口（允许未登录用户查看）
                 .excludePathPatterns("/api/home"); // 放行首页接口（允许未登录用户查看首页内容）
     }
 }

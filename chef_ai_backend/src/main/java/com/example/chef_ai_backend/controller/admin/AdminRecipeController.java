@@ -26,7 +26,11 @@ public class AdminRecipeController {
         Recipe recipe = new Recipe();
         recipe.setName((String) body.get("name"));
         recipe.setFeature((String) body.get("feature"));
-        recipe.setIngredients((String) body.get("ingredients"));
+        Object difficulty = body.get("ingredients");
+        if (difficulty instanceof Number) recipe.setIngredients(((Number) difficulty).intValue());
+        else if (difficulty instanceof String) {
+            try { recipe.setIngredients(Integer.parseInt((String) difficulty)); } catch (Exception ignore) { recipe.setIngredients(null); }
+        } else { recipe.setIngredients(null); }
         recipe.setCondiments((String) body.get("condiments"));
         recipe.setMethod((String) body.get("method"));
         java.util.List<Integer> categoryIds = (java.util.List<Integer>) body.get("categoryIds");
@@ -39,7 +43,11 @@ public class AdminRecipeController {
         recipe.setId(id);
         recipe.setName((String) body.get("name"));
         recipe.setFeature((String) body.get("feature"));
-        recipe.setIngredients((String) body.get("ingredients"));
+        Object difficulty = body.get("ingredients");
+        if (difficulty instanceof Number) recipe.setIngredients(((Number) difficulty).intValue());
+        else if (difficulty instanceof String) {
+            try { recipe.setIngredients(Integer.parseInt((String) difficulty)); } catch (Exception ignore) { recipe.setIngredients(null); }
+        } else { recipe.setIngredients(null); }
         recipe.setCondiments((String) body.get("condiments"));
         recipe.setMethod((String) body.get("method"));
         java.util.List<Integer> categoryIds = (java.util.List<Integer>) body.get("categoryIds");

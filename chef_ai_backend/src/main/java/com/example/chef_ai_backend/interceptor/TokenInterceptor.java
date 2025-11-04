@@ -52,6 +52,7 @@ public class TokenInterceptor implements HandlerInterceptor {
         }
 
         // 3. Token 有效：将用户ID存入请求属性（后续接口可直接获取）
+        request.setAttribute("userId", userId);
         request.setAttribute("loginUserId", userId);
         log.info("Token验证通过，userId：{}", userId);
         return true; // 放行请求

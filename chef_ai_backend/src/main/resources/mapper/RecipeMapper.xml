@@ -129,7 +129,6 @@
       AND (
         r.name LIKE CONCAT('%', #{keyword}, '%')
         OR r.feature LIKE CONCAT('%', #{keyword}, '%')
-        OR r.ingredients LIKE CONCAT('%', #{keyword}, '%')
         OR r.condiments LIKE CONCAT('%', #{keyword}, '%')
         OR r.method LIKE CONCAT('%', #{keyword}, '%')
         OR c.category_name LIKE CONCAT('%', #{keyword}, '%')
@@ -151,7 +150,6 @@
       AND (
         r.name LIKE CONCAT('%', #{keyword}, '%')
         OR r.feature LIKE CONCAT('%', #{keyword}, '%')
-        OR r.ingredients LIKE CONCAT('%', #{keyword}, '%')
         OR r.condiments LIKE CONCAT('%', #{keyword}, '%')
         OR r.method LIKE CONCAT('%', #{keyword}, '%')
         OR c.category_name LIKE CONCAT('%', #{keyword}, '%')

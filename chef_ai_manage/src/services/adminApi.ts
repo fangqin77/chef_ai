@@ -35,3 +35,11 @@ export const deleteRecipe = (id: number | string) =>
 
 export const fetchRecipeCategories = () =>
   http.get('/admin/recipes/categories');
+
+// 收藏相关
+export const favoriteRecipe = (id: number | string) =>
+  http.post(`/admin/recipes/${id}/favorite`);
+export const unfavoriteRecipe = (id: number | string) =>
+  http.delete(`/admin/recipes/${id}/favorite`);
+export const fetchFavoriteRecipes = (params: PageParams) =>
+  http.get('/admin/recipes/favorites', { params });

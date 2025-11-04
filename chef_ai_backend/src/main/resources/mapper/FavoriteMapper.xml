@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chef_ai_backend.mapper.FavoriteMapper">
+
+  <!-- 菜谱收藏表：recipe_favorites(user_id, recipe_id, created_at) -->
+
+  <insert id="insertFavorite">
+    INSERT IGNORE INTO recipe_favorites (user_id, recipe_id, created_at)
+    VALUES (#{adminUserId}, #{recipeId}, NOW())
+  </insert>
+
+  <delete id="deleteFavorite">
+    DELETE FROM recipe_favorites WHERE user_id = #{adminUserId} AND recipe_id = #{recipeId}
+  </delete>
+
+  <select id="listFavorites" resultType="map">
+    SELECT r.*, f.created_at AS favorite_time
+    FROM recipe_favorites f
+    JOIN recipes r ON r.id = f.recipe_id
+    WHERE f.user_id = #{adminUserId}
+    ORDER BY f.created_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countFavorites" resultType="int">
+    SELECT COUNT(1) FROM recipe_favorites WHERE user_id = #{adminUserId}
+  </select>
+
+</mapper>

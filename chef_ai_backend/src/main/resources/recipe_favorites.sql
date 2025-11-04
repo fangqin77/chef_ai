@@ -1,0 +1,40 @@
+/*
+ Navicat Premium Dump SQL
+
+ Source Server         : chef_ai
+ Source Server Type    : MySQL
+ Source Server Version : 80028 (8.0.28)
+ Source Host           : localhost:3306
+ Source Schema         : chef_ai
+
+ Target Server Type    : MySQL
+ Target Server Version : 80028 (8.0.28)
+ File Encoding         : 65001
+
+ Date: 04/11/2025 15:30:00
+*/
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for recipe_favorites
+-- ----------------------------
+DROP TABLE IF EXISTS `recipe_favorites`;
+CREATE TABLE `recipe_favorites`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `recipe_id` int NOT NULL COMMENT '菜谱ID，关联 recipes.id',
+  `user_id` int UNSIGNED NOT NULL COMMENT '用户ID，关联 userss.id',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_recipe_fav`(`recipe_id` ASC, `user_id` ASC) USING BTREE,
+  INDEX `idx_fav_user`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `fk_recipe_fav_recipe` FOREIGN KEY (`recipe_id`) REFERENCES `recipes` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_recipe_fav_user` FOREIGN KEY (`user_id`) REFERENCES `userss` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '菜谱收藏' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of recipe_favorites
+-- ----------------------------
+
+SET FOREIGN_KEY_CHECKS = 1;
