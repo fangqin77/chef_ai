@@ -1,7 +1,7 @@
 <template>
   <div style="padding:16px">
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <a-input v-model:value="keyword" placeholder="菜谱关键词" style="width:240px" />
+      <a-input v-model:value="keyword" placeholder="支持菜名/分类/食材/调料/做法搜索" style="width:240px" @pressEnter="loadData(1)" />
       <a-button type="primary" @click="loadData(1)">查询</a-button>
       <a-button @click="openEdit()">新增菜谱</a-button>
     </div>

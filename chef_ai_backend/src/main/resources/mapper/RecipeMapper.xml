@@ -126,7 +126,15 @@
     LEFT JOIN recipe_categories c2 ON c2.category_id = rcr.category_id
     WHERE 1=1
     <if test="keyword != null and keyword != ''">
-      AND (r.name LIKE CONCAT('%', #{keyword}, '%') OR r.feature LIKE CONCAT('%', #{keyword}, '%'))
+      AND (
+        r.name LIKE CONCAT('%', #{keyword}, '%')
+        OR r.feature LIKE CONCAT('%', #{keyword}, '%')
+        OR r.ingredients LIKE CONCAT('%', #{keyword}, '%')
+        OR r.condiments LIKE CONCAT('%', #{keyword}, '%')
+        OR r.method LIKE CONCAT('%', #{keyword}, '%')
+        OR c.category_name LIKE CONCAT('%', #{keyword}, '%')
+        OR c2.category_name LIKE CONCAT('%', #{keyword}, '%')
+      )
     </if>
     GROUP BY r.id
     ORDER BY r.id DESC
@@ -134,12 +142,22 @@
   </select>
 
   <select id="adminCountRecipes" resultType="int">
-    SELECT COUNT(1) FROM recipes
+    SELECT COUNT(DISTINCT r.id) FROM recipes r
+    LEFT JOIN recipe_categories c ON c.category_id = r.id
+    LEFT JOIN recipe_category_relation rcr ON rcr.recipe_id = r.id
+    LEFT JOIN recipe_categories c2 ON c2.category_id = rcr.category_id
     WHERE 1=1
     <if test="keyword != null and keyword != ''">
-      AND (name LIKE CONCAT('%', #{keyword}, '%') OR feature LIKE CONCAT('%', #{keyword}, '%'))
+      AND (
+        r.name LIKE CONCAT('%', #{keyword}, '%')
+        OR r.feature LIKE CONCAT('%', #{keyword}, '%')
+        OR r.ingredients LIKE CONCAT('%', #{keyword}, '%')
+        OR r.condiments LIKE CONCAT('%', #{keyword}, '%')
+        OR r.method LIKE CONCAT('%', #{keyword}, '%')
+        OR c.category_name LIKE CONCAT('%', #{keyword}, '%')
+        OR c2.category_name LIKE CONCAT('%', #{keyword}, '%')
+      )
     </if>
-
   </select>
 
   <!-- 基本 CRUD -->
