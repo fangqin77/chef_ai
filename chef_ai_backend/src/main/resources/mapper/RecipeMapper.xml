@@ -112,12 +112,27 @@
     ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
+
+  <!-- 管理端：联表分类名称视图（Map） -->
+  <select id="adminListRecipesView" resultType="map">
+    SELECT r.*, c.category_name
+    FROM recipes r
+    LEFT JOIN recipe_categories c ON c.category_id = r.type_id
+    WHERE 1=1
+    <if test="keyword != null and keyword != ''">
+      AND (r.name LIKE CONCAT('%', #{keyword}, '%') OR r.feature LIKE CONCAT('%', #{keyword}, '%'))
+    </if>
+    ORDER BY r.id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
   <select id="adminCountRecipes" resultType="int">
     SELECT COUNT(1) FROM recipes
     WHERE 1=1
     <if test="keyword != null and keyword != ''">
       AND (name LIKE CONCAT('%', #{keyword}, '%') OR feature LIKE CONCAT('%', #{keyword}, '%'))
     </if>
+
   </select>
 
   <!-- 基本 CRUD -->

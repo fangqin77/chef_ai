@@ -16,7 +16,7 @@ public class AdminRecipeService {
 
     public Map<String, Object> list(String keyword, int page, int pageSize) {
         int offset = (Math.max(page, 1) - 1) * Math.max(pageSize, 1);
-        List<Recipe> list = recipeMapper.adminListRecipes(keyword, offset, pageSize);
+        java.util.List<java.util.Map<String, Object>> list = recipeMapper.adminListRecipesView(keyword, offset, pageSize);
         int total = recipeMapper.adminCountRecipes(keyword);
         Map<String, Object> data = new HashMap<>();
         data.put("list", list);

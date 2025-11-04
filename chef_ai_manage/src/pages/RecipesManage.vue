@@ -9,7 +9,7 @@
     <a-table :data-source="list" :columns="columns" :pagination="pagination" row-key="id" @change="onTableChange" bordered size="small" :scroll="{ x: 1000 }">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key==='type_id'">
-          <span>{{ categoryLabel(record.type_id) }}</span>
+          <span>{{ record.category_name || categoryLabel(record.type_id) }}</span>
         </template>
         <template v-else-if="column.key==='image'">
           <a-image :src="record.feature" :width="64" :height="40" :preview="{ src: record.feature }" fallback="https://via.placeholder.com/64x40?text=img" />
@@ -98,10 +98,11 @@ function onTableChange(pag: any) {
 const editOpen = ref(false);
 const editForm = reactive<any>({ id: null, name: '', typeId: undefined, feature: '', ingredients: '', condiments: '', method: '' });
 const categoryOptions = ref<any[]>([]);
-const categoryMap = ref<Record<number, string>>({});
-function categoryLabel(id?: number) {
-  if (id == null) return '';
-  return categoryMap.value[id] ?? String(id);
+const categoryMap = ref<Record<string, string>>({});
+function categoryLabel(id?: any) {
+  if (id === undefined || id === null) return '';
+  const key = String(id);
+  return categoryMap.value[key] ?? key;
 }
 
 function openEdit(row?: any) {
@@ -164,14 +165,15 @@ async function loadCategories() {
   try {
     const { data } = await fetchRecipeCategories();
     const list = data?.data || data || [];
-    categoryOptions.value = list.map((c:any)=>({ label: `${c.category_name || c.typeName || c.categoryName || c.category_id}`, value: c.category_id ?? c.nodeId ?? c.categoryId }));
-    // 构建映射表，便于渲染分类名称
-    categoryMap.value = {} as any;
+    categoryOptions.value = list.map((c:any)=>({ label: `${c.category_name || c.typeName || c.categoryName || c.category_id}`, value: (c.category_id ?? c.nodeId ?? c.categoryId) }))
+      .filter((opt:any)=> opt.value !== undefined && opt.value !== null);
+    // 构建映射表，便于渲染分类名称（统一用字符串 key，避免数字/字符串不一致）
+    categoryMap.value = {};
     list.forEach((c:any) => {
       const id = c.category_id ?? c.nodeId ?? c.categoryId;
+      if (id === undefined || id === null) return;
       const name = c.category_name || c.typeName || c.categoryName || String(id);
-
-      if (id != null) (categoryMap.value as any)[id] = name;
+      categoryMap.value[String(id)] = name;
     });
   } catch (e:any) { /* 可忽略 */ }
 }

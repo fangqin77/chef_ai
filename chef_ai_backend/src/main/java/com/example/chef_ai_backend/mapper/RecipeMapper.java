@@ -40,6 +40,11 @@ public interface RecipeMapper {
                                   @Param("limit") int limit);
     int adminCountRecipes(@Param("keyword") String keyword);
 
+    // 视图：联表返回分类名称（Map）
+    java.util.List<java.util.Map<String, Object>> adminListRecipesView(@Param("keyword") String keyword,
+                                  @Param("offset") int offset,
+                                  @Param("limit") int limit);
+
     // ===== 基本 CRUD =====
     int insertRecipe(Recipe recipe);
     int updateRecipe(Recipe recipe);
