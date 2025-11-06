@@ -3,6 +3,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["*"]
+      
+      
     },
     "checkJs": false
   },
@@ -17,4 +19,5 @@
     "strictTemplates": false
   },
   "exclude": ["node_modules", "unpackage", "dist"]
+ 
 }

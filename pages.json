@@ -57,6 +57,10 @@
     {
       "path": "pages/profile/history",
       "style": { "navigationBarTitleText": "浏览历史" }
+    },
+    {
+      "path": "pages/profile/edit",
+      "style": { "navigationBarTitleText": "编辑资料" }
     }
   ],
   "tabBar": {
@@ -65,10 +69,30 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
-      { "pagePath": "pages/index/index", "text": "首页" },
-      { "pagePath": "pages/recipes/index", "text": "菜谱" },
-      { "pagePath": "pages/social/index", "text": "美食圈" },
-      { "pagePath": "pages/profile/index", "text": "我的" }
+      { 
+        "pagePath": "pages/index/index", 
+        "text": "首页",
+        "iconPath": "static/picture/home.png",
+        "selectedIconPath": "static/picture/home-active.png"
+      },
+      { 
+        "pagePath": "pages/recipes/index", 
+        "text": "菜谱",
+        "iconPath": "/static/picture/recipes.png",
+        "selectedIconPath": "/static/picture/recipes-active.png"
+      },
+      { 
+        "pagePath": "pages/social/index", 
+        "text": "美食圈",
+        "iconPath": "/static/picture/foodie.png",
+        "selectedIconPath": "/static/picture/foodie-active.png"
+      },
+      { 
+        "pagePath": "pages/profile/index", 
+        "text": "我的",
+        "iconPath": "/static/picture/profile.png",
+        "selectedIconPath": "/static/picture/profile-active.png"
+      }
     ]
   },
   "globalStyle": {

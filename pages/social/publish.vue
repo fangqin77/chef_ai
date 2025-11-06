@@ -52,7 +52,7 @@ export default {
     removeImg(i) {
       this.images.splice(i, 1)
     },
-    submit() {
+    async submit() {
       if (this.submitting) return
       const text = (this.text || '').trim()
       if (text.length > 200) {
@@ -69,32 +69,21 @@ export default {
       }
       this.submitting = true
       try {
-        const id = 'p_' + Date.now()
-        const now = new Date()
-        const time = '刚刚'
-        const me = {
-          id,
-          name: '我',
-          time,
-          avatar: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
-          text,
-          images: [...this.images],
-          likes: 0,
-          comments: 0
+        // 调用发布帖子接口
+        const response = await createCommunityPost(text, this.images, 1);
+        if (response && response.success) {
+          uni.showToast({ title: '已发布', icon: 'none' });
+          setTimeout(() => {
+            // 返回到美食圈首页
+            uni.navigateBack({ delta: 1 });
+          }, 400);
+        } else {
+          uni.showToast({ title: '发布失败，请重试', icon: 'none' });
         }
-        const key = 'social_posts'
-        const list = uni.getStorageSync(key) || []
-        list.unshift(me)
-        uni.setStorageSync(key, list)
-        uni.showToast({ title: '已发布', icon: 'none' })
-        setTimeout(() => {
-          // 返回到美食圈首页
-          uni.navigateBack({ delta: 1 })
-        }, 400)
       } catch(e) {
-        uni.showToast({ title: '发布失败，请重试', icon: 'none' })
+        uni.showToast({ title: '发布失败，请重试', icon: 'none' });
       } finally {
-        this.submitting = false
+        this.submitting = false;
       }
     }
   }

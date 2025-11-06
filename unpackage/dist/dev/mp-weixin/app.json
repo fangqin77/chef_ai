@@ -13,7 +13,8 @@
     "pages/profile/myworks",
     "pages/profile/myinfo",
     "pages/profile/comments",
-    "pages/profile/history"
+    "pages/profile/history",
+    "pages/profile/edit"
   ],
   "subPackages": [],
   "window": {
@@ -30,19 +31,27 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "static/picture/home.png",
+        "selectedIconPath": "static/picture/home-active.png"
       },
       {
         "pagePath": "pages/recipes/index",
-        "text": "菜谱"
+        "text": "菜谱",
+        "iconPath": "/static/picture/recipes.png",
+        "selectedIconPath": "/static/picture/recipes-active.png"
       },
       {
         "pagePath": "pages/social/index",
-        "text": "美食圈"
+        "text": "美食圈",
+        "iconPath": "/static/picture/foodie.png",
+        "selectedIconPath": "/static/picture/foodie-active.png"
       },
       {
         "pagePath": "pages/profile/index",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "/static/picture/profile.png",
+        "selectedIconPath": "/static/picture/profile-active.png"
       }
     ]
   },

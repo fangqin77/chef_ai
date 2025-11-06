@@ -6,33 +6,32 @@
     <!-- 顶部 -->
     <view class="header">
       <text class="title">我的</text>
-      <text class="gear" @click="onSettings">⚙</text>
     </view>
 
     <!-- 名片 -->
-    <view class="card">
+    <view class="card" @click="handleUserCardClick">
       <view class="card-top">
         <view class="avatar-wrap">
-          <image class="avatar" src="https://img.js.design/assets/img/6638d48432d24d4ad14381c3.png" mode="aspectFill" />
+          <image class="avatar" :src="userInfo.avatar || '/static/avatar-default.png'" mode="aspectFill" />
         </view>
         <view class="profile">
-          <text class="name">美食爱好者</text>
-          <text class="desc">分享生活中的美好味道</text>
+          <text class="name">{{ userInfo.nickname || '用户' }}</text>
+          <text class="desc">美食爱好者</text>
         </view>
       </view>
       <view class="stats">
         <view class="stat">
-          <text class="num">{{ stats.follow }}</text>
+          <text class="num">{{ userInfo.followCount || 0 }}</text>
           <text class="label">关注</text>
         </view>
         <view class="divider" />
         <view class="stat">
-          <text class="num">{{ stats.fans }}</text>
+          <text class="num">{{ userInfo.fansCount || 0 }}</text>
           <text class="label">粉丝</text>
         </view>
         <view class="divider" />
         <view class="stat">
-          <text class="num">{{ stats.likes }}</text>
+          <text class="num">{{ userInfo.likeCount || 0 }}</text>
           <text class="label">获赞</text>
         </view>
       </view>
@@ -74,33 +73,232 @@
       </view>
     </view>
 
+    <!-- 退出登录 -->
+    <view class="group" v-if="userInfo.isLoggedIn">
+      <view class="cell logout-cell" @click="handleLogout">
+        <text class="cell-icon">🚪</text>
+        <text class="cell-text logout-text">退出登录</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
     <view style="height: 40rpx;" />
   </view>
 </template>
 
 <script>
+import { wechatLogin } from '../../api/user.js';
+import { request } from '../../api/request.js';
 export default {
   data() {
     return {
-      stats: { follow: 125, fans: '1.2k', likes: '3.6k' },
+      userInfo: {
+        avatar: '',        // 头像（未登录为空）
+        nickname: '',      // 昵称（未登录为空）
+        followCount: 0,    // 关注数
+        fansCount: 0,      // 粉丝数
+        likeCount: 0,      // 获赞数
+        isLoggedIn: false  // 登录状态
+      },
       quicks: []
     }
   },
+  async onLoad() {
+    this.checkLoginStatus();
+  },
   methods: {
-    goHistory() { uni.navigateTo({ url: '/pages/profile/history' }) },
-    onSettings() { uni.showToast({ title: '设置入口预留', icon: 'none' }) },
-    tapQuick(q) { uni.showToast({ title: q.text, icon: 'none' }) },
-    toast(t) { uni.showToast({ title: t, icon: 'none' }) },
-    goFavorites() { uni.navigateTo({ url: '/pages/profile/favorites' }) },
-    goChatGenRecipe() {
-      // 跳转到 AI 对话页，触发生成菜谱
-      uni.navigateTo({ url: '/pages/chat/index?intent=generate_recipe&source=profile' })
+    // 检查登录状态
+    checkLoginStatus() {
+      const token = uni.getStorageSync('token');
+      console.log('检查登录状态，token:', token); // 调试日志
+      if (token) {
+        this.loadUserInfo();
+      } else {
+        // 未登录状态使用默认数据
+        this.userInfo = {
+          avatar: '/static/avatar-default.png',
+          nickname: '用户',
+          followCount: 0,
+          fansCount: 0,
+          likeCount: 0,
+          isLoggedIn: false
+        };
+        console.log('未登录状态，userInfo:', this.userInfo); // 调试日志
+      }
     },
-    goMyWorks() { uni.navigateTo({ url: '/pages/profile/myworks' }) },
-    goMyInfo() { uni.navigateTo({ url: '/pages/profile/myinfo' }) },
-    goMyComments() { uni.navigateTo({ url: '/pages/profile/comments' }) }
+    // 点击卡片事件
+    handleUserCardClick() {
+      uni.navigateTo({ url: '/pages/profile/edit' });
+    },
+    // 显示微信授权弹窗
+    showWechatAuthModal() {
+      uni.showModal({
+        title: '微信授权登录',
+        content: '请授权登录以使用完整功能',
+        confirmText: '授权登录',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            this.handleWechatLogin();
+          }
+        }
+      });
+    },
+    // 微信授权登录
+    handleWechatLogin() {
+      uni.login({
+        provider: 'weixin',
+        success: (loginRes) => {
+          console.log('获取到微信code:', loginRes.code);
+          // 使用code调用后端登录接口
+          this.loginWithCode(loginRes.code);
+        },
+        fail: (err) => {
+          console.error('微信登录失败:', err);
+          uni.showToast({ title: '登录失败', icon: 'none' });
+        }
+      });
+    },
+    // 使用code调用后端登录接口
+    loginWithCode(code) {
+      wechatLogin(code)
+        .then(res => {
+          if (res && res.success) {
+            // 保存token到本地存储
+            uni.setStorageSync('token', res.token || res.data?.token);
+            uni.showToast({ title: '登录成功' });
+            this.checkLoginStatus(); // 刷新页面状态
+          } else {
+            uni.showToast({ title: res.msg || '登录失败', icon: 'none' });
+          }
+        })
+        .catch(err => {
+          console.error('调用登录接口失败:', err);
+          uni.showToast({ title: '网络错误，请重试', icon: 'none' });
+        });
+    },
+    // 加载用户信息（已登录状态）
+    async loadUserInfo() {
+      try {
+        const token = uni.getStorageSync('token');
+        console.log('当前 token:', token, '存储时间:', new Date().toISOString());
+        
+        if (!token) {
+          // 未登录状态使用默认数据
+          this.userInfo = {
+            avatar: '/static/avatar-default.png',
+            nickname: '用户',
+            followCount: 0,
+            fansCount: 0,
+            likeCount: 0,
+            isLoggedIn: false
+          };
+          return;
+        }
+        
+        // 检查 token 是否有效（示例：非空且长度合理）
+        if (token.length < 10) {
+          uni.showToast({ title: '登录凭证无效，请重新登录', icon: 'none' });
+          uni.navigateTo({ url: '/pages/login/index' });
+          return;
+        }
+        
+        const [res, err] = await new Promise((resolve) => {
+          const requestConfig = {
+            url: 'http://172.20.10.3:9000/api/user/info',
+            method: 'GET',
+            header: {
+              'token': token.trim(), // 修改为后端预期的头名称
+              'Content-Type': 'application/json'
+            },
+            timeout: 10000,
+            withCredentials: true
+          };
+          console.log('请求配置:', JSON.stringify(requestConfig, null, 2)); // 打印完整配置
+          
+          uni.request({
+            ...requestConfig,
+            complete: (response) => {
+              console.log('请求用户信息完成:', response);
+              if (response.statusCode === 401) {
+                console.error('Token 无效，后端返回:', response.data);
+              }
+              resolve([response, null]);
+            },
+            fail: (error) => {
+              console.error('请求用户信息失败:', error);
+              resolve([null, error]);
+            }
+          });
+        });
+        
+        if (err || !res || res.statusCode !== 200) {
+          if (res?.statusCode === 401) {
+            uni.removeStorageSync('token');
+            uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
+            uni.navigateTo({ url: '/pages/login/index' });
+          } else {
+            uni.showToast({ title: '网络错误，请重试', icon: 'none' });
+          }
+          return;
+        }
+        
+        // 更新用户信息
+        this.userInfo = { ...res.data, isLoggedIn: true };
+      } catch (err) {
+        console.error('获取用户信息失败:', err);
+        uni.showToast({ title: '获取信息失败', icon: 'none' });
+      }
+    },
+    goHistory() {
+      uni.navigateTo({ url: '/pages/profile/history' });
+    },
+    goFavorites() {
+      uni.navigateTo({ url: '/pages/profile/favorites' });
+    },
+    goMyComments() {
+      uni.navigateTo({ url: '/pages/profile/comments' });
+    },
+    goMyWorks() {
+      uni.navigateTo({ url: '/pages/profile/works' });
+    },
+    goMyInfo() {
+      uni.navigateTo({ url: '/pages/profile/myinfo' });
+    },
+    // 退出登录
+    handleLogout() {
+      uni.showModal({
+        title: '确认退出',
+        content: '确定要退出登录吗？',
+        success: (res) => {
+          if (res.confirm) {
+            // 调用退出登录接口
+            request('/api/logout', {}, 'POST')
+              .then(() => {
+                // 清除本地存储的 token 和用户信息
+                uni.removeStorageSync('token');
+                this.userInfo = {
+                  avatar: '/static/avatar-default.png',
+                  nickname: '用户',
+                  followCount: 0,
+                  fansCount: 0,
+                  likeCount: 0,
+                  isLoggedIn: false
+                };
+                uni.showToast({ title: '退出登录成功', icon: 'none' });
+              })
+              .catch(err => {
+                console.error('退出登录失败:', err);
+                uni.showToast({ title: '退出登录失败', icon: 'none' });
+              });
+          }
+        }
+      });
+    }
   }
-}
+      }
+      
+  
 </script>
 
 <style>
@@ -155,6 +353,14 @@ export default {
 .cell-icon { width: 48rpx; text-align: center; font-size: 30rpx; color: #ff6a00; }
 .cell-text { flex: 1; font-size: 28rpx; color: #1f2937; }
 .arrow { font-size: 36rpx; color: #c7cdd3; }
+
+/* 退出登录样式 */
+.logout-cell {
+  background: #fff;
+}
+.logout-text {
+  color: #ff4757 !important;
+}
 /* 右上角卡通图样式（统一） */
 
 </style>

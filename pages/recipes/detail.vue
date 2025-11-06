@@ -6,6 +6,7 @@
       <view class="hero-mask" />
       <view class="hero-title">
         <text class="name">{{ recipe.name || '菜谱详情' }}</text>
+        <image class="favorite-icon" :src="isFavorite ? '../../static/收藏 -已收藏.png' : '../../static/未收藏.png'" mode="aspectFit" @click="toggleFavorite" style="position: absolute; top: 30rpx; right: 30rpx; z-index: 10;" />
       </view>
     </view>
 
@@ -23,9 +24,10 @@
       <view class="section">
         <view class="section-title">做法</view>
         <view class="section-content">
-          <view v-for="(step, index) in formatMethod(recipe.method)" :key="index" class="step">
-            <text class="step-index">{{ index + 1 }}.</text>
-            <text class="step-text">{{ step }}</text>
+          <view class="steps-container">
+            <view v-for="(step, index) in formatMethod(recipe.method)" :key="index" class="step">
+              <text class="step-text">{{ index + 1 }}. {{ step }}{{ step.endsWith('。') ? '' : '。' }}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -54,7 +56,7 @@
 </template>
 
 <script>
-import { getRecipeDetail, mapTypeIdToCat } from '../../api/recipes.js'
+const { getRecipeDetail, mapTypeIdToCat } = require('../../api/recipes.js')
 
 export default {
   data() {
@@ -67,7 +69,8 @@ export default {
         condiments: '',
         ingredients: null,
         feature: ''
-      }
+      },
+      isFavorite: false
     }
   },
   onLoad(options) {
@@ -76,6 +79,133 @@ export default {
     }
   },
   methods: {
+    // 切换收藏状态
+    toggleFavorite() {
+      const api = require('../../api/recipes.js');
+      if (this.isFavorite) {
+        api.removeFavorite(this.recipe.id)
+          .then(() => {
+            this.isFavorite = false;
+            uni.showToast({
+              title: '已取消收藏',
+              icon: 'none'
+            });
+            // 强制刷新UI
+            this.$forceUpdate();
+          })
+          .catch(err => {
+            console.error('取消收藏失败：', err);
+            uni.showToast({
+              title: '操作失败，请重试',
+              icon: 'none'
+            });
+          });
+      } else {
+        // 生成未来七天的日期选项（今日、明日、后日 + 未来四天）
+        const today = new Date();
+        const dateValues = [];
+        for (let i = 0; i < 7; i++) {
+          const date = new Date(today);
+          date.setDate(today.getDate() + i);
+          const month = date.getMonth() + 1;
+          const day = date.getDate();
+          dateValues.push(`${date.getFullYear()}-${month}-${day}`);
+        }
+        // 第一页：今日、明日、后日 + 更多
+        const firstPageOptions = [
+          `今日（${today.getMonth() + 1}月${today.getDate()}日）`,
+          `明日（${today.getMonth() + 1}月${today.getDate() + 1}日）`,
+          `后日（${today.getMonth() + 1}月${today.getDate() + 2}日）`,
+          '更多日期'
+        ];
+        // 弹出第一页日期选择器
+        uni.showActionSheet({
+          itemList: firstPageOptions,
+          success: (res) => {
+            if (res.tapIndex !== undefined) {
+              if (res.tapIndex < 3) {
+                // 选择今日、明日、后日
+                const selectedDate = dateValues[res.tapIndex];
+                this.confirmAddToDaily(selectedDate);
+              } else {
+                // 选择“更多日期”，弹出第二页
+                const secondPageOptions = [];
+                for (let i = 3; i < 7; i++) {
+                  const date = new Date(today);
+                  date.setDate(today.getDate() + i);
+                  const month = date.getMonth() + 1;
+                  const day = date.getDate();
+                  secondPageOptions.push(`${month}月${day}日`);
+                }
+                uni.showActionSheet({
+                  itemList: secondPageOptions,
+                  success: (res2) => {
+                    if (res2.tapIndex !== undefined) {
+                      const selectedDate = dateValues[res2.tapIndex + 3];
+                      this.confirmAddToDaily(selectedDate);
+                    }
+                  },
+                  fail: (err) => {
+                    console.error('第二页日期选择失败：', err);
+                  }
+                });
+              }
+            }
+          },
+          fail: (err) => {
+            console.error('第一页日期选择失败：', err);
+          }
+        });
+      }
+    },
+    // 确认添加到每日菜谱
+    confirmAddToDaily(date) {
+      const api = require('../../api/recipes.js');
+      api.addFavorite(this.recipe.id)
+        .then((res) => {
+          if (res.success) {
+            this.isFavorite = true;
+            // 调用添加到每日菜谱的逻辑，并传递日期
+            api.addToDailyRecipes(this.recipe.id, date)
+              .then((dailyRes) => {
+                if (dailyRes.success) {
+                  uni.showToast({
+                    title: '已添加到每日菜谱',
+                    icon: 'none'
+                  });
+                  // 强制刷新数据
+                  this.loadRecipeDetail(this.recipe.id);
+                  // 触发全局事件，通知每日菜谱页面刷新
+                  uni.$emit('refreshDailyRecipes');
+                } else {
+                  uni.showToast({
+                    title: dailyRes.message || '操作失败，请重试',
+                    icon: 'none'
+                  });
+                }
+              })
+              .catch(err => {
+                console.error('添加到每日菜谱失败：', err);
+                uni.showToast({
+                  title: '操作失败，请重试',
+                  icon: 'none'
+                });
+              });
+          } else {
+            uni.showToast({
+              title: res.message || '操作失败，请重试',
+              icon: 'none'
+            });
+          }
+        })
+        .catch(err => {
+          console.error('添加收藏失败：', err);
+          uni.showToast({
+            title: '操作失败，请重试',
+            icon: 'none'
+          });
+        });
+    },
     // 加载菜谱详情
     loadRecipeDetail(id) {
       getRecipeDetail(id)
@@ -106,7 +236,11 @@ export default {
       if (!method) return []
       return method.split('↵')
         .filter(step => step.trim())
-        .map(step => step.replace(/^\d+\.\s*/, '')) // 移除步骤前的序号（如 1.）
+        .map((step, index) => {
+          // 移除步骤中可能存在的额外序号（如第二个 1.）
+          const cleanedStep = step.replace(/^\d+\.\s*/, '').trim();
+          return cleanedStep;
+        })
     },
     // 难度等级文本
     getDifficultyText(level) {
@@ -129,6 +263,13 @@ export default {
   background: #f8f8f8;
   min-height: 100vh;
   padding-bottom: 40rpx;
+}
+.favorite-icon {
+  width: 48rpx;
+  height: 48rpx;
+  position: absolute;
+  right: 30rpx;
+  top: 30rpx;
 }
 
 /* 顶部大图 */

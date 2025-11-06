@@ -4,7 +4,13 @@
   min-height: 100vh;
   padding-bottom: 40rpx;
 }
-
+.favorite-icon {
+  width: 48rpx;
+  height: 48rpx;
+  position: absolute;
+  right: 30rpx;
+  top: 30rpx;
+}
 /* 顶部大图 */
 .hero {
   position: relative;
@@ -33,7 +39,6 @@
   font-weight: 800;
   margin-bottom: 16rpx;
 }
-
 /* 详情卡片 */
 .card {
   margin: 20rpx 30rpx;

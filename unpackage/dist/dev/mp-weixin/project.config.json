@@ -9,7 +9,8 @@
     "postcss": false,
     "minified": false,
     "newFeature": true,
-    "bigPackageSizeSupport": true
+    "bigPackageSizeSupport": true,
+    "minSdkVersion": "2.20.0"
   },
   "compileType": "miniprogram",
   "libVersion": "",

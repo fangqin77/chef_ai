@@ -78,62 +78,54 @@
 </template>
 
 <script>
+import { getCommunityPosts } from '@/api/recipes';
+
 export default {
   data() {
     return {
-      seed: [
-        {
-          id: 'p1',
-          name: '小雅厨房',
-          time: '2 小时前',
-          avatar: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
-          text: '今天尝试做了传说中的网红芝士蛋糕，第一次做就成功了！奶香浓郁、入口即化，太满足了～',
-          images: ['/static/yuan_97e57f821c79b841651df5b413309328.jpg'],
-          likes: 128
-        },
-        {
-          id: 'p2',
-          name: '老八的美食',
-          time: '5 小时前',
-          avatar: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
-          text: '周末在家做了一锅香喷喷的红烧肉，肥而不腻、瘦而不柴。秘诀就是要用冰糖炒糖色，火候掌握好！',
-          images: ['/static/yuan_97e57f821c79b841651df5b413309328.jpg','/static/yuan_97e57f821c79b841651df5b413309328.jpg'],
-          likes: 256
-        },
-        {
-          id: 'p3',
-          name: '美食达人小丽',
-          time: '1 天前',
-          avatar: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
-          text: '分享一个超简单的早餐食谱！牛油果吐司配煎蛋，营养丰富又美味，5 分钟就能搞定～',
-          images: ['/static/yuan_97e57f821c79b841651df5b413309328.jpg'],
-          likes: 173
-        }
-      ],
       posts: [],
       commentsMap: {},   // { [postId]: [{name,text,time}] }
       inputMap: {},      // { [postId]: 'input text' }
       focusMap: {}       // { [postId]: boolean }
     }
   },
-  onShow() {
-    const local = uni.getStorageSync('social_posts') || []
-    const likedSet = new Set(uni.getStorageSync('social_likes') || [])
-    const merged = [...local, ...this.seed].map(p => ({
-      ...p,
-      liked: likedSet.has(String(p.id)),
-      likes: Number(p.likes || 0),
-      _menuOpen: false,
-      _commenting: false
-    }))
-    this.posts = merged
-    const cm = uni.getStorageSync('social_comments') || {}
-    this.commentsMap = cm
-    const im = {}
-    const fm = {}
-    merged.forEach(p => { im[p.id] = ''; fm[p.id] = false })
-    this.inputMap = im
-    this.focusMap = fm
+  async onShow() {
+    try {
+      // 获取当前用户 ID，确保传递正确的数据类型（null 或 Long）
+      const userId = uni.getStorageSync('userId');
+      const parsedUserId = userId === 'null' ? null : Number(userId);
+      
+      const response = await getCommunityPosts(1, 10, null, parsedUserId);
+      if (response && response.list) {
+        // 如果接口返回的 list 为空，使用默认数据或显示提示
+        if (response.list.length === 0) {
+          uni.showToast({ title: '暂无帖子数据', icon: 'none' });
+          this.posts = [];
+        } else {
+          this.posts = response.list.map(post => ({
+            ...post,
+            _menuOpen: false,
+            _commenting: false
+          }));
+        }
+      } else {
+        uni.showToast({ title: '数据格式错误', icon: 'none' });
+        this.posts = [];
+      }
+      // 初始化评论和焦点状态
+      const im = {};
+      const fm = {};
+      this.posts.forEach(post => {
+        im[post.id] = '';
+        fm[post.id] = false;
+      });
+      this.inputMap = im;
+      this.focusMap = fm;
+    } catch (error) {
+      console.error('获取帖子列表失败:', error);
+      uni.showToast({ title: '获取帖子列表失败', icon: 'none' });
+      this.posts = [];
+    }
   },
   onShareAppMessage(res) {
     return {

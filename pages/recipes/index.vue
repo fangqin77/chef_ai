@@ -21,9 +21,19 @@
     <!-- 顶部栏 -->
     <view class="header">
       <text class="title">菜谱大全</text>
-      <view class="search-btn" @click="onSearch">
-        <text class="icon">🔍</text>
-        <text class="label">搜索</text>
+      <view class="search-bar">
+        <input 
+          class="search-input" 
+          v-model="searchKeyword" 
+          placeholder="输入关键词"
+          @confirm="onSearch"
+        />
+        <image 
+          class="search-btn" 
+          src="/static/search-icon.png" 
+          mode="aspectFit" 
+          @click="onSearch"
+        />
       </view>
     </view>
 
@@ -34,7 +44,7 @@
         v-for="c in topCats"
         :key="c.key"
         :class="['chip', activeCat === c.key ? 'active' : '']"
-        @click="activeCat = c.key"
+        @click="handleCategoryClick(c.key)"
       >
         {{ c.name }}
       </view>
@@ -51,7 +61,7 @@
         v-for="c in moreCats"
         :key="c.key"
         :class="['chip', activeCat === c.key ? 'active' : '']"
-        @click="activeCat = c.key"
+        @click="handleCategoryClick(c.key)"
       >
         {{ c.name }}
       </view>
@@ -75,7 +85,8 @@
 </template>
 
 <script>
-import {getRecipes, mapTypeIdToCat, DEFAULT_COVER} from '../../api/recipes.js' 
+import { getRecipes, mapTypeIdToCat, DEFAULT_COVER, getCategories, searchRecipes } from '@/api/recipes.js';
+import { request } from '@/api/request.js';
 export default {
   onLoad(options) {
     if (options && options.cat) {
@@ -100,67 +111,72 @@ export default {
       }
     }
   },
-  onShow() {
+  async onShow() {
     const cat = uni.getStorageSync('recipes_cat');
     if (cat) {
       this.activeCat = cat;
       uni.removeStorageSync('recipes_cat');
     }
-    // 调用 /api/recipes/list 接口
-    console.log('开始请求菜谱数据...')
-    getRecipes()
-      .then(res => {
-        console.log('菜谱接口响应数据:', res)
-        const arr = Array.isArray(res) ? res : []
-        this.list = arr.map(r => ({
-          id: r.id,                 // Recipe.id
-          name: r.name || '菜谱',   // Recipe.name
-          cat: mapTypeIdToCat(r.typeId),   // 将后端typeId映射到前端分类key
-          cover: r.feature || DEFAULT_COVER,     // 使用后端返回的feature字段或默认封面
-          // 保留后端原始数据，方便后续使用
-          originalData: r
-        }))
-        console.log('成功加载菜谱数量:', this.list.length)
-      })
-      .catch(err => {
-        console.error('获取菜谱列表失败：', err)
-        console.log('错误详情:', JSON.stringify(err))
-        // 使用模拟数据作为后备方案
-        this.list = this.getMockData()
-        uni.showToast({
-          title: '后端服务不可用，使用模拟数据',
-          icon: 'none',
-          duration: 2000
+    
+    // 动态加载分类标签
+    try {
+      const res = await getCategories();
+      const categories = Array.isArray(res) ? res : [];
+      this.cats = [
+        { key: 'all', name: '全部' },
+        ...categories
+          .map(c => ({
+            key: c.categoryName.toLowerCase().replace(/\\s+/g, '_'), // 如 "川菜" -> "chuan_cai"
+            name: c.categoryName,
+            categoryId: c.categoryId // 保留原始ID，用于接口请求
+          }))
+      ];
+      console.log('分类标签加载成功:', this.cats);
+    } catch (err) {
+      console.error('加载分类标签失败:', err);
+      uni.showToast({ title: '分类加载失败', icon: 'none' });
+    }
+    
+    // 如果有搜索关键词，不重新加载全部数据
+    if (!this.searchKeyword) {
+      // 调用 /api/recipes/list 接口
+      console.log('开始请求菜谱数据...');
+      getRecipes()
+        .then(res => {
+          console.log('菜谱接口响应数据:', res);
+          const arr = Array.isArray(res) ? res : [];
+          this.list = arr.map(r => ({
+            id: r.id,
+            name: r.name || '菜谱',
+            cat: mapTypeIdToCat(r.typeId),
+            cover: r.feature || DEFAULT_COVER,
+            originalData: r
+          }));
+          console.log('成功加载菜谱数量:', this.list.length);
         })
-      })
+        .catch(err => {
+          console.error('获取菜谱列表失败：', err);
+          console.log('错误详情:', JSON.stringify(err));
+          this.list = this.getMockData();
+          uni.showToast({
+            title: '后端服务不可用，使用模拟数据',
+            icon: 'none',
+            duration: 2000
+          });
+        });
+    }
   },
   data() {
     return {
       recommendMode: false,
       reco: null,
       activeCat: 'all',
-      cats: [
-        { key: 'all', name: '全部' },
-        { key: 'cn', name: '中式' },
-        { key: 'west', name: '西式' },
-        { key: 'jp', name: '日式' },
-        { key: 'kr', name: '韩式' },
-        { key: 'chuancai', name: '川菜' },
-        { key: 'yuecai', name: '粤菜' },
-        { key: 'xianggai', name: '湘菜' },
-        { key: 'zhecai', name: '浙菜' },
-        { key: 'dongbei', name: '东北' },
-        { key: 'xibei', name: '西北' },
-        { key: 'jiachang', name: '家常' },
-        { key: 'sushi', name: '素食' },
-        { key: 'shaokao', name: '烧烤' },
-        { key: 'tianpin', name: '甜品' }
-      ],
+      cats: [{ key: 'all', name: '全部' }], // 默认保留'全部'，其他分类通过接口加载
       showAllCats: false,
       maxCats: 8,
       topCount: 6,
-      // 接口返回数据列表
-      list: []
+      list: [],
+      searchKeyword: ''
     }
   },
   computed: {
@@ -196,53 +212,208 @@ export default {
       const src = this.list || [];
       const n = Math.min(4, src.length);
       const pool = [...src];
-      const res = [];
-      for (let i = 0; i < n; i++) {
-        const idx = Math.floor(Math.random() * pool.length);
-        res.push(pool.splice(idx, 1)[0]);
+    },
+
+    // 搜索菜谱
+    async onSearch() {
+      uni.showLoading({ title: '搜索中...' });
+      try {
+        const res = await searchRecipes(this.searchKeyword);
+        this.list = Array.isArray(res) ? res.map(r => ({
+          id: r.id,
+          name: r.name || '菜谱',
+          cat: mapTypeIdToCat(r.typeId),
+          cover: r.feature || DEFAULT_COVER,
+          originalData: r
+        })) : [];
+      } catch (err) {
+        console.error('搜索失败:', err);
+        uni.showToast({ title: '搜索失败', icon: 'none' });
+      } finally {
+        uni.hideLoading();
       }
-      return res;
     },
     // 推荐模式方法
     pickRandom() {
       if (!this.list || this.list.length === 0) {
-        this.reco = null
-        return
+        this.reco = null;
+        return;
       }
-      const idx = Math.floor(Math.random() * this.list.length)
-      this.reco = this.list[idx]
+      const idx = Math.floor(Math.random() * this.list.length);
+      this.reco = this.list[idx];
     },
     cancelRecommend() {
-      const pages = getCurrentPages && getCurrentPages()
+      const pages = getCurrentPages && getCurrentPages();
       if (pages && pages.length > 1) {
-        uni.navigateBack({ delta: 1 })
+        uni.navigateBack({ delta: 1 });
       } else {
-        this.recommendMode = false
+        this.recommendMode = false;
       }
     },
     nextRecommend() {
-      this.pickRandom()
+      this.pickRandom();
     },
-    onSearch() {
-      uni.showToast({ title: '搜索暂未接入', icon: 'none' })
-    },
+  
     openRecipe(r) {
       // 跳转到详情页并传参（名称/做法/原料/调料/特性/图片）
       const q = [
         'id=' + encodeURIComponent(r.id || ''),
         'name=' + encodeURIComponent(r.name || ''),
         'imageUrl=' + encodeURIComponent(r.cover || '')
-      ].join('&')
-      uni.navigateTo({ url: '/pages/recipes/detail?' + q })
+      ].join('&');
+      uni.navigateTo({ url: '/pages/recipes/detail?' + q });
     },
     toggleCats() {
-      this.showAllCats = !this.showAllCats
+      this.showAllCats = !this.showAllCats;
+    },
+    // 模拟数据方法
+    getMockData() {
+      return [
+        {
+          id: '1',
+          name: '红烧肉',
+          cat: 'cn',
+          cover: '/static/default-food.png',
+          level: '简单',
+          time: 45
+        },
+        {
+          id: '2',
+          name: '意大利面',
+          cat: 'west',
+          cover: '/static/default-food.png',
+          level: '简单',
+          time: 30
+        },
+        {
+          id: '3',
+          name: '寿司',
+          cat: 'jp',
+          cover: '/static/default-food.png',
+          level: '中等',
+          time: 60
+        },
+        {
+          id: '4',
+          name: '宫保鸡丁',
+          cat: 'chuancai',
+          cover: '/static/default-food.png',
+          level: '中等',
+          time: 35
+        }
+      ];
+    },
+    // 根据分类加载菜谱
+    async handleCategoryClick(categoryKey) {
+      console.log('点击分类标签:', categoryKey);
+      uni.showLoading({ title: '加载中...', mask: true });
+      try {
+        this.activeCat = categoryKey;
+        const category = this.cats.find(c => c.key === categoryKey);
+
+        if (categoryKey === 'all') {
+          // 加载全部菜谱
+          await this.loadAllRecipes();
+        } else if (category && category.categoryId) {
+          console.log('当前分类对象:', category); // 调试日志
+          console.log('当前分类ID:', category.categoryId); // 调试日志
+          // 根据分类 ID 调接口，将 categoryId 作为查询参数
+          const res = await request(`/api/recipes/by-category?categoryId=${category.categoryId}`, {}, 'GET');
+          console.log('分类菜谱接口返回数据:', res);
+          if (Array.isArray(res) && res.length > 0) {
+            console.log('接口返回的 res 数据详情:', JSON.parse(JSON.stringify(res))); // 打印原始数据
+            this.list = res.map(r => {
+              const mappedItem = {
+                id: r.id,
+                name: r.name || '菜谱',
+                cat: categoryKey, // 直接使用当前分类标签（如 "粤菜"）
+                cover: r.feature || DEFAULT_COVER,
+                originalData: r
+              };
+              console.log('映射后的单个数据:', mappedItem); // 调试单个数据
+              return mappedItem;
+            });
+            console.log('this.list 完整赋值结果:', this.list);
+            this.$forceUpdate();
+          } else {
+            uni.showToast({ title: '该分类暂无菜谱', icon: 'none' });
+            this.list = [];
+          }
+        } else {
+          uni.showToast({ title: '分类信息无效', icon: 'none' }); // 提示分类信息无效
+          await this.loadAllRecipes();
+        }
+      } catch (err) {
+        console.error('加载菜谱失败:', err);
+        uni.showToast({ title: '加载失败', icon: 'none' });
+      } finally {
+        uni.hideLoading();
+        console.log('当前分类:', this.activeCat, '筛选后列表:', this.filteredList);
+      }
+    },
+
+    // 加载全部菜谱
+    async loadAllRecipes() {
+      const res = await getRecipes();
+      this.list = res.map(r => ({
+        id: r.id,
+        name: r.name || '菜谱',
+        cat: mapTypeIdToCat(r.typeId),
+        cover: r.feature || DEFAULT_COVER,
+        originalData: r
+      }));
+    },
+    // 加载指定分类菜谱
+    async loadRecipesByCategory(categoryKey) {
+      const res = await getRecipes();
+      this.list = res
+        .filter(r => {
+          const cat = mapTypeIdToCat(r.typeId) || 'all';
+          return cat === categoryKey || categoryKey === 'all';
+        })
+        .map(r => ({
+          id: r.id,
+          name: r.name || '菜谱',
+          cat: mapTypeIdToCat(r.typeId) || 'all',
+          cover: r.feature || DEFAULT_COVER,
+          originalData: r
+        }));
     }
-  }
-}
-</script>
+  },}
+  </script>
 
 <style>
+/* 搜索栏样式 */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: rgba(255, 253, 250, 0.95);
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.search-bar {
+  display: flex;
+  align-items: center;
+  width: 60%;
+  margin-left: auto;
+}
+.search-input {
+  flex: 1;
+  padding: 10rpx 20rpx;
+  background: rgba(245, 245, 245, 0.9);
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  border: 1rpx solid #e5e7eb;
+}
+.search-btn {
+  margin-left: 10rpx;
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: transparent;
+}
 .page {
   padding: 24rpx;
   background: #f7f2e7;
@@ -253,37 +424,37 @@ export default {
 
 /* 顶部栏 */
 .header {
-  height: 88rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 20rpx;
+  background: transparent;
+  border-radius: 20rpx;
 }
 .title {
   font-size: 36rpx;
   font-weight: 700;
   color: #1a1f36;
 }
-.icon-search {
-  font-size: 36rpx;
-  color: #5f6368;
-}
-/* 显眼的搜索按钮 */
-.search-btn {
-  display: inline-flex;
+.search-bar {
+  display: flex;
   align-items: center;
-  gap: 10rpx;
-  padding: 10rpx 18rpx;
-  background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%);
-  color: #fff;
-  border-radius: 999rpx;
-  box-shadow: 0 8rpx 20rpx rgba(255,122,0,0.28);
+  width: 50%;
+  justify-content: flex-end;
 }
-.search-btn .icon {
-  font-size: 30rpx;
-}
-.search-btn .label {
+.search-input {
+  width: 70%;
+  padding: 10rpx 20rpx;
+  background: rgba(245, 245, 245, 0.9);
+  border-radius: 40rpx;
   font-size: 28rpx;
-  font-weight: 600;
+  border: 1rpx solid #e5e7eb;
+}
+.search-btn {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: transparent;
 }
 
 .subheading {

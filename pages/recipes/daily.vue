@@ -36,225 +36,266 @@
   </view>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-
-type RowItem = {
-  id: string | number
-  name: string
-  imageUrl: string
-  plannedDate: string
-  _dx?: number
-  _open?: boolean
-  _gIndex?: number
-}
-
-type Group = { date: string; items: RowItem[] }
-
-const fallbackImg = '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
-const items = ref<RowItem[]>([])
-const groups = ref<Group[]>([])
-let _startX = 0
-
-function safeDecode(val: unknown): string | unknown {
-  if (typeof val !== 'string') return val
-  let result: string = val
-  for (let i = 0; i < 2; i++) {
-    if (typeof result === 'string' && result.includes('%')) {
-      try {
-        const decoded = decodeURIComponent(result)
-        if (decoded === result) break
-        result = decoded
-        continue
-      } catch (e) {
+<script>
+export default {
+  data() {
+    return {
+      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
+      items: [],
+      groups: [],
+      _startX: 0
+    }
+  },
+  onShow() {
+    this.loadData();
+    uni.$on('refreshDailyRecipes', () => {
+      this.loadData();
+    });
+  },
+  onUnload() {
+    uni.$off('refreshDailyRecipes');
+  },
+  methods: {
+    safeDecode(val) {
+      if (typeof val !== 'string') return val
+      let result = val
+      for (let i = 0; i < 2; i++) {
+        if (typeof result === 'string' && result.includes('%')) {
+          try {
+            const decoded = decodeURIComponent(result)
+            if (decoded === result) break
+            result = decoded
+            continue
+          } catch (e) {
+            break
+          }
+        }
         break
       }
+      return result
+    },
+
+    findIndexById(id) {
+      return (this.items || []).findIndex(x => String(x.id) === String(id))
+    },
+
+    buildGroups(list) {
+      const map = {}
+      list.forEach(it => {
+        const d = it.plannedDate || '未安排'
+        if (!map[d]) map[d] = []
+        const idx0 = this.findIndexById(it.id)
+        if (idx0 >= 0) this.items[idx0]._gIndex = idx0
+        map[d].push(this.items[idx0])
+      })
+      const todayBase = new Date()
+      const base = new Date(todayBase.getFullYear(), todayBase.getMonth(), todayBase.getDate())
+      const MS_PER_DAY = 86400000
+      const diffDays = (ds) => {
+        if (!ds || ds === '未安排') return Number.POSITIVE_INFINITY
+        const parts = String(ds).split('-').map(Number)
+        if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return Number.POSITIVE_INFINITY
+        const d = new Date(parts[0], parts[1] - 1, parts[2])
+        return Math.abs((d.getTime() - base.getTime()) / MS_PER_DAY)
+      }
+      const keys = Object.keys(map).sort((a, b) => {
+        const da = diffDays(a)
+        const db = diffDays(b)
+        if (da !== db) return da - db
+        return a > b ? 1 : -1
+      })
+      this.groups = keys.map(k => ({ date: k, items: map[k] }))
+    },
+
+    async loadData() {
+      try {
+        // 从本地存储获取 Token（如果有）
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({
+            title: '请先登录',
+            icon: 'none'
+          });
+          // 跳转到登录页
+          uni.navigateTo({ url: '/pages/login/index' });
+          return;
+        }
+        // 检查 Token 是否有效
+        if (typeof token !== 'string' || token.trim() === '') {
+          uni.showToast({
+            title: 'Token无效，请重新登录',
+            icon: 'none'
+          });
+          uni.navigateTo({ url: '/pages/login/index' });
+          return;
+        }
+        const headers = {};
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('Token:', token);
+        console.log('Request Headers:', headers);
+
+        // 确保日期格式为 yyyy-MM-dd
+        const dateParam = new Date().toISOString().split('T')[0];
+        
+        const requestConfig = {
+          url: 'http://172.20.10.3:9000/api/recipes/daily',
+          method: 'GET',
+          data: { date: dateParam },
+          header: headers
+        };        console.log('Request Config:', requestConfig);
+        
+        const [err, response] = await uni.request(requestConfig);
+        if (err) {
+          console.error('请求失败：', err);
+          throw err;
+        }
+        if (!response.data.success) {
+          console.error('API返回数据无效：', response.data);
+          throw new Error('API返回数据无效');
+        }
+        this.items = response.data.data.map(item => ({
+          id: item.id,
+          name: item.name,
+          imageUrl: item.imageUrl,
+          plannedDate: item.plannedDate,
+          _dx: 0,
+          _open: false
+        }));
+        this.buildGroups(this.items);
+      } catch (err) {
+        console.error('获取每日菜谱失败：', err);
+        uni.showToast({
+          title: '获取每日菜谱失败，请重试',
+          icon: 'none'
+        });
+      }
+    },
+
+    async remove(it) {
+      try {
+        const response = await uni.request({
+          url: `/api/recipes/${it.id}/remove-from-daily`,
+          method: 'DELETE',
+          data: { date: it.plannedDate }
+        });
+        if (response.statusCode === 200 && response.data.success) {
+          uni.showToast({
+            title: '已删除',
+            icon: 'none'
+          });
+          this.loadData();
+        } else {
+          uni.showToast({
+            title: '删除失败，请重试',
+            icon: 'none'
+          });
+        }
+      } catch (err) {
+        console.error('删除失败：', err);
+        uni.showToast({
+          title: '删除失败，请重试',
+          icon: 'none'
+        });
+      }
+    },
+
+    onTouchStart(e, idx) {
+      this._startX = (e.touches && e.touches[0] ? e.touches[0].clientX : 0)
+      this.closeAll(idx)
+    },
+
+    onTouchMove(e, idx) {
+      const x = (e.touches && e.touches[0] ? e.touches[0].clientX : 0)
+      const dx = x - (this._startX || 0)
+      const clamped = Math.max(-200, Math.min(0, dx))
+      const it = this.items[idx]
+      if (it) {
+        it._dx = clamped
+        it._open = clamped < -48
+      }
+    },
+
+    onTouchEnd(e, idx) {
+      const it = this.items[idx]
+      if (!it) return
+      const endX = (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : (this._startX || 0))
+      const distance = Math.abs(endX - (this._startX || 0))
+      if (distance < 8) {
+        it._dx = 0
+        it._open = false
+        setTimeout(() => this.handleTap(it), 0)
+        return
+      }
+      const dx = it._dx || 0
+      if (dx < -48) {
+        it._dx = -140
+        it._open = true
+      } else {
+        it._dx = 0
+        it._open = false
+      }
+    },
+
+    closeAll(keepIdx = -1) {
+      (this.items || []).forEach((row, i) => {
+        if (i !== keepIdx) {
+          row._dx = 0
+          row._open = false
+        }
+      })
+    },
+
+    clearAll() {
+      uni.removeStorageSync && uni.removeStorageSync('favorites_recipes')
+      uni.removeStorageSync && uni.removeStorageSync('favorites_meta')
+      uni.removeStorageSync && uni.removeStorageSync('favorites_planned')
+      uni.showToast && uni.showToast({ title: '已清空', icon: 'none' })
+      this.loadData()
+    },
+
+    handleTap(it) {
+      this.onRowTap(it)
+    },
+
+    onRowTap(it) {
+      const idx = this.findIndexById(it.id)
+      if (idx >= 0) {
+        const row = this.items[idx]
+        if (row && row._open) {
+          row._dx = 0
+          row._open = false
+          return
+        }
+      }
+      this.closeAll()
+      this.goDetail(it)
+    },
+
+    goDetail(it) {
+      const rawId = it && it.id != null ? this.safeDecode(String(it.id)) : ''
+      const encodedId = typeof rawId === 'string' && rawId ? encodeURIComponent(rawId) : ''
+      const url = encodedId ? `/pages/recipes/detail?id=${encodedId}` : '/pages/recipes/detail'
+      uni.navigateTo && uni.navigateTo({
+        url,
+        fail: () => {
+          uni.showToast && uni.showToast({ title: '跳转失败，请检查 pages.json 是否已注册 detail 页面', icon: 'none' })
+          uni.redirectTo && uni.redirectTo({ url })
+        }
+      })
+    },
+
+    goExplore() {
+      if (uni.switchTab) {
+        uni.switchTab({ url: '/pages/recipes/index' })
+      } else {
+        uni.reLaunch && uni.reLaunch({ url: '/pages/recipes/index' })
+      }
     }
-    break
-  }
-  return result
-}
-
-function findIndexById(id: string | number): number {
-  return (items.value || []).findIndex(x => String(x.id) === String(id))
-}
-
-function buildGroups(list: RowItem[]) {
-  const map: Record<string, RowItem[]> = {}
-  list.forEach(it => {
-    const d = it.plannedDate || '未安排'
-    if (!map[d]) map[d] = []
-    const idx0 = findIndexById(it.id)
-    if (idx0 >= 0) items.value[idx0]._gIndex = idx0
-    map[d].push(items.value[idx0])
-  })
-  const todayBase = new Date()
-  const base = new Date(todayBase.getFullYear(), todayBase.getMonth(), todayBase.getDate())
-  const MS_PER_DAY = 86400000
-  const diffDays = (ds: string): number => {
-    if (!ds || ds === '未安排') return Number.POSITIVE_INFINITY
-    const parts = String(ds).split('-').map(Number)
-    if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return Number.POSITIVE_INFINITY
-    const d = new Date(parts[0], parts[1] - 1, parts[2])
-    return Math.abs((d.getTime() - base.getTime()) / MS_PER_DAY)
-  }
-  const keys = Object.keys(map).sort((a, b) => {
-    const da = diffDays(a)
-    const db = diffDays(b)
-    if (da !== db) return da - db
-    return a > b ? 1 : -1
-  })
-  groups.value = keys.map(k => ({ date: k, items: map[k] }))
-}
-
-function loadData() {
-  let ids: Array<string | number> = []
-  try {
-    ids = (uni.getStorageSync && uni.getStorageSync('favorites_recipes')) || []
-  } catch (e) {
-    ids = []
-  }
-  let recent: any[] = []
-  let cards: Record<string, any> = {}
-  let planned: Record<string, string> = {}
-  try { recent = (uni.getStorageSync && uni.getStorageSync('random_selection_data')) || [] } catch (e) { recent = [] }
-  try { cards = (uni.getStorageSync && uni.getStorageSync('favorites_cards')) || {} } catch (e) { cards = {} }
-  try { planned = (uni.getStorageSync && uni.getStorageSync('favorites_planned')) || {} } catch (e) { planned = {} }
-
-  const list: RowItem[] = (ids || []).map((id) => {
-    const key = String(id)
-    const fromCard = cards[key] || {}
-    const fromRecent = (recent || []).find((x: any) => String(x.id) === key) || {}
-    const dateStr = planned[key] || '未安排'
-    return {
-      id,
-      name: String(safeDecode(fromCard.name || fromRecent.name || '')),
-      imageUrl: fromCard.imageUrl || fromRecent.cover || fromRecent.imageUrl || '',
-      plannedDate: dateStr,
-      _dx: 0,
-      _open: false
-    }
-  })
-  items.value = list
-  buildGroups(list)
-}
-
-function remove(it: RowItem) {
-  const key = String(it.id)
-  const ids = ((uni.getStorageSync && uni.getStorageSync('favorites_recipes')) || []).map((x: any) => String(x))
-  const idx = ids.indexOf(key)
-  if (idx >= 0) {
-    ids.splice(idx, 1)
-    uni.setStorageSync && uni.setStorageSync('favorites_recipes', ids)
-  }
-  const meta = (uni.getStorageSync && uni.getStorageSync('favorites_meta')) || {}
-  if (meta[key]) {
-    delete meta[key]
-    uni.setStorageSync && uni.setStorageSync('favorites_meta', meta)
-  }
-  const planned = (uni.getStorageSync && uni.getStorageSync('favorites_planned')) || {}
-  if (planned[key]) {
-    delete planned[key]
-    uni.setStorageSync && uni.setStorageSync('favorites_planned', planned)
-  }
-  uni.showToast && uni.showToast({ title: '已删除', icon: 'none' })
-  loadData()
-}
-
-function onTouchStart(e: any, idx: number) {
-  _startX = (e.touches && e.touches[0] ? e.touches[0].clientX : 0)
-  closeAll(idx)
-}
-
-function onTouchMove(e: any, idx: number) {
-  const x = (e.touches && e.touches[0] ? e.touches[0].clientX : 0)
-  const dx = x - (_startX || 0)
-  const clamped = Math.max(-200, Math.min(0, dx))
-  const it = items.value[idx]
-  if (it) {
-    it._dx = clamped
-    it._open = clamped < -48
+  },
+  mounted() {
+    this.loadData()
   }
 }
-
-function onTouchEnd(e: any, idx: number) {
-  const it = items.value[idx]
-  if (!it) return
-  const endX = (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : (_startX || 0))
-  const distance = Math.abs(endX - (_startX || 0))
-  if (distance < 8) {
-    it._dx = 0
-    it._open = false
-    setTimeout(() => handleTap(it), 0)
-    return
-  }
-  const dx = it._dx || 0
-  if (dx < -48) {
-    it._dx = -140
-    it._open = true
-  } else {
-    it._dx = 0
-    it._open = false
-  }
-}
-
-function closeAll(keepIdx: number = -1) {
-  (items.value || []).forEach((row, i) => {
-    if (i !== keepIdx) {
-      row._dx = 0
-      row._open = false
-    }
-  })
-}
-
-function clearAll() {
-  uni.removeStorageSync && uni.removeStorageSync('favorites_recipes')
-  uni.removeStorageSync && uni.removeStorageSync('favorites_meta')
-  uni.removeStorageSync && uni.removeStorageSync('favorites_planned')
-  uni.showToast && uni.showToast({ title: '已清空', icon: 'none' })
-  loadData()
-}
-
-function handleTap(it: RowItem) {
-  onRowTap(it)
-}
-
-function onRowTap(it: RowItem) {
-  const idx = findIndexById(it.id)
-  if (idx >= 0) {
-    const row = items.value[idx]
-    if (row && row._open) {
-      row._dx = 0
-      row._open = false
-      return
-    }
-  }
-  closeAll()
-  goDetail(it)
-}
-
-function goDetail(it: RowItem) {
-  const rawId = it && it.id != null ? safeDecode(String(it.id)) : ''
-  const encodedId = typeof rawId === 'string' && rawId ? encodeURIComponent(rawId) : ''
-  const url = encodedId ? `/pages/recipes/detail?id=${encodedId}` : '/pages/recipes/detail'
-  uni.navigateTo && uni.navigateTo({
-    url,
-    fail: () => {
-      uni.showToast && uni.showToast({ title: '跳转失败，请检查 pages.json 是否已注册 detail 页面', icon: 'none' })
-      uni.redirectTo && uni.redirectTo({ url })
-    }
-  })
-}
-
-function goExplore() {
-  if (uni.switchTab) {
-    uni.switchTab({ url: '/pages/recipes/index' })
-  } else {
-    uni.reLaunch && uni.reLaunch({ url: '/pages/recipes/index' })
-  }
-}
-
-onMounted(loadData)
 </script>
 
 <style>

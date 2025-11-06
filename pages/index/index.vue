@@ -33,9 +33,9 @@
           <view class="arrow right" @click="nextSlide">›</view>
           <swiper class="recommend-swiper" circular autoplay interval="4000" :current="currentIndex">
             <swiper-item v-for="item in recommendedRecipes" :key="item.id">
-              <view class="recipe-card" @click="goRecipeDetail(item)">
-                <view class="img-wrap">
-                  <image class="recipe-img" :src="item.image || '/static/yuan_97e57f821c79b841651df5b413309328.jpg'" mode="aspectFill" />
+              <view class="recipe-card">
+                <view class="img-wrap" @click="goRecipeDetail(item)">
+                  <image class="recipe-img" :src="item.image || '/static/default-recipe-cover.jpg'" mode="aspectFill" />
                   <view class="name-plate">{{ item.name }}</view>
                 </view>
               </view>
@@ -51,32 +51,26 @@
 </template>
 
 <script>
-import { getRecipes } from '../../api/recipes.js'
+const { getRandomRecipes } = require('../../api/recipes.js')
 export default {
   data() {
     return {
-      recommendedRecipes: [
-        { id: 'yuxiang-rousi', name: '鱼香肉丝', image: '/static/yuan_97e57f821c79b841651df5b413309328.jpg' },
-        { id: 'r1', name: '宫保鸡丁', image: '' },
-        { id: 'r2', name: '红烧肉', image: '' },
-        { id: 'r3', name: '麻婆豆腐', image: '' },
-        { id: 'r4', name: '清蒸鲈鱼', image: '' }
-      ],
+      recommendedRecipes: [],
       currentIndex: 0
     }
   },
   onShow() {
-    // 从后端拉取首页数据，填充推荐菜谱
-      getRecipes({ recipeLimit: 6 }).then((res) => {
-      const list = Array.isArray(res.recipes) ? res.recipes : []
+    // 调用随机菜谱接口
+    getRandomRecipes(5).then((res) => {
+      const list = Array.isArray(res) ? res : []
       this.recommendedRecipes = list.map((r) => ({
-        id: r.id || r.recipeId || r.key || String(Math.random()).slice(2),
-        name: r.name || r.title || '菜谱',
-        image: r.imageUrl || r.cover || r.image || ''
+        id: r.id || String(Math.random()).slice(2),
+        name: r.name || '菜谱',
+        image: r.feature || '/static/default-recipe-cover.jpg'
       }))
       this.currentIndex = 0
     }).catch(() => {
-      // 静默失败，保留本地默认展示
+      // 静默失败，保留空数组
     })
   },
   methods: {
@@ -85,15 +79,15 @@ export default {
     },
     goRandomRecipe() {
       // 随机菜谱：跳转到独立随机页面
-      uni.navigateTo({ url: '/pages/recipes/random' })
+      uni.navigateTo({ url: '/pages/recipes/random' });
     },
     goPlan() {
       // 跳到“每日菜谱”（购物车样式）
       uni.navigateTo({ url: '/pages/recipes/daily' })
     },
     goRecipeDetail(item) {
-      // 跳到菜谱详情（按你的路由规则调整）
-      uni.navigateTo({ url: `/pages/recipes/index?detailId=${item.id}` })
+      // 跳转到菜谱详情
+      uni.navigateTo({ url: `/pages/recipes/detail?id=${item.id}` });
     },
     prevSlide() {
       if (!this.recommendedRecipes.length) return

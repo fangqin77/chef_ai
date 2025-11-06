@@ -68,6 +68,13 @@
 }
 .arrow { font-size: 36rpx; color: #c7cdd3;
 }
+/* 退出登录样式 */
+.logout-cell {
+  background: #fff;
+}
+.logout-text {
+  color: #ff4757 !important;
+}
 /* 右上角卡通图样式（统一） */
 
 
