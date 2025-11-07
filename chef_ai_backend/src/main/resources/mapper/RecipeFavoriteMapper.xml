@@ -9,6 +9,7 @@
     <result property="recipeId" column="recipe_id"/>
     <result property="userId" column="user_id"/>
     <result property="createdAt" column="created_at"/>
+    <result property="planCookDate" column="plan_cook_date"/>
   </resultMap>
 
   <!-- 插入收藏记录 -->
@@ -39,7 +40,7 @@
 
   <!-- 查询用户收藏的菜谱视图：返回菜谱信息 + 收藏时间 -->
   <select id="selectUserFavoriteRecipesView" resultType="map">
-    SELECT r.*, rf.created_at AS favorite_time
+    SELECT r.*, rf.created_at AS favorite_time, rf.plan_cook_date
     FROM recipe_favorites rf
     JOIN recipes r ON r.id = rf.recipe_id
     WHERE rf.user_id = #{userId}
@@ -65,5 +66,37 @@
   <select id="countRecipeFavorites" resultType="int">
     SELECT COUNT(*) FROM recipe_favorites 
     WHERE recipe_id = #{recipeId}
+  </select>
+  
+  <!-- 新增收藏（带计划日期） -->
+  <insert id="insert">
+    INSERT INTO recipe_favorites (user_id, recipe_id, created_at, plan_cook_date)
+    VALUES (#{userId}, #{recipeId}, NOW(), #{planCookDate})
+  </insert>
+
+  <!-- 校验重复收藏 -->
+  <select id="selectByUserAndRecipe" resultMap="RecipeFavoriteMap">
+    SELECT * FROM recipe_favorites
+    WHERE user_id = #{userId} AND recipe_id = #{recipeId} LIMIT 1
+  </select>
+
+  <!-- 更新计划日期 -->
+  <update id="updatePlanDate">
+    UPDATE recipe_favorites SET plan_cook_date = #{planCookDate}
+    WHERE user_id = #{userId} AND recipe_id = #{recipeId}
+  </update>
+
+  <!-- 取消计划 -->
+  <update id="clearPlanDate">
+    UPDATE recipe_favorites SET plan_cook_date = NULL
+    WHERE user_id = #{userId} AND recipe_id = #{recipeId}
+  </update>
+
+  <!-- 每日菜谱查询（按计划日期） -->
+  <select id="selectDailyFavorites" resultMap="RecipeFavoriteMap">
+    SELECT * FROM recipe_favorites
+    WHERE user_id = #{userId} 
+      AND plan_cook_date = #{targetDate}
+    ORDER BY plan_cook_date ASC
   </select>
 </mapper>

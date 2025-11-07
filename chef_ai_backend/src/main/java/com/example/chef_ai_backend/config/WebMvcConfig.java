@@ -7,7 +7,9 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web 配置：注册拦截器，指定拦截规则
+ * Web MVC 配置：注册登录拦截器并维护白名单。
+ * - 默认拦截 /api/** 下需要登录的接口
+ * - 将无需登录的公共接口加入 excludePathPatterns 白名单
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -28,6 +30,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/recipes/random") // 放行随机菜谱接口（允许未登录用户查看）
                 .excludePathPatterns("/api/recipes/hot") // 放行热门菜谱接口（允许未登录用户查看）
                 .excludePathPatterns("/api/recipes/**/favorite-count") // 放行菜谱收藏次数接口（允许未登录用户查看）
+                .excludePathPatterns("/api/recipes/daily") // 放行每日菜谱接口（允许未登录用户查看）
+                .excludePathPatterns("/api/recipes/daily/details") // 放行每日菜谱详情接口（允许未登录用户查看）
+                .excludePathPatterns("/api/community/posts") // 放行社区帖子列表（允许未登录用户查看）
                 .excludePathPatterns("/api/home"); // 放行首页接口（允许未登录用户查看首页内容）
     }
 }

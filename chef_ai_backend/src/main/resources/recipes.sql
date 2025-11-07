@@ -11,7 +11,7 @@
  Target Server Version : 80028 (8.0.28)
  File Encoding         : 65001
 
- Date: 04/11/2025 10:16:12
+ Date: 04/11/2025 10:56:56
 */
 
 SET NAMES utf8mb4;
@@ -31,7 +31,7 @@ CREATE TABLE `recipes`  (
   `feature` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_type_id`(`type_id` ASC) USING BTREE COMMENT '类型号索引，优化分类查询'
-) ENGINE = InnoDB AUTO_INCREMENT = 1007 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜谱表（与Recipe实体类对齐）' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1008 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜谱表（与Recipe实体类对齐）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of recipes
@@ -71,5 +71,6 @@ INSERT INTO `recipes` VALUES (1002, NULL, '皮蛋豆腐', '1.嫩豆腐切厚片�
 INSERT INTO `recipes` VALUES (1003, NULL, '葱油饼', '1.面粉加温水揉成光滑面团，醒发30分钟；2.面团搓条下剂，擀成薄圆饼，抹上葱油（葱花+盐+食用油）；3.从一边卷起成长条，再盘成圆饼，擀成薄饼；4.平底锅刷油，放入葱油饼，小火煎至两面金黄酥脆', '面粉、葱花、盐、食用油、温水', 1, 'https://imgs.699pic.com/images/600/700/253.jpg!list1x.v2');
 INSERT INTO `recipes` VALUES (1004, NULL, '冬瓜丸子汤', '1.猪肉馅加姜末、盐、香油朝一个方向搅拌上劲；2.冬瓜去皮切片；3.锅中加水烧开，转小火，用手将肉馅挤成丸子，逐个放入锅中；4.丸子全部浮起后，放入冬瓜片，加盐调味，煮至冬瓜熟透，撒葱花出锅', '猪肉馅、冬瓜、姜末、盐、香油、葱花', 2, 'https://ts1.tc.mm.bing.net/th/id/OIP-C.geUaNFYDqmpONwkqF7RKLAHaHa?rs=1&pid=ImgDetMain&o=7&rm=3');
 INSERT INTO `recipes` VALUES (1005, NULL, '糯米糍', '1.糯米提前浸泡4小时，沥干后蒸熟，趁热加少许白糖拌匀，捣成糯米团；2.豆沙馅搓成小球；3.取糯米团按扁，包入豆沙馅，搓圆；4.放入椰蓉中滚一圈，均匀裹上椰蓉即可', '糯米、豆沙馅、椰蓉、白糖', 3, 'https://ts4.tc.mm.bing.net/th/id/OIP-C.j_yTdvtK_U86YbBy97wgyQHaF7?rs=1&pid=ImgDetMain&o=7&rm=3');
+INSERT INTO `recipes` VALUES (1007, NULL, '鱼香肉丝', '1.木耳、胡萝卜、青椒切丝，蒜切末，猪肉丝加生抽、盐腌制 10 分钟。\n2.锅中放油，肉丝炒至变色盛出。\n3.另起锅放油，蒜末爆香，放木耳、胡萝卜、青椒丝翻炒 2 分钟。\n4.加鱼香酱、肉丝，翻炒均匀即可。', '猪肉丝 200 克、木耳 50 克、胡萝卜 50 克、青椒 50 克、蒜 2 瓣、鱼香酱 30 克、盐 3 克、生抽 5 毫升、食用油 20 毫升', 2, 'https://img.88tph.com/production/20180731/12752409-0.jpg!/watermark/url/L3BhdGgvbG9nby5wbmc/align/center');
 
 SET FOREIGN_KEY_CHECKS = 1;

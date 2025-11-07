@@ -18,7 +18,6 @@
         <template v-else-if="column.key==='actions'">
           <a-space>
             <a-button size="small" @click="openEdit(record)">编辑</a-button>
-            <a-button size="small" @click="doFavorite(record)">收藏</a-button>
             <a-popconfirm title="确认删除该菜谱？" @confirm="remove(record.id)">
               <a-button size="small" danger>删除</a-button>
             </a-popconfirm>
@@ -74,7 +73,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
-import { fetchRecipes, createRecipe, updateRecipe, deleteRecipe, fetchRecipeCategories, favoriteRecipe } from '../services/adminApi';
+import { fetchRecipes, createRecipe, updateRecipe, deleteRecipe, fetchRecipeCategories } from '../services/adminApi';
 
 const list = ref<any[]>([]);
 const total = ref(0);
@@ -134,16 +133,6 @@ async function save() {
     loadData();
   } catch (e:any) {
     message.error(e?.response?.data?.message || e?.message || '保存异常');
-  }
-}
-
-async function doFavorite(row:any){
-  try{
-    const { data } = await favoriteRecipe(row.id);
-    if(!data?.success) throw new Error(data?.message || '收藏失败');
-    message.success('已收藏');
-  }catch(e:any){
-    message.error(e?.response?.data?.message || e?.message || '收藏异常');
   }
 }
 

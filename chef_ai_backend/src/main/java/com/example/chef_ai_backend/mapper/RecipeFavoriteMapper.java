@@ -3,6 +3,7 @@ package com.example.chef_ai_backend.mapper;
 import com.example.chef_ai_backend.model.RecipeFavorite;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface RecipeFavoriteMapper {
@@ -29,4 +30,19 @@ public interface RecipeFavoriteMapper {
     
     // 统计菜谱被收藏次数
     int countRecipeFavorites(@Param("recipeId") Integer recipeId);
+    
+    // 新增收藏（带计划日期）
+    int insert(@Param("userId") Long userId, @Param("recipeId") Integer recipeId, @Param("planCookDate") LocalDate planCookDate);
+    
+    // 校验重复收藏
+    RecipeFavorite selectByUserAndRecipe(@Param("userId") Long userId, @Param("recipeId") Integer recipeId);
+    
+    // 更新计划日期
+    int updatePlanDate(@Param("userId") Long userId, @Param("recipeId") Integer recipeId, @Param("planCookDate") LocalDate planCookDate);
+    
+    // 取消计划（清空日期）
+    int clearPlanDate(@Param("userId") Long userId, @Param("recipeId") Integer recipeId);
+    
+    // 每日菜谱查询（按计划日期）
+    List<RecipeFavorite> selectDailyFavorites(@Param("userId") Long userId, @Param("targetDate") LocalDate targetDate);
 }

@@ -13,7 +13,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 
 /**
- * 拦截器：所有需要登录的接口自动校验 Token
+ * 登录校验拦截器：统一从请求头读取 Token/Authorization 并校验。
+ * - 放行登录接口
+ * - 校验失败返回 401 未授权
+ * - 校验通过将 userId/loginUserId 写入请求属性供后续接口使用
  */
 @Component
 public class TokenInterceptor implements HandlerInterceptor {
@@ -33,8 +36,20 @@ public class TokenInterceptor implements HandlerInterceptor {
             return true;
         }
         
-        // 1. 从请求头获取 Token（前端需传入 Header: Token=xxx）
+        // 1. 从请求头获取 Token（支持 Token 和 Authorization: Bearer 两种方式）
         String token = request.getHeader("Token");
+        if (token == null || token.isEmpty()) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null) {
+                // 兼容不带 Bearer 前缀的情况（仅临时过渡用）
+                if (authHeader.startsWith("Bearer ")) {
+                    token = authHeader.substring(7);
+                } else {
+                    token = authHeader; // 直接使用 Authorization 头的内容作为 token
+                }
+                log.info("从Authorization头获取Token：{}", token);
+            }
+        }
         log.info("从请求头获取Token：{}", token);
 
         // 2. 验证 Token 有效性

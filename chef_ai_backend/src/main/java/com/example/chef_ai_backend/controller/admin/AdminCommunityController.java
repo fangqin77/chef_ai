@@ -7,6 +7,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * 管理端社区控制器：提供帖子管理的查询与审核接口。
+ * - 支持按审核状态/用户/关键词分页查询
+ * - 审核操作支持 approve/reject
+ */
 @RestController
 @RequestMapping("/admin/community")
 @CrossOrigin(origins = "*")

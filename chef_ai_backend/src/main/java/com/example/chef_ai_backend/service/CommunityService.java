@@ -47,6 +47,7 @@ public class CommunityService {
 
     @Transactional
     public Long createPost(Long userId, String content, String mediaJson, Integer visibility) {
+        System.out.println("准备插入帖子: userId=" + userId + ", content=" + content + ", mediaJson=" + mediaJson + ", visibility=" + visibility);
         Post p = new Post();
         p.setUserId(userId);
         p.setContent(content);
@@ -54,6 +55,7 @@ public class CommunityService {
         p.setVisibility(visibility == null ? 1 : visibility);
         // status=normal, audit_status=pending 在XML里默认写入
         communityMapper.insertPost(p);
+        System.out.println("帖子插入完成，ID=" + p.getId());
         return p.getId();
     }
 

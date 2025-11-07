@@ -1,21 +1,22 @@
 package com.example.chef_ai_backend.model;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-public class RecipeFavorite {
+public class DailyRecipe {
     private Long id;
     private Integer recipeId;
     private Long userId;
     private LocalDateTime createdAt;
-    private LocalDate planCookDate; // 计划制作日期（核心字段）
+    private LocalDate date;
 
     // Constructors
-    public RecipeFavorite() {}
+    public DailyRecipe() {}
 
-    public RecipeFavorite(Integer recipeId, Long userId) {
+    public DailyRecipe(Integer recipeId, Long userId, LocalDate date) {
         this.recipeId = recipeId;
         this.userId = userId;
+        this.date = date;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -52,11 +53,11 @@ public class RecipeFavorite {
         this.createdAt = createdAt;
     }
 
-    public LocalDate getPlanCookDate() {
-        return planCookDate;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public void setPlanCookDate(LocalDate planCookDate) {
-        this.planCookDate = planCookDate;
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 }

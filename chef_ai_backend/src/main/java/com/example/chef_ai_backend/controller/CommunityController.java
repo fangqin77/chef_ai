@@ -8,6 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * 社区模块控制器：提供帖子列表、发帖、评论、点赞、收藏、举报等接口。
+ * - 列表仅返回审核通过且正常的帖子
+ * - 发帖默认写入审核状态（当前配置为发布即通过）
+ * - 评论默认待审核
+ * - 点赞、收藏为幂等操作
+ */
 @RestController
 @RequestMapping("/api/community")
 @CrossOrigin(origins = "*")
@@ -53,13 +60,50 @@ public class CommunityController {
     @PostMapping("/posts")
     public Map<String, Object> createPost(@RequestBody Map<String, Object> body,
                                           HttpServletRequest request) {
-        Long uid = currentUserId(request);
-        String content = (String) body.get("content");
-        // mediaList 前端传数组，这里简单存为 JSON 字符串
-        String mediaJson = com.alibaba.fastjson2.JSON.toJSONString(body.get("mediaList"));
-        Integer visibility = (Integer) body.getOrDefault("visibility", 1);
-        Long id = communityService.createPost(uid, content, mediaJson, visibility);
-        return Map.of("id", id, "audit_status", "pending");
+        try {
+            System.out.println("接收参数：" + body);
+            Long uid = currentUserId(request);
+            System.out.println("当前用户 ID：" + uid);
+            // 检查用户是否已登录
+            if (uid == null) {
+                return Map.of("success", false, "message", "用户未登录");
+            }
+            
+            String content = (String) body.get("content");
+            // 检查内容是否为空
+            if (content == null || content.trim().isEmpty()) {
+                return Map.of("success", false, "message", "帖子内容不能为空");
+            }
+            
+            // mediaList 前端传数组，这里简单存为 JSON 字符串
+            Object mediaList = body.get("mediaList");
+            // 确保 mediaList 是数组或空数组
+            if (mediaList == null) {
+                mediaList = new Object[0]; // 空数组
+            }
+            
+            String mediaJson = com.alibaba.fastjson2.JSON.toJSONString(mediaList);
+            Object visibilityObj = body.get("visibility");
+            
+            // 处理 visibility 参数，确保是整数类型
+            Integer visibility = 1; // 默认值
+            if (visibilityObj instanceof Number) {
+                visibility = ((Number) visibilityObj).intValue();
+            } else if (visibilityObj instanceof String) {
+                try {
+                    visibility = Integer.parseInt((String) visibilityObj);
+                } catch (NumberFormatException e) {
+                    // 保持默认值
+                }
+            }
+            
+            Long id = communityService.createPost(uid, content, mediaJson, visibility);
+            return Map.of("success", true, "data", Map.of("id", id, "audit_status", "pending"));
+        } catch (Exception e) {
+            // 捕获所有异常并返回错误信息
+            e.printStackTrace();
+            return Map.of("success", false, "message", "发布失败：" + e.getMessage());
+        }
     }
 
     // 删除本人帖子（软删除）

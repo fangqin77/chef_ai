@@ -78,7 +78,7 @@
 
   <insert id="insertPost" parameterType="com.example.chef_ai_backend.model.Post" useGeneratedKeys="true" keyProperty="id">
     INSERT INTO posts (user_id, content, media_json, visibility, status, audit_status)
-    VALUES (#{userId}, #{content}, #{mediaJson}, #{visibility}, 'normal', 'pending')
+    VALUES (#{userId}, #{content}, #{mediaJson}, #{visibility}, 'normal', 'approved')
   </insert>
 
   <!-- 管理端：分页查询帖子（任意状态） -->

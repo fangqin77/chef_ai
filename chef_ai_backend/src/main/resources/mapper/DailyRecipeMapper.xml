@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chef_ai_backend.mapper.DailyRecipeMapper">
+  <!-- 结果映射 -->
+  <resultMap id="DailyRecipeMap" type="com.example.chef_ai_backend.model.DailyRecipe">
+    <id property="id" column="id"/>
+    <result property="recipeId" column="recipe_id"/>
+    <result property="userId" column="user_id"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="date" column="date"/>
+  </resultMap>
+
+  <!-- 插入每日菜谱记录 -->
+  <insert id="insertDailyRecipe" parameterType="com.example.chef_ai_backend.model.DailyRecipe" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO daily_recipes (recipe_id, user_id, date, created_at)
+    VALUES (#{recipeId}, #{userId}, #{date}, #{createdAt})
+  </insert>
+
+  <!-- 删除每日菜谱记录 -->
+  <delete id="deleteDailyRecipe">
+    DELETE FROM daily_recipes 
+    WHERE recipe_id = #{recipeId} AND user_id = #{userId} AND date = #{date}
+  </delete>
+
+  <!-- 查询每日菜谱记录 -->
+  <select id="selectDailyRecipe" resultMap="DailyRecipeMap">
+    SELECT * FROM daily_recipes 
+    WHERE recipe_id = #{recipeId} AND user_id = #{userId} AND date = #{date}
+  </select>
+
+  <!-- 查询用户某天的每日菜谱列表 -->
+  <select id="selectUserDailyRecipes" resultMap="DailyRecipeMap">
+    SELECT * FROM daily_recipes 
+    WHERE user_id = #{userId} AND date = #{date}
+    ORDER BY created_at DESC
+  </select>
+
+  <!-- 查询用户某天的每日菜谱详细信息列表（包含菜谱信息） -->
+  <select id="selectUserDailyRecipesWithDetails" resultType="map">
+    SELECT dr.*, r.name as recipe_name, r.feature as recipe_image, r.method as recipe_method
+    FROM daily_recipes dr
+    JOIN recipes r ON r.id = dr.recipe_id
+    WHERE dr.user_id = #{userId} AND dr.date = #{date}
+    ORDER BY dr.created_at DESC
+  </select>
+
+  <!-- 查询用户一段时间内的每日菜谱列表 -->
+  <select id="selectUserDailyRecipesByPeriod" resultMap="DailyRecipeMap">
+    SELECT * FROM daily_recipes 
+    WHERE user_id = #{userId} AND date BETWEEN #{startDate} AND #{endDate}
+    ORDER BY date DESC, created_at DESC
+  </select>
+
+  <!-- 统计用户某天的每日菜谱数量 -->
+  <select id="countUserDailyRecipes" resultType="int">
+    SELECT COUNT(*) FROM daily_recipes 
+    WHERE user_id = #{userId} AND date = #{date}
+  </select>
+</mapper>
