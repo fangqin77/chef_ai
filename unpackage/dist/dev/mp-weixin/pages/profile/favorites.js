@@ -102,7 +102,7 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  var g0 = _vm.ids.length
+  var g0 = _vm.favorites.length
   _vm.$mp.data = Object.assign(
     {},
     {
@@ -146,73 +146,190 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 /* WEBPACK VAR INJECTION */(function(uni) {
 
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
+var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 var _default = {
   data: function data() {
     return {
-      map: {},
-      ids: [],
-      fallback: '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
+      favorites: [],
+      fallback: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
+      loading: false
     };
   },
   onShow: function onShow() {
-    var fav = uni.getStorageSync('my_fav_posts') || {};
-    this.map = fav;
-    this.ids = Object.keys(fav);
+    var _this = this;
+    return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
+      return _regenerator.default.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.next = 2;
+              return _this.loadFavorites();
+            case 2:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }))();
   },
   methods: {
+    // 加载收藏列表
+    loadFavorites: function loadFavorites() {
+      var _this2 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
+        var token, response;
+        return _regenerator.default.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                if (!_this2.loading) {
+                  _context2.next = 2;
+                  break;
+                }
+                return _context2.abrupt("return");
+              case 2:
+                _context2.prev = 2;
+                _this2.loading = true;
+
+                // 检查用户是否登录
+                token = uni.getStorageSync('token');
+                if (token) {
+                  _context2.next = 9;
+                  break;
+                }
+                uni.showToast({
+                  title: '请先登录',
+                  icon: 'none'
+                });
+                _this2.favorites = [];
+                return _context2.abrupt("return");
+              case 9:
+                _context2.next = 11;
+                return (0, _recipes.getUserFavorites)(1, 20);
+              case 11:
+                response = _context2.sent;
+                console.log('获取收藏列表响应:', response);
+                if (response && response.list) {
+                  _this2.favorites = response.list.map(function (item) {
+                    return _objectSpread(_objectSpread({}, item), {}, {
+                      id: String(item.id)
+                    });
+                  });
+                  console.log("\u83B7\u53D6\u5230 ".concat(_this2.favorites.length, " \u6761\u6536\u85CF\u8BB0\u5F55"));
+                } else {
+                  console.error('接口返回数据格式错误:', response);
+                  _this2.favorites = [];
+                }
+                _context2.next = 21;
+                break;
+              case 16:
+                _context2.prev = 16;
+                _context2.t0 = _context2["catch"](2);
+                console.error('获取收藏列表失败:', _context2.t0);
+                uni.showToast({
+                  title: '获取收藏失败',
+                  icon: 'none'
+                });
+                _this2.favorites = [];
+              case 21:
+                _context2.prev = 21;
+                _this2.loading = false;
+                return _context2.finish(21);
+              case 24:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, null, [[2, 16, 21, 24]]);
+      }))();
+    },
+    // 取消收藏
     remove: function remove(id) {
-      try {
-        var fav = uni.getStorageSync('my_fav_posts') || {};
-        if (fav[id]) delete fav[id];
-        uni.setStorageSync('my_fav_posts', fav);
-        this.map = fav;
-        this.ids = Object.keys(fav);
-        uni.showToast({
-          title: '已删除收藏',
-          icon: 'none'
-        });
-      } catch (e) {
-        uni.showToast({
-          title: '删除失败',
-          icon: 'none'
-        });
-      }
+      var _this3 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
+        return _regenerator.default.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                uni.showModal({
+                  title: '取消收藏',
+                  content: '确定要取消收藏该作品吗？',
+                  success: function () {
+                    var _success = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3(res) {
+                      var response;
+                      return _regenerator.default.wrap(function _callee3$(_context3) {
+                        while (1) {
+                          switch (_context3.prev = _context3.next) {
+                            case 0:
+                              if (!res.confirm) {
+                                _context3.next = 12;
+                                break;
+                              }
+                              _context3.prev = 1;
+                              _context3.next = 4;
+                              return (0, _recipes.cancelLikePost)(id);
+                            case 4:
+                              response = _context3.sent;
+                              if (response && response.success) {
+                                // 从本地列表中移除
+                                _this3.favorites = _this3.favorites.filter(function (item) {
+                                  return String(item.id) !== id;
+                                });
+                                uni.showToast({
+                                  title: '取消收藏成功',
+                                  icon: 'success'
+                                });
+                              } else {
+                                uni.showToast({
+                                  title: (response === null || response === void 0 ? void 0 : response.message) || '取消收藏失败',
+                                  icon: 'none'
+                                });
+                              }
+                              _context3.next = 12;
+                              break;
+                            case 8:
+                              _context3.prev = 8;
+                              _context3.t0 = _context3["catch"](1);
+                              console.error('取消收藏失败:', _context3.t0);
+                              uni.showToast({
+                                title: '取消收藏失败，请重试',
+                                icon: 'none'
+                              });
+                            case 12:
+                            case "end":
+                              return _context3.stop();
+                          }
+                        }
+                      }, _callee3, null, [[1, 8]]);
+                    }));
+                    function success(_x) {
+                      return _success.apply(this, arguments);
+                    }
+                    return success;
+                  }()
+                });
+              case 1:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4);
+      }))();
     },
     open: function open(id) {
-      // 打开美食圈并滚动到对应项（简单跳转到美食圈即可）
-      uni.switchTab ? uni.switchTab({
-        url: '/pages/social/index'
-      }) : uni.navigateTo({
-        url: '/pages/social/index'
+      // 打开美食圈并跳转到对应帖子详情页
+      uni.navigateTo({
+        url: "/pages/social/detail?id=".concat(encodeURIComponent(id))
       });
     },
     goSocial: function goSocial() {

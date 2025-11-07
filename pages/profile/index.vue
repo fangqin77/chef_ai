@@ -12,7 +12,7 @@
     <view class="card" @click="handleUserCardClick">
       <view class="card-top">
         <view class="avatar-wrap">
-          <image class="avatar" :src="userInfo.avatar || '/static/avatar-default.png'" mode="aspectFill" />
+          <image class="avatar" :src="userInfo.avatarUrl || userInfo.avatar || '/static/avatar-default.png'" mode="aspectFill" />
         </view>
         <view class="profile">
           <text class="name">{{ userInfo.nickname || '用户' }}</text>
@@ -106,6 +106,43 @@ export default {
   async onLoad() {
     this.checkLoginStatus();
   },
+
+    async onShow() {
+    // 每次显示页面时重新加载用户信息
+    const token = uni.getStorageSync('token');
+    if (token) {
+      this.loadUserInfo(); // 从服务器获取最新信息
+    } else {
+      this.checkLoginStatus();
+    }
+  },
+  
+  onLoad() {
+    // 监听用户信息更新事件
+    uni.$on('userInfoUpdated', () => {
+      console.log('收到用户信息更新事件，重新加载用户信息');
+      this.loadUserInfo();
+    });
+  },
+  
+  onUnload() {
+    // 移除事件监听
+    uni.$off('userInfoUpdated');
+  },
+  
+  onLoad() {
+    // 监听用户信息更新事件
+    uni.$on('userInfoUpdated', () => {
+      console.log('收到用户信息更新事件，重新加载用户信息');
+      this.loadUserInfo();
+    });
+  },
+  
+  onUnload() {
+    // 移除事件监听
+    uni.$off('userInfoUpdated');
+  },
+
   methods: {
     // 检查登录状态
     checkLoginStatus() {
@@ -208,7 +245,7 @@ export default {
             url: 'http://172.20.10.3:9000/api/user/info',
             method: 'GET',
             header: {
-              'token': token.trim(), // 修改为后端预期的头名称
+              'Token': token.trim(), // 修改为后端预期的头名称
               'Content-Type': 'application/json'
             },
             timeout: 10000,
@@ -243,8 +280,19 @@ export default {
           return;
         }
         
-        // 更新用户信息
-        this.userInfo = { ...res.data, isLoggedIn: true };
+        // 更新用户信息 - 正确处理API返回的数据结构
+        const apiData = res.data.data || res.data;
+        if (apiData) {
+          // 映射后端字段到前端字段
+          this.userInfo = {
+            avatarUrl: apiData.avatarUrl || apiData.avatar, // 后端返回 avatarUrl
+            nickname: apiData.nickname,
+            followCount: apiData.followCount || 0,
+            fansCount: apiData.fansCount || 0,
+            likeCount: apiData.likeCount || 0,
+            isLoggedIn: true
+          };
+        }
       } catch (err) {
         console.error('获取用户信息失败:', err);
         uni.showToast({ title: '获取信息失败', icon: 'none' });

@@ -4,77 +4,109 @@
       <text class="title">我的评论</text>
     </view>
 
-    <view v-if="!items.length" class="empty">
+    <view v-if="!comments.length" class="empty">
       <text class="tip">暂无评论记录</text>
       <button class="btn primary small" @click="goSocial">去美食圈</button>
     </view>
 
     <scroll-view v-else scroll-y class="list">
-      <view class="card" v-for="it in items" :key="it.key">
+      <view class="card" v-for="comment in comments" :key="comment.id">
         <view class="top">
-          <image class="avatar" :src="it.avatar || fallbackImg" mode="aspectFill" />
+          <image class="avatar" :src="comment.avatarUrl || fallbackImg" mode="aspectFill" />
           <view class="meta">
-            <text class="name">{{ it.name || '我' }}</text>
-            <text class="time">{{ it.time || '刚刚' }}</text>
+            <text class="name">{{ comment.userName || '我' }}</text>
+            <text class="time">{{ formatTime(comment.createTime) }}</text>
           </view>
           <view class="ops">
-            <button class="btn tiny ghost" @click="open(it)">去查看</button>
+            <button class="btn tiny ghost" @click="open(comment)">去查看</button>
           </view>
         </view>
-        <view class="content">{{ it.text }}</view>
+        <view class="content">{{ comment.content }}</view>
       </view>
     </scroll-view>
   </view>
 </template>
 
 <script>
+import { getUserComments } from '@/api/recipes';
+
 export default {
   data() {
     return {
-      items: [],
-      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
+      comments: [],
+      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
+      loading: false
     }
   },
-  onShow() {
-    this.load()
+  async onShow() {
+    await this.loadComments();
   },
   methods: {
-    meName() {
+    // 加载评论列表
+    async loadComments() {
+      if (this.loading) return;
+      
       try {
-        const v = uni.getStorageSync('profile_info') || {}
-        const name = String(v.name || '').trim()
-        return name || '我'
-      } catch(e) { return '我' }
+        this.loading = true;
+        
+        // 检查用户是否登录
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          this.comments = [];
+          return;
+        }
+        
+        // 从后端API获取评论列表
+        const response = await getUserComments(1, 20);
+        console.log('获取评论列表响应:', response);
+        
+        if (response && response.list) {
+          this.comments = response.list.map(comment => ({
+            ...comment,
+            id: String(comment.id),
+            postId: String(comment.postId || comment.postId)
+          }));
+          console.log(`获取到 ${this.comments.length} 条评论记录`);
+        } else {
+          console.error('接口返回数据格式错误:', response);
+          this.comments = [];
+        }
+      } catch (error) {
+        console.error('获取评论列表失败:', error);
+        uni.showToast({ title: '获取评论失败', icon: 'none' });
+        this.comments = [];
+      } finally {
+        this.loading = false;
+      }
     },
-    load() {
-      const me = this.meName()
-      let cm = {}
-      try { cm = uni.getStorageSync('social_comments') || {} } catch(e) { cm = {} }
-      const list = []
-      Object.keys(cm).forEach(pid => {
-        const arr = Array.isArray(cm[pid]) ? cm[pid] : []
-        arr.forEach((c, idx) => {
-          if (String(c.name || '').trim() === me) {
-            list.push({
-              key: pid + '_' + idx,
-              postId: String(pid),
-              name: c.name || '我',
-              text: c.text || '',
-              time: c.time || '刚刚',
-              avatar: c.avatar || ''
-            })
-          }
-        })
-      })
-      // 可按时间简排序（这里保持插入顺序）
-      this.items = list
+    
+    // 格式化时间显示
+    formatTime(timestamp) {
+      if (!timestamp) return '刚刚';
+      
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+      if (diff < 2592000000) return Math.floor(diff / 86400000) + '天前';
+      
+      return date.toLocaleDateString();
     },
+    
     goSocial() {
       uni.switchTab ? uni.switchTab({ url: '/pages/social/index' }) : uni.navigateTo({ url: '/pages/social/index' })
     },
-    open(it) {
-      if (!it || !it.postId) return
-      uni.navigateTo({ url: '/pages/social/index?postId=' + encodeURIComponent(String(it.postId)) })
+    
+    open(comment) {
+      if (!comment || !comment.postId) return;
+      // 跳转到对应的帖子详情页
+      uni.navigateTo({ 
+        url: `/pages/social/detail?id=${encodeURIComponent(comment.postId)}` 
+      });
     }
   }
 }

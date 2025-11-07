@@ -157,7 +157,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
 var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
-//
+var _toConsumableArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ 18));
+var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
 //
 //
 //
@@ -188,21 +189,13 @@ var _default = {
   data: function data() {
     return {
       text: '',
-      imgInput: '',
       images: [],
       submitting: false
     };
   },
   methods: {
     addImg: function addImg() {
-      var u = (this.imgInput || '').trim();
-      if (!u) {
-        uni.showToast({
-          title: '请输入图片地址',
-          icon: 'none'
-        });
-        return;
-      }
+      var _this = this;
       if (this.images.length >= 9) {
         uni.showToast({
           title: '最多上传 9 张图片',
@@ -210,27 +203,54 @@ var _default = {
         });
         return;
       }
-      this.images.push(u);
-      this.imgInput = '';
+      uni.chooseImage({
+        count: 9 - this.images.length,
+        sizeType: ['original', 'compressed'],
+        sourceType: ['album', 'camera'],
+        success: function success(res) {
+          var newImages = res.tempFilePaths.filter(function (path) {
+            return !_this.images.includes(path);
+          });
+          if (newImages.length === 0) {
+            uni.showToast({
+              title: '请勿重复添加图片',
+              icon: 'none'
+            });
+            return;
+          }
+          _this.images = [].concat((0, _toConsumableArray2.default)(_this.images), (0, _toConsumableArray2.default)(newImages));
+          uni.showToast({
+            title: '添加成功',
+            icon: 'none'
+          });
+        },
+        fail: function fail(err) {
+          uni.showToast({
+            title: "\u9009\u62E9\u56FE\u7247\u5931\u8D25: ".concat(err.errMsg || '未知错误'),
+            icon: 'none',
+            duration: 3000
+          });
+        }
+      });
     },
     removeImg: function removeImg(i) {
       this.images.splice(i, 1);
     },
     submit: function submit() {
-      var _this = this;
+      var _this2 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
         var text, response;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                if (!_this.submitting) {
+                if (!_this2.submitting) {
                   _context.next = 2;
                   break;
                 }
                 return _context.abrupt("return");
               case 2:
-                text = (_this.text || '').trim();
+                text = (_this2.text || '').trim();
                 if (!(text.length > 200)) {
                   _context.next = 6;
                   break;
@@ -241,7 +261,7 @@ var _default = {
                 });
                 return _context.abrupt("return");
               case 6:
-                if (!(!text && _this.images.length === 0)) {
+                if (!(!text && _this2.images.length === 0)) {
                   _context.next = 9;
                   break;
                 }
@@ -251,7 +271,7 @@ var _default = {
                 });
                 return _context.abrupt("return");
               case 9:
-                if (!(_this.images.length > 9)) {
+                if (!(_this2.images.length > 9)) {
                   _context.next = 12;
                   break;
                 }
@@ -261,10 +281,10 @@ var _default = {
                 });
                 return _context.abrupt("return");
               case 12:
-                _this.submitting = true;
+                _this2.submitting = true;
                 _context.prev = 13;
                 _context.next = 16;
-                return createCommunityPost(text, _this.images, 1);
+                return (0, _recipes.createCommunityPost)(text, _this2.images, 1);
               case 16:
                 response = _context.sent;
                 if (response && response.success) {
@@ -295,7 +315,7 @@ var _default = {
                 });
               case 23:
                 _context.prev = 23;
-                _this.submitting = false;
+                _this2.submitting = false;
                 return _context.finish(23);
               case 26:
               case "end":

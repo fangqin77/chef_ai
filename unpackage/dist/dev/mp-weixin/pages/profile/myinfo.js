@@ -153,7 +153,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
 var _toConsumableArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ 18));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
 //
 //
 //
@@ -184,29 +187,103 @@ var _default = {
   data: function data() {
     return {
       fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
-      notices: []
+      notices: [],
+      loading: false
     };
   },
   onShow: function onShow() {
-    this.buildNotices();
+    this.loadNotifications();
   },
   methods: {
-    basePosts: function basePosts() {
-      var local = [];
-      try {
-        local = uni.getStorageSync('social_posts') || [];
-      } catch (e) {}
-      return Array.isArray(local) ? local : [];
+    loadNotifications: function loadNotifications() {
+      var _this = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
+        var token, response, backendNotices, localNotices, allNotices, seen, uniq;
+        return _regenerator.default.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _this.loading = true;
+                _context.prev = 1;
+                // 检查是否有token
+                token = uni.getStorageSync('token');
+                if (token) {
+                  _context.next = 6;
+                  break;
+                }
+                // 如果没有token，使用本地数据
+                _this.notices = _this.buildLocalNotices();
+                return _context.abrupt("return");
+              case 6:
+                _context.next = 8;
+                return (0, _recipes.getUserNotifications)();
+              case 8:
+                response = _context.sent;
+                if (response && response.code === 200 && response.data) {
+                  // 成功获取后端数据
+                  backendNotices = _this.formatBackendNotifications(response.data); // 合并本地通知
+                  localNotices = _this.buildLocalNotices();
+                  allNotices = [].concat((0, _toConsumableArray2.default)(backendNotices), (0, _toConsumableArray2.default)(localNotices)); // 去重
+                  seen = new Set(), uniq = [];
+                  allNotices.forEach(function (n) {
+                    var k = [n.postId, n.title, n.brief].join('|');
+                    if (!seen.has(k)) {
+                      seen.add(k);
+                      uniq.push(n);
+                    }
+                  });
+                  _this.notices = uniq;
+                } else {
+                  // 后端API失败，使用本地数据
+                  _this.notices = _this.buildLocalNotices();
+                }
+                _context.next = 16;
+                break;
+              case 12:
+                _context.prev = 12;
+                _context.t0 = _context["catch"](1);
+                console.error('获取通知失败:', _context.t0);
+                // 失败时使用本地数据
+                _this.notices = _this.buildLocalNotices();
+              case 16:
+                _context.prev = 16;
+                _this.loading = false;
+                return _context.finish(16);
+              case 19:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, null, [[1, 12, 16, 19]]);
+      }))();
     },
-    commentsMap: function commentsMap() {
-      try {
-        return uni.getStorageSync('social_comments') || {};
-      } catch (e) {
-        return {};
-      }
+    formatBackendNotifications: function formatBackendNotifications(notifications) {
+      var _this2 = this;
+      if (!Array.isArray(notifications)) return [];
+      return notifications.map(function (notif) {
+        return {
+          type: notif.type || 'notification',
+          postId: notif.postId || notif.relatedId || '',
+          title: notif.title || '新通知',
+          brief: notif.content || notif.message || '',
+          time: _this2.formatTime(notif.createTime || notif.timestamp),
+          avatar: notif.avatar || notif.senderAvatar || ''
+        };
+      });
     },
-    buildNotices: function buildNotices() {
-      // 从本地资料读取昵称（如果之前保存过），否则默认“我”
+    formatTime: function formatTime(timestamp) {
+      if (!timestamp) return '刚刚';
+      var now = new Date();
+      var time = new Date(timestamp);
+      var diff = now - time;
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+      if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+      return time.toLocaleDateString();
+    },
+    buildLocalNotices: function buildLocalNotices() {
+      // 从本地资料读取昵称（如果之前保存过），否则默认"我"
       var me = '我';
       try {
         var v = uni.getStorageSync('profile_info') || {};
@@ -273,7 +350,21 @@ var _default = {
           uniq.push(n);
         }
       });
-      this.notices = uniq;
+      return uniq;
+    },
+    basePosts: function basePosts() {
+      var local = [];
+      try {
+        local = uni.getStorageSync('social_posts') || [];
+      } catch (e) {}
+      return Array.isArray(local) ? local : [];
+    },
+    commentsMap: function commentsMap() {
+      try {
+        return uni.getStorageSync('social_comments') || {};
+      } catch (e) {
+        return {};
+      }
     },
     clearNotices: function clearNotices() {
       uni.removeStorageSync('profile_notifications');

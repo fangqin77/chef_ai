@@ -146,16 +146,106 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 /* WEBPACK VAR INJECTION */(function(uni) {
 
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
+var _toConsumableArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ 18));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
 var _vue = __webpack_require__(/*! vue */ 25);
 var items = (0, _vue.ref)([]);
 var fallbackImg = '/static/yuan_97e57f821c79b841651df5b413309328.jpg';
 function load() {
+  return _load.apply(this, arguments);
+}
+function _load() {
+  _load = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
+    var token, response, backendHistory, localHistory, allHistory, seen, uniq;
+    return _regenerator.default.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.prev = 0;
+            // 检查是否有token
+            token = uni.getStorageSync && uni.getStorageSync('token');
+            if (token) {
+              _context.next = 5;
+              break;
+            }
+            // 如果没有token，使用本地数据
+            loadLocalHistory();
+            return _context.abrupt("return");
+          case 5:
+            _context.next = 7;
+            return (0, _recipes.getUserBrowsingHistory)();
+          case 7:
+            response = _context.sent;
+            if (response && response.code === 200 && response.data) {
+              // 成功获取后端数据
+              backendHistory = formatBackendHistory(response.data); // 合并本地历史
+              localHistory = loadLocalHistory();
+              allHistory = [].concat((0, _toConsumableArray2.default)(backendHistory), (0, _toConsumableArray2.default)(localHistory)); // 去重
+              seen = new Set(), uniq = [];
+              allHistory.forEach(function (h) {
+                var k = h.key;
+                if (!seen.has(k)) {
+                  seen.add(k);
+                  uniq.push(h);
+                }
+              });
+              items.value = uniq;
+            } else {
+              // 后端API失败，使用本地数据
+              loadLocalHistory();
+            }
+            _context.next = 15;
+            break;
+          case 11:
+            _context.prev = 11;
+            _context.t0 = _context["catch"](0);
+            console.error('获取浏览历史失败:', _context.t0);
+            // 失败时使用本地数据
+            loadLocalHistory();
+          case 15:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee, null, [[0, 11]]);
+  }));
+  return _load.apply(this, arguments);
+}
+function loadLocalHistory() {
   try {
     var arr = uni.getStorageSync && uni.getStorageSync('social_history') || [];
     items.value = Array.isArray(arr) ? arr : [];
+    return items.value;
   } catch (e) {
     items.value = [];
+    return [];
   }
+}
+function formatBackendHistory(historyData) {
+  if (!Array.isArray(historyData)) return [];
+  return historyData.map(function (item) {
+    return {
+      key: String(item.id || item.postId || Date.now()),
+      postId: String(item.postId || item.id || ''),
+      cover: item.cover || item.image || '',
+      title: item.title || item.name || '作品',
+      time: formatTime(item.createTime || item.timestamp || item.time)
+    };
+  });
+}
+function formatTime(timestamp) {
+  if (!timestamp) return '刚刚';
+  var now = new Date();
+  var time = new Date(timestamp);
+  var diff = now.getTime() - time.getTime();
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+  return time.toLocaleDateString();
 }
 function save(list) {
   uni.setStorageSync && uni.setStorageSync('social_history', list);

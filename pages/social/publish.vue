@@ -8,8 +8,7 @@
       <textarea class="textarea" v-model="text" placeholder="写点什么，记录你的美食时刻～" maxlength="200" />
       <view class="imgs">
         <view class="row">
-          <input class="img-input" v-model="imgInput" placeholder="图片地址（可选）" />
-          <button class="btn small" :disabled="images.length >= 9" @click="addImg">添加</button>
+          <button class="btn-img" :disabled="images.length >= 9" @click="addImg">添加图片</button>
         </view>
         <view class="thumbs" v-if="images.length">
           <text class="count">已添加 {{ images.length }}/9</text>
@@ -26,28 +25,43 @@
 </template>
 
 <script>
+import { createCommunityPost } from '@/api/recipes';
+
 export default {
   data() {
     return {
       text: '',
-      imgInput: '',
       images: [],
       submitting: false
     }
   },
   methods: {
     addImg() {
-      const u = (this.imgInput || '').trim()
-      if (!u) {
-        uni.showToast({ title: '请输入图片地址', icon: 'none' })
-        return
-      }
       if (this.images.length >= 9) {
-        uni.showToast({ title: '最多上传 9 张图片', icon: 'none' })
-        return
+        uni.showToast({ title: '最多上传 9 张图片', icon: 'none' });
+        return;
       }
-      this.images.push(u)
-      this.imgInput = ''
+      uni.chooseImage({
+        count: 9 - this.images.length,
+        sizeType: ['original', 'compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          const newImages = res.tempFilePaths.filter(path => !this.images.includes(path));
+          if (newImages.length === 0) {
+            uni.showToast({ title: '请勿重复添加图片', icon: 'none' });
+            return;
+          }
+          this.images = [...this.images, ...newImages];
+          uni.showToast({ title: '添加成功', icon: 'none' });
+        },
+        fail: (err) => {
+          uni.showToast({ 
+            title: `选择图片失败: ${err.errMsg || '未知错误'}`,
+            icon: 'none',
+            duration: 3000
+          });
+        }
+      });
     },
     removeImg(i) {
       this.images.splice(i, 1)
@@ -106,7 +120,7 @@ export default {
   box-shadow: 0 6rpx 14rpx rgba(0,0,0,0.06);
 }
 .btn { height: 80rpx; line-height: 80rpx; text-align: center; border-radius: 16rpx; background: #f3f4f6; color: #374151; }
-.btn.small { height: 72rpx; line-height: 72rpx; padding: 0 20rpx; }
+.btn-img { height: 80rpx; line-height: 80rpx; padding: 0 32rpx; background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%); color: #fff; border-radius: 16rpx; font-size: 28rpx; }
 .btn.primary { background: linear-gradient(90deg, #FFE27A 0%, #FFC107 100%); color: #fff; margin-top: 20rpx; }
 .thumbs { margin-top: 12rpx; display: flex; gap: 12rpx; flex-wrap: wrap; align-items: center; }
 .thumb { position: relative; width: 180rpx; height: 180rpx; border-radius: 14rpx; overflow: hidden; background: #eee; }

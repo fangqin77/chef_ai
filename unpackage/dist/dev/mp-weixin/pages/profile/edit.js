@@ -137,49 +137,32 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 /* WEBPACK VAR INJECTION */(function(uni) {
 
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
+var _user = __webpack_require__(/*! @/api/user.js */ 30);
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 var _default = {
   data: function data() {
     return {
       userInfo: {
         avatar: '',
         nickname: ''
-      }
+      },
+      submitting: false // 添加这一行
     };
   },
   onLoad: function onLoad() {
     // 从本地存储加载用户信息
     var userInfo = uni.getStorageSync('userInfo');
     if (userInfo) {
-      this.userInfo = userInfo;
+      this.userInfo = _objectSpread({}, userInfo);
     }
   },
   methods: {
@@ -191,20 +174,146 @@ var _default = {
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
         success: function success(res) {
+          // 设置为临时路径，上传后会更新为服务器URL  // 添加这行注释
           _this.userInfo.avatar = res.tempFilePaths[0];
         }
       });
     },
-    // 保存资料
+    // 上传头像到服务器
+    uploadAvatarToServer: function uploadAvatarToServer() {
+      var _this2 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
+        return _regenerator.default.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                return _context.abrupt("return", new Promise(function (resolve, reject) {
+                  uni.uploadFile({
+                    url: 'http://172.20.10.3:9000/api/user/upload-avatar',
+                    filePath: _this2.userInfo.avatar,
+                    name: 'avatar',
+                    header: {
+                      'Token': uni.getStorageSync('token') // 修复为 Token
+                    },
+
+                    success: function success(res) {
+                      try {
+                        var data = JSON.parse(res.data);
+                        if (data && data.success && data.data && data.data.avatarUrl) {
+                          _this2.userInfo.avatar = data.data.avatarUrl;
+                          resolve();
+                        } else {
+                          reject(new Error(data.message || '头像上传失败'));
+                        }
+                      } catch (e) {
+                        reject(new Error('头像上传响应解析失败'));
+                      }
+                    },
+                    fail: function fail(error) {
+                      reject(error);
+                    }
+                  });
+                }));
+              case 1:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }))();
+    },
     saveProfile: function saveProfile() {
-      // 保存到本地存储
-      uni.setStorageSync('userInfo', this.userInfo);
-      uni.showToast({
-        title: '保存成功',
-        icon: 'none'
-      });
-      // 返回上一页
-      uni.navigateBack();
+      var _this3 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
+        var response, userInfoToSave;
+        return _regenerator.default.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                if (!_this3.submitting) {
+                  _context2.next = 2;
+                  break;
+                }
+                return _context2.abrupt("return");
+              case 2:
+                if (!(!_this3.userInfo.nickname || _this3.userInfo.nickname.trim() === '')) {
+                  _context2.next = 5;
+                  break;
+                }
+                uni.showToast({
+                  title: '昵称不能为空',
+                  icon: 'none'
+                });
+                return _context2.abrupt("return");
+              case 5:
+                _this3.submitting = true;
+                uni.showLoading({
+                  title: '保存中...'
+                });
+                _context2.prev = 7;
+                if (!(_this3.userInfo.avatar && _this3.userInfo.avatar.startsWith('wxfile://'))) {
+                  _context2.next = 11;
+                  break;
+                }
+                _context2.next = 11;
+                return _this3.uploadAvatarToServer();
+              case 11:
+                _context2.next = 13;
+                return (0, _user.updateUserInfo)({
+                  nickname: _this3.userInfo.nickname
+                });
+              case 13:
+                response = _context2.sent;
+                if (response && response.success) {
+                  // 保存到本地存储，同时确保头像字段正确映射
+                  userInfoToSave = _objectSpread(_objectSpread({}, _this3.userInfo), {}, {
+                    avatarUrl: _this3.userInfo.avatar // 确保头像URL字段正确
+                  });
+
+                  uni.setStorageSync('userInfo', userInfoToSave);
+                  uni.showToast({
+                    title: '保存成功',
+                    icon: 'none'
+                  });
+
+                  // 返回上一页并触发刷新
+                  uni.navigateBack({
+                    success: function success() {
+                      // 通过事件总线或全局事件通知父页面刷新
+                      setTimeout(function () {
+                        // 触发全局事件，让"我的"页面重新加载用户信息
+                        uni.$emit('userInfoUpdated');
+                      }, 500);
+                    }
+                  });
+                } else {
+                  uni.showToast({
+                    title: response.message || '保存失败',
+                    icon: 'none'
+                  });
+                }
+                _context2.next = 21;
+                break;
+              case 17:
+                _context2.prev = 17;
+                _context2.t0 = _context2["catch"](7);
+                console.error('保存用户信息失败:', _context2.t0);
+                uni.showToast({
+                  title: '网络错误，请重试',
+                  icon: 'none'
+                });
+              case 21:
+                _context2.prev = 21;
+                uni.hideLoading();
+                _this3.submitting = false;
+                return _context2.finish(21);
+              case 25:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, null, [[7, 17, 21, 25]]);
+      }))();
     }
   }
 };

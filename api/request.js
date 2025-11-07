@@ -61,6 +61,16 @@ function request(path, data = {}, method = 'GET', customHeaders = {}) {
             
             // 处理其他错误状态码或 success: false
             if (res.statusCode !== 200 || (res.data && res.data.success === false)) {
+              // 特殊处理"已收藏"的情况，将success改为true，因为操作实际上是成功的
+              if (res.data && res.data.message && res.data.message.includes('已收藏')) {
+                resolve({
+                  ...res.data,
+                  success: true,
+                  message: '收藏成功'
+                });
+                return;
+              }
+              
               const errorMsg = res.data?.msg || res.data?.message || '请求失败，请重试';
               uni.showToast({ title: errorMsg, icon: 'none' });
               reject(new Error(errorMsg));

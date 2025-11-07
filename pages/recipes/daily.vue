@@ -37,6 +37,7 @@
 </template>
 
 <script>
+const { getDailyFavorites, cancelPlanWithFavorite } = require('@/api/recipes.js')
 export default {
   data() {
     return {
@@ -129,38 +130,27 @@ export default {
           uni.navigateTo({ url: '/pages/login/index' });
           return;
         }
-        const headers = {};
-        headers['Authorization'] = `Bearer ${token}`;
-        console.log('Token:', token);
-        console.log('Request Headers:', headers);
 
-        // 确保日期格式为 yyyy-MM-dd
-        const dateParam = new Date().toISOString().split('T')[0];
+        // 使用 API 获取今日的每日菜谱
+        const response = await getDailyFavorites();
         
-        const requestConfig = {
-          url: 'http://172.20.10.3:9000/api/recipes/daily',
-          method: 'GET',
-          data: { date: dateParam },
-          header: headers
-        };        console.log('Request Config:', requestConfig);
+        console.log('今日菜谱接口响应:', response);
         
-        const [err, response] = await uni.request(requestConfig);
-        if (err) {
-          console.error('请求失败：', err);
-          throw err;
+        // 处理返回的数据结构
+        this.items = [];
+        if (response.success && response.data && Array.isArray(response.data)) {
+          // 数组格式：[{...}, {...}, ...]
+          this.items = response.data.map(item => ({
+            id: item.id,
+            name: item.name,
+            imageUrl: item.imageUrl,
+            plannedDate: item.plannedDate || '未安排',
+            _dx: 0,
+            _open: false
+          }));
         }
-        if (!response.data.success) {
-          console.error('API返回数据无效：', response.data);
-          throw new Error('API返回数据无效');
-        }
-        this.items = response.data.data.map(item => ({
-          id: item.id,
-          name: item.name,
-          imageUrl: item.imageUrl,
-          plannedDate: item.plannedDate,
-          _dx: 0,
-          _open: false
-        }));
+        
+        console.log('处理后的菜谱数据:', this.items);
         this.buildGroups(this.items);
       } catch (err) {
         console.error('获取每日菜谱失败：', err);
@@ -171,31 +161,118 @@ export default {
       }
     },
 
+    // 收藏菜谱到今日（带日期的收藏接口）
+    async favoriteRecipe(recipeId) {
+      try {
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          return;
+        }
+
+        // 使用带日期的收藏接口，收藏到今日
+        const today = new Date().toISOString().split('T')[0];
+        const [err, response] = await uni.request({
+          url: `/api/recipes/favorites/plan?recipeId=${recipeId}&planCookDate=${today}`,
+          method: 'POST',
+          header: { Authorization: `Bearer ${token}` }
+        });
+
+        if (err || !response.data.success) {
+          console.error('收藏失败:', err || response.data);
+          uni.showToast({ title: '收藏失败', icon: 'none' });
+          return;
+        }
+
+        uni.showToast({ title: '已添加到今日菜谱' });
+      } catch (err) {
+        console.error('收藏异常:', err);
+        uni.showToast({ title: '收藏异常', icon: 'none' });
+      }
+    },
+
+    // 取消收藏（从每日菜谱中移除）
+    async unfavoriteRecipe(recipeId) {
+      try {
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          return;
+        }
+
+        // 使用带日期的收藏接口的删除功能
+        const [err, response] = await uni.request({
+          url: `/api/recipes/favorites/plan?recipeId=${recipeId}`,
+          method: 'DELETE',
+          header: { Authorization: `Bearer ${token}` }
+        });
+
+        if (err || !response.data.success) {
+          console.error('取消收藏失败:', err || response.data);
+          uni.showToast({ title: '取消收藏失败', icon: 'none' });
+          return;
+        }
+
+        uni.showToast({ title: '已从每日菜谱移除' });
+      } catch (err) {
+        console.error('取消收藏异常:', err);
+        uni.showToast({ title: '取消收藏异常', icon: 'none' });
+      }
+    },
+
+    // 添加到每日菜谱
+    async addToDaily(recipeId, date) {
+      try {
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          return;
+        }
+
+        const [err, response] = await uni.request({
+          url: `/api/recipes/${recipeId}/add-to-daily`,
+          method: 'POST',
+          data: { date },
+          header: { Authorization: `Bearer ${token}` }
+        });
+
+        if (err || !response.data.success) {
+          console.error('添加到每日菜谱失败:', err || response.data);
+          uni.showToast({ title: '添加失败', icon: 'none' });
+          return;
+        }
+
+        uni.showToast({ title: '添加成功' });
+        this.loadData(); // 刷新列表
+      } catch (err) {
+        console.error('添加异常:', err);
+        uni.showToast({ title: '添加异常', icon: 'none' });
+      }
+    },
+
+    // 从每日菜谱中移除（调用 cancelPlanWithFavorite 接口）
     async remove(it) {
       try {
-        const response = await uni.request({
-          url: `/api/recipes/${it.id}/remove-from-daily`,
-          method: 'DELETE',
-          data: { date: it.plannedDate }
-        });
-        if (response.statusCode === 200 && response.data.success) {
-          uni.showToast({
-            title: '已删除',
-            icon: 'none'
-          });
-          this.loadData();
-        } else {
-          uni.showToast({
-            title: '删除失败，请重试',
-            icon: 'none'
-          });
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          return;
         }
+
+        // 调用取消计划接口（保留收藏记录）
+        const response = await cancelPlanWithFavorite(it.id);
+
+        if (!response.success) {
+          console.error('移除失败:', response);
+          uni.showToast({ title: '移除失败', icon: 'none' });
+          return;
+        }
+
+        uni.showToast({ title: '已从每日菜谱移除' });
+        this.loadData();
       } catch (err) {
-        console.error('删除失败：', err);
-        uni.showToast({
-          title: '删除失败，请重试',
-          icon: 'none'
-        });
+        console.error('移除异常:', err);
+        uni.showToast({ title: '移除异常', icon: 'none' });
       }
     },
 
@@ -245,12 +322,70 @@ export default {
       })
     },
 
-    clearAll() {
-      uni.removeStorageSync && uni.removeStorageSync('favorites_recipes')
-      uni.removeStorageSync && uni.removeStorageSync('favorites_meta')
-      uni.removeStorageSync && uni.removeStorageSync('favorites_planned')
-      uni.showToast && uni.showToast({ title: '已清空', icon: 'none' })
-      this.loadData()
+    // 清空所有每日菜谱
+    async clearAll() {
+      try {
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          return;
+        }
+
+        // 如果没有菜谱，直接返回
+        if (!this.items.length) {
+          uni.showToast({ title: '暂无菜谱可清空', icon: 'none' });
+          return;
+        }
+
+        // 显示确认对话框
+        uni.showModal({
+          title: '确认清空',
+          content: '确定要清空所有每日菜谱吗？此操作不可撤销。',
+          success: async (res) => {
+            if (res.confirm) {
+              // 批量删除所有菜谱
+              let successCount = 0;
+              let errorCount = 0;
+              
+              // 显示加载中
+              uni.showLoading({ title: '清空中...', mask: true });
+              
+              // 循环调用删除接口删除每个菜谱
+              for (const item of this.items) {
+                try {
+                  const response = await cancelPlanWithFavorite(item.id);
+                  if (response.success) {
+                    successCount++;
+                  } else {
+                    errorCount++;
+                    console.error(`删除菜谱 ${item.id} 失败:`, response);
+                  }
+                } catch (err) {
+                  errorCount++;
+                  console.error(`删除菜谱 ${item.id} 异常:`, err);
+                }
+              }
+              
+              uni.hideLoading();
+              
+              // 显示结果
+              if (errorCount === 0) {
+                uni.showToast({ title: `已清空 ${successCount} 个菜谱`, icon: 'none' });
+              } else if (successCount > 0) {
+                uni.showToast({ title: `成功清空 ${successCount} 个，失败 ${errorCount} 个`, icon: 'none' });
+              } else {
+                uni.showToast({ title: '清空失败，请重试', icon: 'none' });
+              }
+              
+              // 刷新数据
+              this.loadData();
+            }
+          }
+        });
+      } catch (err) {
+        console.error('清空操作异常:', err);
+        uni.showToast({ title: '清空异常，请重试', icon: 'none' });
+      }
     },
 
     handleTap(it) {

@@ -59,49 +59,67 @@ function getUserInfo() {
   return request('/api/user/info', {}, 'GET');
 }
 
-// 添加收藏
-function addFavorite(recipeId) {
-  return request(`/api/recipes/${recipeId}/favorite`, {}, 'POST');
+// ========== 收藏与计划管理接口（RecipePlanController） ==========
+
+// 1. 设置收藏并选择计划日期（幂等操作）
+function addFavoriteWithDate(recipeId, planCookDate) {
+  return request(`/api/recipes/favorites/plan?recipeId=${recipeId}&planCookDate=${planCookDate}`, {}, 'POST');
 }
 
-// 取消收藏
+// 2. 获取每日菜谱（获取今日的菜谱）
+function getDailyFavorites() {
+  return request('/api/recipes/favorites/plan/daily', {}, 'GET');
+}
+
+// 3. 修改计划日期
+function updatePlanDate(recipeId, planCookDate) {
+  return request(`/api/recipes/favorites/plan/update?recipeId=${recipeId}&planCookDate=${planCookDate}`, {}, 'PUT');
+}
+
+// 4. 取消计划
+function cancelPlan(recipeId) {
+  return request(`/api/recipes/favorites/plan/cancel?recipeId=${recipeId}`, {}, 'PUT');
+}
+
+// 5. 取消收藏（删除收藏记录）
 function removeFavorite(recipeId) {
   return request(`/api/recipes/${recipeId}/favorite`, {}, 'DELETE');
 }
 
-// 检查是否已收藏
-function isFavorite(recipeId) {
-  return request(`/api/recipes/${recipeId}/favorite`, {}, 'GET');
+// 6. 取消计划/移除每日菜谱（保留收藏记录）
+function cancelPlanWithFavorite(recipeId) {
+  return request(`/api/recipes/favorites/plan/cancel?recipeId=${recipeId}`, {}, 'PUT');
 }
 
-// 获取用户收藏列表
-function getUserFavorites(page = 1, pageSize = 10) {
-  return request(`/api/recipes/favorites?page=${page}&pageSize=${pageSize}`, {}, 'GET');
-}
-
-// 获取菜谱被收藏次数
-function getRecipeFavoriteCount(recipeId) {
-  return request(`/api/recipes/${recipeId}/favorite-count`, {}, 'GET');
-}
-
-// 添加到每日菜谱（通过收藏接口）
-function addToDailyRecipes(recipeId, date) {
-  return request(`/api/recipes/${recipeId}/add-to-daily?date=${date}`, {}, 'POST');
-}
-
-// 从每日菜谱中移除
-function removeFromDailyRecipes(recipeId, date) {
-  return request(`/api/recipes/${recipeId}/remove-from-daily?date=${date}`, {}, 'DELETE');
-}
+// ========== 社区功能接口 ==========
 
 // 获取社区帖子列表
 function getCommunityPosts(page = 1, pageSize = 10, keyword = null, userId = null) {
-  return request('/api/community/posts', { page, pageSize, keyword, userId }, 'GET');
+  // 构建参数对象，当userId为null时不传递该参数
+  const params = { page, pageSize };
+  if (keyword !== null) params.keyword = keyword;
+  if (userId !== null && userId !== 'current') params.userId = userId;
+  
+  // 如果是获取当前用户的作品，使用不同的接口
+  if (userId === 'current') {
+    return request('/api/community/posts/my', params, 'GET');
+  }
+  
+  return request('/api/community/posts', params, 'GET');
 }
 
 // 发布社区帖子
-function createCommunityPost(content, mediaList = [], visibility = 1) {
-  return request('/api/community/posts', { content, mediaList, visibility }, 'POST');
+export function createCommunityPost(content, mediaList = [], visibility = 1) {
+  console.log('调用 createCommunityPost 接口，参数:', { content, mediaList, visibility });
+  return request('/api/community/posts', { content, mediaList, visibility }, 'POST')
+    .then(response => {
+      console.log('createCommunityPost 接口响应:', response);
+      return response;
+    })
+    .catch(error => {
+      console.error('createCommunityPost 接口错误:', error);
+      throw error;
+    });
 }
 
 // 点赞帖子
@@ -119,6 +137,36 @@ function createComment(postId, content, parentId = null) {
   return request(`/api/community/posts/${postId}/comments`, { content, parentId }, 'POST');
 }
 
+// 编辑社区帖子
+function updateCommunityPost(postId, content, mediaList = [], visibility = 1) {
+  return request(`/api/community/posts/${postId}`, { content, mediaList, visibility }, 'PUT');
+}
+
+// 删除社区帖子
+function deleteCommunityPost(postId) {
+  return request(`/api/community/posts/${postId}`, {}, 'DELETE');
+}
+
+// 获取用户收藏的帖子列表
+function getUserFavorites(page = 1, pageSize = 20) {
+  return request('/api/community/posts/favorites', { page, pageSize }, 'GET');
+}
+
+// 获取用户发表的评论列表
+function getUserComments(page = 1, pageSize = 20) {
+  return request('/api/community/comments/my', { page, pageSize }, 'GET');
+}
+
+// 获取用户通知
+function getUserNotifications() {
+  return request('/api/notifications', {}, 'GET');
+}
+
+// 获取用户浏览历史
+function getUserBrowsingHistory(page = 1, pageSize = 20) {
+  return request('/api/browsing/history', { page, pageSize }, 'GET');
+}
+
 module.exports = {
   getRecipes,
   getRecipeDetail,
@@ -129,16 +177,24 @@ module.exports = {
   mapTypeIdToCat,
   DEFAULT_COVER,
   getUserInfo,
-  addFavorite,
+  // 收藏与计划管理接口
+  addFavoriteWithDate,
+  getDailyFavorites,
+  updatePlanDate,
+  cancelPlan,
   removeFavorite,
-  isFavorite,
-  getUserFavorites,
-  getRecipeFavoriteCount,
-  addToDailyRecipes,
-  removeFromDailyRecipes,
+  cancelPlanWithFavorite,
+  // 社区功能接口
   getCommunityPosts,
   createCommunityPost,
   likePost,
   cancelLikePost,
-  createComment
+  createComment,
+  updateCommunityPost,
+  deleteCommunityPost,
+  getUserFavorites,
+  getUserComments,
+  // 新添加的接口
+  getUserNotifications,
+  getUserBrowsingHistory
 }

@@ -156,10 +156,14 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 /* WEBPACK VAR INJECTION */(function(uni) {
 
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _recipes = __webpack_require__(/*! ../../api/recipes.js */ 42);
 //
 //
 //
@@ -217,10 +221,6 @@ exports.default = void 0;
 //
 //
 //
-
-var _require = __webpack_require__(/*! ../../api/recipes.js */ 42),
-  getRecipeDetail = _require.getRecipeDetail,
-  mapTypeIdToCat = _require.mapTypeIdToCat;
 var _default = {
   data: function data() {
     return {
@@ -239,22 +239,74 @@ var _default = {
   onLoad: function onLoad(options) {
     if (options && options.id) {
       this.loadRecipeDetail(options.id);
+      // 检查该菜谱是否已被收藏到每日菜谱中
+      this.checkFavoriteStatus(options.id);
     }
   },
   methods: {
+    // 检查收藏状态
+    checkFavoriteStatus: function checkFavoriteStatus(recipeId) {
+      var _this = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
+        var response, isInDailyFavorites;
+        return _regenerator.default.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.prev = 0;
+                _context.next = 3;
+                return (0, _recipes.getDailyFavorites)();
+              case 3:
+                response = _context.sent;
+                if (response.success && response.data && Array.isArray(response.data)) {
+                  // 检查当前菜谱是否在每日菜谱列表中
+                  isInDailyFavorites = response.data.some(function (item) {
+                    return String(item.id) === String(recipeId);
+                  });
+                  _this.isFavorite = isInDailyFavorites;
+                  console.log("\u83DC\u8C31 ".concat(recipeId, " \u6536\u85CF\u72B6\u6001:"), isInDailyFavorites ? '已收藏' : '未收藏');
+                }
+                _context.next = 11;
+                break;
+              case 7:
+                _context.prev = 7;
+                _context.t0 = _context["catch"](0);
+                console.error('检查收藏状态失败：', _context.t0);
+                // 如果检查失败，默认设置为未收藏状态
+                _this.isFavorite = false;
+              case 11:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, null, [[0, 7]]);
+      }))();
+    },
     // 切换收藏状态
     toggleFavorite: function toggleFavorite() {
-      var _this = this;
+      var _this2 = this;
       var api = __webpack_require__(/*! ../../api/recipes.js */ 42);
+
+      // 先检查是否已收藏
       if (this.isFavorite) {
-        api.removeFavorite(this.recipe.id).then(function () {
-          _this.isFavorite = false;
-          uni.showToast({
-            title: '已取消收藏',
-            icon: 'none'
-          });
-          // 强制刷新UI
-          _this.$forceUpdate();
+        // 使用取消收藏接口删除收藏记录
+        api.removeFavorite(this.recipe.id).then(function (response) {
+          if (response.success) {
+            _this2.isFavorite = false;
+            uni.showToast({
+              title: '已取消收藏',
+              icon: 'none'
+            });
+            // 强制刷新UI
+            _this2.$forceUpdate();
+            // 触发全局事件，通知每日菜谱页面刷新
+            uni.$emit('refreshDailyRecipes');
+          } else {
+            uni.showToast({
+              title: response.message || '取消收藏失败',
+              icon: 'none'
+            });
+          }
         }).catch(function (err) {
           console.error('取消收藏失败：', err);
           uni.showToast({
@@ -263,109 +315,127 @@ var _default = {
           });
         });
       } else {
-        // 生成未来七天的日期选项（今日、明日、后日 + 未来四天）
-        var today = new Date();
-        var dateValues = [];
-        for (var i = 0; i < 7; i++) {
-          var date = new Date(today);
-          date.setDate(today.getDate() + i);
-          var month = date.getMonth() + 1;
-          var day = date.getDate();
-          dateValues.push("".concat(date.getFullYear(), "-").concat(month, "-").concat(day));
-        }
-        // 第一页：今日、明日、后日 + 更多
-        var firstPageOptions = ["\u4ECA\u65E5\uFF08".concat(today.getMonth() + 1, "\u6708").concat(today.getDate(), "\u65E5\uFF09"), "\u660E\u65E5\uFF08".concat(today.getMonth() + 1, "\u6708").concat(today.getDate() + 1, "\u65E5\uFF09"), "\u540E\u65E5\uFF08".concat(today.getMonth() + 1, "\u6708").concat(today.getDate() + 2, "\u65E5\uFF09"), '更多日期'];
-        // 弹出第一页日期选择器
-        uni.showActionSheet({
-          itemList: firstPageOptions,
-          success: function success(res) {
-            if (res.tapIndex !== undefined) {
-              if (res.tapIndex < 3) {
-                // 选择今日、明日、后日
-                var selectedDate = dateValues[res.tapIndex];
-                _this.confirmAddToDaily(selectedDate);
-              } else {
-                // 选择“更多日期”，弹出第二页
-                var secondPageOptions = [];
-                for (var _i = 3; _i < 7; _i++) {
-                  var _date = new Date(today);
-                  _date.setDate(today.getDate() + _i);
-                  var _month = _date.getMonth() + 1;
-                  var _day = _date.getDate();
-                  secondPageOptions.push("".concat(_month, "\u6708").concat(_day, "\u65E5"));
-                }
-                uni.showActionSheet({
-                  itemList: secondPageOptions,
-                  success: function success(res2) {
-                    if (res2.tapIndex !== undefined) {
-                      var _selectedDate = dateValues[res2.tapIndex + 3];
-                      _this.confirmAddToDaily(_selectedDate);
-                    }
-                  },
-                  fail: function fail(err) {
-                    console.error('第二页日期选择失败：', err);
-                  }
-                });
-              }
-            }
-          },
-          fail: function fail(err) {
-            console.error('第一页日期选择失败：', err);
-          }
-        });
+        // 直接显示日期选择器，不使用简单的收藏检查
+        this.showDateSelector();
       }
+    },
+    // 显示期选择器
+    showDateSelector: function showDateSelector() {
+      var _this3 = this;
+      // 生成未来七天的日期选项（今日、明日、后日 + 未来四天）
+      var today = new Date();
+      var dateValues = [];
+      for (var i = 0; i < 7; i++) {
+        var date = new Date(today);
+        date.setDate(today.getDate() + i);
+        var month = String(date.getMonth() + 1).padStart(2, '0'); // 月份补零
+        var day = String(date.getDate()).padStart(2, '0'); // 日期补零
+        dateValues.push("".concat(date.getFullYear(), "-").concat(month, "-").concat(day));
+      }
+      // 第一页：今日、明日、后日 + 更多
+      var firstPageOptions = ["\u4ECA\u65E5\uFF08".concat(today.getMonth() + 1, "\u6708").concat(today.getDate(), "\u65E5\uFF09"), "\u660E\u65E5\uFF08".concat(today.getMonth() + 1, "\u6708").concat(today.getDate() + 1, "\u65E5\uFF09"), "\u540E\u65E5\uFF08".concat(today.getMonth() + 1, "\u6708").concat(today.getDate() + 2, "\u65E5\uFF09"), '更多日期'];
+      // 弹出第一页日期选择器
+      uni.showActionSheet({
+        itemList: firstPageOptions,
+        success: function success(res) {
+          if (res.tapIndex !== undefined) {
+            if (res.tapIndex < 3) {
+              // 选择今日、明日、后日
+              var selectedDate = dateValues[res.tapIndex];
+              _this3.confirmAddToDaily(selectedDate);
+            } else {
+              // 选择“更多日期”，弹出第二页
+              var secondPageOptions = [];
+              for (var _i = 3; _i < 7; _i++) {
+                var _date = new Date(today);
+                _date.setDate(today.getDate() + _i);
+                var _month = _date.getMonth() + 1;
+                var _day = _date.getDate();
+                secondPageOptions.push("".concat(_month, "\u6708").concat(_day, "\u65E5"));
+              }
+              uni.showActionSheet({
+                itemList: secondPageOptions,
+                success: function success(res2) {
+                  if (res2.tapIndex !== undefined) {
+                    var _selectedDate = dateValues[res2.tapIndex + 3];
+                    _this3.confirmAddToDaily(_selectedDate);
+                  }
+                },
+                fail: function fail(err) {
+                  console.error('第二页日期选择失败：', err);
+                }
+              });
+            }
+          }
+        },
+        fail: function fail(err) {
+          console.error('第一页日期选择失败：', err);
+        }
+      });
     },
     // 确认添加到每日菜谱
     confirmAddToDaily: function confirmAddToDaily(date) {
-      var _this2 = this;
+      var _this4 = this;
       var api = __webpack_require__(/*! ../../api/recipes.js */ 42);
-      api.addFavorite(this.recipe.id).then(function (res) {
+      // 直接使用带日期的收藏接口，一次性完成收藏+设置日期
+      console.log('添加到每日菜谱请求参数:', {
+        recipeId: this.recipe.id,
+        date: date
+      });
+      api.addFavoriteWithDate(this.recipe.id, date).then(function (res) {
+        console.log('添加到每日菜谱响应:', res);
         if (res.success) {
-          _this2.isFavorite = true;
-          // 调用添加到每日菜谱的逻辑，并传递日期
-          api.addToDailyRecipes(_this2.recipe.id, date).then(function (dailyRes) {
-            if (dailyRes.success) {
-              uni.showToast({
-                title: '已添加到每日菜谱',
-                icon: 'none'
-              });
-              // 强制刷新数据
-              _this2.loadRecipeDetail(_this2.recipe.id);
-              // 触发全局事件，通知每日菜谱页面刷新
-              uni.$emit('refreshDailyRecipes');
-            } else {
-              uni.showToast({
-                title: dailyRes.message || '操作失败，请重试',
-                icon: 'none'
-              });
-            }
-          }).catch(function (err) {
-            console.error('添加到每日菜谱失败：', err);
+          _this4.isFavorite = true;
+          uni.showToast({
+            title: '已添加到每日菜谱',
+            icon: 'none'
+          });
+          // 强制刷新数据
+          _this4.loadRecipeDetail(_this4.recipe.id);
+          // 触发全局事件，通知每日菜谱页面刷新
+          uni.$emit('refreshDailyRecipes');
+        } else {
+          // 特殊处理"已收藏"的情况
+          if (res.message && res.message.includes('已收藏')) {
+            _this4.isFavorite = true;
             uni.showToast({
-              title: '操作失败，请重试',
+              title: '菜谱已在每日菜谱中',
               icon: 'none'
             });
+            // 触发全局事件，通知每日菜谱页面刷新
+            uni.$emit('refreshDailyRecipes');
+          } else {
+            uni.showToast({
+              title: res.message || '操作失败，请重试',
+              icon: 'none'
+            });
+          }
+        }
+      }).catch(function (err) {
+        console.error('添加到每日菜谱失败：', err);
+        // 特殊处理"已收藏"的异常情况
+        if (err.message && err.message.includes('已收藏')) {
+          _this4.isFavorite = true;
+          uni.showToast({
+            title: '菜谱已在每日菜谱中',
+            icon: 'none'
           });
+          // 触发全局事件，通知每日菜谱页面刷新
+          uni.$emit('refreshDailyRecipes');
         } else {
           uni.showToast({
-            title: res.message || '操作失败，请重试',
+            title: '操作失败，请重试',
             icon: 'none'
           });
         }
-      }).catch(function (err) {
-        console.error('添加收藏失败：', err);
-        uni.showToast({
-          title: '操作失败，请重试',
-          icon: 'none'
-        });
       });
     },
     // 加载菜谱详情
     loadRecipeDetail: function loadRecipeDetail(id) {
-      var _this3 = this;
-      getRecipeDetail(id).then(function (res) {
+      var _this5 = this;
+      (0, _recipes.getRecipeDetail)(id).then(function (res) {
         if (res) {
-          _this3.recipe = {
+          _this5.recipe = {
             id: res.id,
             typeId: res.typeId,
             name: res.name,
@@ -374,7 +444,7 @@ var _default = {
             ingredients: res.ingredients || 0,
             feature: res.feature || ''
           };
-          console.log('菜谱详情数据:', _this3.recipe); // 调试日志
+          console.log('菜谱详情数据:', _this5.recipe); // 调试日志
         }
       }).catch(function (err) {
         console.error('获取菜谱详情失败：', err);
@@ -406,7 +476,7 @@ var _default = {
       if (level === 3) return 'tag-red';
       return '';
     },
-    mapTypeIdToCat: mapTypeIdToCat
+    mapTypeIdToCat: _recipes.mapTypeIdToCat
   }
 };
 exports.default = _default;

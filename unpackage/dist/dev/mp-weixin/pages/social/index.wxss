@@ -72,6 +72,74 @@
   color: #1f2937;
   line-height: 1.6;
 }
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
+}
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
+}
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
+}
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
+}
 
 /* 图片栅格 */
 .images {

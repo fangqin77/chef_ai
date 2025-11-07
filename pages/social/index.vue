@@ -11,14 +11,25 @@
     <view class="feed">
       <view class="post" v-for="p in posts" :key="p.id">
         <view class="post-top">
-          <image class="avatar" :src="p.avatar" mode="aspectFill" />
+          <image class="avatar" :src="p.avatar || '/static/user-avatar.png'" mode="aspectFill" />
           <view class="author">
-            <text class="name">{{ p.name }}</text>
+            <text class="name">美食达人</text>
+            <text class="time">{{ displayTime(p) }}</text>
           </view>
           <text class="more" v-if="!hasImages(p)" @click="toggleMenu(p)">···</text>
         </view>
 
-        <view class="content">{{ p.text }}</view>
+        <view class="content">
+          <text class="recipe-name">{{ p.name }}</text>
+          <view v-if="p.condiments" class="recipe-info">
+            <text class="info-label">食材：</text>
+            <text>{{ p.condiments }}</text>
+          </view>
+          <view v-if="p.method" class="recipe-method">
+            <text class="info-label">做法：</text>
+            <text>{{ formatMethod(p.method) }}</text>
+          </view>
+        </view>
 
         <view v-if="hasImages(p)" class="images" :class="'cols-' + gridCols(p)">
           <image v-for="(img, idx) in (p.images || [])"
@@ -78,7 +89,7 @@
 </template>
 
 <script>
-import { getCommunityPosts } from '@/api/recipes';
+import { getCommunityPosts, likePost, cancelLikePost, createComment } from '@/api/recipes';
 
 export default {
   data() {
@@ -89,44 +100,45 @@ export default {
       focusMap: {}       // { [postId]: boolean }
     }
   },
-  async onShow() {
-    try {
-      // 获取当前用户 ID，确保传递正确的数据类型（null 或 Long）
-      const userId = uni.getStorageSync('userId');
-      const parsedUserId = userId === 'null' ? null : Number(userId);
-      
-      const response = await getCommunityPosts(1, 10, null, parsedUserId);
-      if (response && response.list) {
-        // 如果接口返回的 list 为空，使用默认数据或显示提示
-        if (response.list.length === 0) {
-          uni.showToast({ title: '暂无帖子数据', icon: 'none' });
-          this.posts = [];
+    async onShow() {
+      try {
+        // 获取所有用户的帖子（不传入用户ID参数）
+        const response = await getCommunityPosts(1, 10);
+        console.log('获取帖子列表响应:', response);
+        
+        if (response && response.list) {
+          // 如果接口返回的 list 为空，显示提示
+          if (response.list.length === 0) {
+            console.log('没有帖子数据');
+            this.posts = [];
+          } else {
+            console.log(`获取到 ${response.list.length} 条帖子`);
+            this.posts = response.list.map(post => ({
+              ...post,
+              _menuOpen: false,
+              _commenting: false
+            }));
+          }
         } else {
-          this.posts = response.list.map(post => ({
-            ...post,
-            _menuOpen: false,
-            _commenting: false
-          }));
+          console.error('接口返回数据格式错误:', response);
+          this.posts = [];
         }
-      } else {
-        uni.showToast({ title: '数据格式错误', icon: 'none' });
+        
+        // 初始化评论和焦点状态
+        const im = {};
+        const fm = {};
+        this.posts.forEach(post => {
+          im[post.id] = '';
+          fm[post.id] = false;
+        });
+        this.inputMap = im;
+        this.focusMap = fm;
+      } catch (error) {
+        console.error('获取帖子列表失败:', error);
+        uni.showToast({ title: '获取帖子列表失败', icon: 'none' });
         this.posts = [];
       }
-      // 初始化评论和焦点状态
-      const im = {};
-      const fm = {};
-      this.posts.forEach(post => {
-        im[post.id] = '';
-        fm[post.id] = false;
-      });
-      this.inputMap = im;
-      this.focusMap = fm;
-    } catch (error) {
-      console.error('获取帖子列表失败:', error);
-      uni.showToast({ title: '获取帖子列表失败', icon: 'none' });
-      this.posts = [];
-    }
-  },
+    },
   onShareAppMessage(res) {
     return {
       title: '分享一篇美食圈作品',
@@ -235,44 +247,69 @@ export default {
       // 失焦时仅取消焦点，不收起评论框
       this.$set(this.focusMap, id, false)
     },
-    toggleLike(p) {
+    async toggleLike(p) {
       if (p) p._menuOpen = false
-      const key = 'social_likes'
-      const favKey = 'my_fav_posts'
       const id = String(p.id)
-      let arr = uni.getStorageSync(key) || []
-      const set = new Set(arr.map(String))
-      const before = set.has(id)
-      let fav = {}
-      try { fav = uni.getStorageSync(favKey) || {} } catch(e) { fav = {} }
-      if (before) {
-        set.delete(id)
-        p.liked = false
-        p.likes = Math.max((p.likes || 0) - 1, 0)
-        if (fav[id]) delete fav[id]
-        uni.showToast({ title: '已取消收藏', icon: 'none' })
-      } else {
-        set.add(id)
-        p.liked = true
-        p.likes = (p.likes || 0) + 1
-        fav[id] = {
-          id,
-          name: p.name,
-          time: p.time,
-          avatar: p.avatar,
-          text: p.text,
-          cover: Array.isArray(p.images) && p.images.length ? p.images[0] : ''
+      
+      try {
+        const token = uni.getStorageSync('token')
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' })
+          return
         }
-        uni.showToast({ title: '已收藏', icon: 'none' })
+        
+        if (p.liked) {
+          // 取消点赞（取消收藏）
+          const response = await cancelLikePost(id)
+          if (response && response.success) {
+            p.liked = false
+            p.likes = Math.max((p.likes || 0) - 1, 0)
+            uni.showToast({ title: '已取消收藏', icon: 'none' })
+          } else {
+            uni.showToast({ title: response?.message || '取消收藏失败', icon: 'none' })
+          }
+        } else {
+          // 点赞（收藏）
+          const response = await likePost(id)
+          if (response && response.success) {
+            p.liked = true
+            p.likes = (p.likes || 0) + 1
+            uni.showToast({ title: '已收藏', icon: 'none' })
+          } else {
+            uni.showToast({ title: response?.message || '收藏失败', icon: 'none' })
+          }
+        }
+      } catch (error) {
+        console.error('点赞操作失败:', error)
+        uni.showToast({ title: '操作失败，请重试', icon: 'none' })
       }
-      arr = Array.from(set)
-      uni.setStorageSync(key, arr)
-      uni.setStorageSync(favKey, fav)
     },
     getComments(pid) {
       const cm = this.commentsMap || {}
       const list = cm[String(pid)] || []
       return Array.isArray(list) ? list : []
+    },
+    
+    // 格式化制作方法
+    formatMethod(method) {
+      if (!method) return '';
+      // 去除换行符和多余空格，用句号分隔步骤
+      return method.replace(/
+
+|
+|
+/g, ' ').replace(/\s+/g, ' ').trim();
+    },
+    
+    // 格式化制作方法
+    formatMethod(method) {
+      if (!method) return '';
+      // 去除换行符和多余空格，用句号分隔步骤
+      return method.replace(/
+
+|
+|
+/g, ' ').replace(/\s+/g, ' ').trim();
     },
     getCommentCount(pid) {
       return this.getComments(pid).length
@@ -388,6 +425,86 @@ export default {
   font-size: 28rpx;
   color: #1f2937;
   line-height: 1.6;
+}
+
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
+}
+
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
+}
+
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
+}
+
+.recipe-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #ff6a00;
+  margin-bottom: 12rpx;
+}
+
+.recipe-info,
+.recipe-method {
+  margin-bottom: 10rpx;
+  line-height: 1.5;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #374151;
+  margin-right: 8rpx;
 }
 
 /* 图片栅格 */

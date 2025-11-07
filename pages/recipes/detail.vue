@@ -56,7 +56,7 @@
 </template>
 
 <script>
-const { getRecipeDetail, mapTypeIdToCat } = require('../../api/recipes.js')
+import { getRecipeDetail, mapTypeIdToCat, getDailyFavorites } from '../../api/recipes.js'
 
 export default {
   data() {
@@ -76,22 +76,55 @@ export default {
   onLoad(options) {
     if (options && options.id) {
       this.loadRecipeDetail(options.id)
+      // 检查该菜谱是否已被收藏到每日菜谱中
+      this.checkFavoriteStatus(options.id)
     }
   },
   methods: {
+    // 检查收藏状态
+    async checkFavoriteStatus(recipeId) {
+      try {
+        // 获取每日菜谱列表
+        const response = await getDailyFavorites();
+        
+        if (response.success && response.data && Array.isArray(response.data)) {
+          // 检查当前菜谱是否在每日菜谱列表中
+          const isInDailyFavorites = response.data.some(item => String(item.id) === String(recipeId));
+          this.isFavorite = isInDailyFavorites;
+          console.log(`菜谱 ${recipeId} 收藏状态:`, isInDailyFavorites ? '已收藏' : '未收藏');
+        }
+      } catch (err) {
+        console.error('检查收藏状态失败：', err);
+        // 如果检查失败，默认设置为未收藏状态
+        this.isFavorite = false;
+      }
+    },
+    
     // 切换收藏状态
     toggleFavorite() {
       const api = require('../../api/recipes.js');
+      
+      // 先检查是否已收藏
       if (this.isFavorite) {
+        // 使用取消收藏接口删除收藏记录
         api.removeFavorite(this.recipe.id)
-          .then(() => {
-            this.isFavorite = false;
-            uni.showToast({
-              title: '已取消收藏',
-              icon: 'none'
-            });
-            // 强制刷新UI
-            this.$forceUpdate();
+          .then((response) => {
+            if (response.success) {
+              this.isFavorite = false;
+              uni.showToast({
+                title: '已取消收藏',
+                icon: 'none'
+              });
+              // 强制刷新UI
+              this.$forceUpdate();
+              // 触发全局事件，通知每日菜谱页面刷新
+              uni.$emit('refreshDailyRecipes');
+            } else {
+              uni.showToast({
+                title: response.message || '取消收藏失败',
+                icon: 'none'
+              });
+            }
           })
           .catch(err => {
             console.error('取消收藏失败：', err);
@@ -101,14 +134,21 @@ export default {
             });
           });
       } else {
+        // 直接显示日期选择器，不使用简单的收藏检查
+        this.showDateSelector();
+      }
+    },
+    // 显示期选择器
+    showDateSelector() 
+    {
         // 生成未来七天的日期选项（今日、明日、后日 + 未来四天）
         const today = new Date();
         const dateValues = [];
         for (let i = 0; i < 7; i++) {
           const date = new Date(today);
           date.setDate(today.getDate() + i);
-          const month = date.getMonth() + 1;
-          const day = date.getDate();
+          const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份补零
+          const day = String(date.getDate()).padStart(2, '0'); // 日期补零
           dateValues.push(`${date.getFullYear()}-${month}-${day}`);
         }
         // 第一页：今日、明日、后日 + 更多
@@ -156,58 +196,66 @@ export default {
             console.error('第一页日期选择失败：', err);
           }
         });
-      }
     },
     // 确认添加到每日菜谱
-    confirmAddToDaily(date) {
+    confirmAddToDaily(date) 
+    {
       const api = require('../../api/recipes.js');
-      api.addFavorite(this.recipe.id)
+      // 直接使用带日期的收藏接口，一次性完成收藏+设置日期
+      console.log('添加到每日菜谱请求参数:', { recipeId: this.recipe.id, date });
+      api.addFavoriteWithDate(this.recipe.id, date)
         .then((res) => {
+          console.log('添加到每日菜谱响应:', res);
           if (res.success) {
             this.isFavorite = true;
-            // 调用添加到每日菜谱的逻辑，并传递日期
-            api.addToDailyRecipes(this.recipe.id, date)
-              .then((dailyRes) => {
-                if (dailyRes.success) {
-                  uni.showToast({
-                    title: '已添加到每日菜谱',
-                    icon: 'none'
-                  });
-                  // 强制刷新数据
-                  this.loadRecipeDetail(this.recipe.id);
-                  // 触发全局事件，通知每日菜谱页面刷新
-                  uni.$emit('refreshDailyRecipes');
-                } else {
-                  uni.showToast({
-                    title: dailyRes.message || '操作失败，请重试',
-                    icon: 'none'
-                  });
-                }
-              })
-              .catch(err => {
-                console.error('添加到每日菜谱失败：', err);
-                uni.showToast({
-                  title: '操作失败，请重试',
-                  icon: 'none'
-                });
-              });
-          } else {
             uni.showToast({
-              title: res.message || '操作失败，请重试',
+              title: '已添加到每日菜谱',
               icon: 'none'
             });
+            // 强制刷新数据
+            this.loadRecipeDetail(this.recipe.id);
+            // 触发全局事件，通知每日菜谱页面刷新
+            uni.$emit('refreshDailyRecipes');
+          } else {
+            // 特殊处理"已收藏"的情况
+            if (res.message && res.message.includes('已收藏')) {
+              this.isFavorite = true;
+              uni.showToast({
+                title: '菜谱已在每日菜谱中',
+                icon: 'none'
+              });
+              // 触发全局事件，通知每日菜谱页面刷新
+              uni.$emit('refreshDailyRecipes');
+            } else {
+              uni.showToast({
+                title: res.message || '操作失败，请重试',
+                icon: 'none'
+              });
+            }
           }
         })
         .catch(err => {
-          console.error('添加收藏失败：', err);
-          uni.showToast({
-            title: '操作失败，请重试',
-            icon: 'none'
-          });
+          console.error('添加到每日菜谱失败：', err);
+          // 特殊处理"已收藏"的异常情况
+          if (err.message && err.message.includes('已收藏')) {
+            this.isFavorite = true;
+            uni.showToast({
+              title: '菜谱已在每日菜谱中',
+              icon: 'none'
+            });
+            // 触发全局事件，通知每日菜谱页面刷新
+            uni.$emit('refreshDailyRecipes');
+          } else {
+            uni.showToast({
+              title: '操作失败，请重试',
+              icon: 'none'
+            });
+          }
         });
     },
     // 加载菜谱详情
-    loadRecipeDetail(id) {
+    loadRecipeDetail(id) 
+    {
       getRecipeDetail(id)
         .then(res => {
           if (res) {
@@ -232,7 +280,8 @@ export default {
         })
     },
     // 格式化做法步骤
-    formatMethod(method) {
+    formatMethod(method) 
+    {
       if (!method) return []
       return method.split('↵')
         .filter(step => step.trim())
@@ -253,9 +302,10 @@ export default {
       if (level === 3) return 'tag-red'
       return ''
     },
-    mapTypeIdToCat
+    mapTypeIdToCat,
   }
 }
+
 </script>
 
 <style>

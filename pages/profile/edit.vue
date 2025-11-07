@@ -24,20 +24,22 @@
 </template>
 
 <script>
+import { updateUserInfo, updateUserAvatar } from '@/api/user.js';
 export default {
   data() {
     return {
       userInfo: {
         avatar: '',
         nickname: ''
-      }
+      },
+       submitting: false  // 添加这一行
     }
   },
   onLoad() {
     // 从本地存储加载用户信息
     const userInfo = uni.getStorageSync('userInfo');
     if (userInfo) {
-      this.userInfo = userInfo;
+      this.userInfo ={ ...userInfo }; 
     }
   },
   methods: {
@@ -48,19 +50,97 @@ export default {
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
         success: (res) => {
-          this.userInfo.avatar = res.tempFilePaths[0];
+      // 设置为临时路径，上传后会更新为服务器URL  // 添加这行注释
+      this.userInfo.avatar = res.tempFilePaths[0];
         }
       });
+
     },
-    // 保存资料
-    saveProfile() {
-      // 保存到本地存储
-      uni.setStorageSync('userInfo', this.userInfo);
-      uni.showToast({ title: '保存成功', icon: 'none' });
-      // 返回上一页
-      uni.navigateBack();
-    }
+    // 上传头像到服务器
+async uploadAvatarToServer() {
+  return new Promise((resolve, reject) => {
+    uni.uploadFile({
+      url: 'http://172.20.10.3:9000/api/user/upload-avatar',
+      filePath: this.userInfo.avatar,
+      name: 'avatar',
+      header: {
+        'Token': uni.getStorageSync('token') // 修复为 Token
+      },
+      success: (res) => {
+        try {
+          const data = JSON.parse(res.data);
+          if (data && data.success && data.data && data.data.avatarUrl) {
+            this.userInfo.avatar = data.data.avatarUrl;
+            resolve();
+          } else {
+            reject(new Error(data.message || '头像上传失败'));
+          }
+        } catch (e) {
+          reject(new Error('头像上传响应解析失败'));
+        }
+      },
+      fail: (error) => {
+        reject(error);
+      }
+    });
+  });
+},
+    async saveProfile() {
+  if (this.submitting) return;
+  
+  // 验证昵称
+  if (!this.userInfo.nickname || this.userInfo.nickname.trim() === '') {
+    uni.showToast({ title: '昵称不能为空', icon: 'none' });
+    return;
   }
+  
+  this.submitting = true;
+  uni.showLoading({ title: '保存中...' });
+  
+  try {
+    // 如果头像有更新（是临时文件路径），先上传头像
+    if (this.userInfo.avatar && this.userInfo.avatar.startsWith('wxfile://')) {
+      await this.uploadAvatarToServer();
+    }
+    
+    // 更新用户信息
+    const response = await updateUserInfo({
+      nickname: this.userInfo.nickname
+    });
+    
+    if (response && response.success) {
+        // 保存到本地存储，同时确保头像字段正确映射
+      const userInfoToSave = {
+        ...this.userInfo,
+        avatarUrl: this.userInfo.avatar // 确保头像URL字段正确
+      };
+      uni.setStorageSync('userInfo', userInfoToSave);
+      
+      uni.showToast({ title: '保存成功', icon: 'none' });
+      
+      // 返回上一页并触发刷新
+      uni.navigateBack({
+        success: () => {
+          // 通过事件总线或全局事件通知父页面刷新
+          setTimeout(() => {
+            // 触发全局事件，让"我的"页面重新加载用户信息
+            uni.$emit('userInfoUpdated');
+          }, 500);
+        }
+      });
+    } else {
+      uni.showToast({ title: response.message || '保存失败', icon: 'none' });
+    }
+  } catch (error) {
+    console.error('保存用户信息失败:', error);
+    uni.showToast({ title: '网络错误，请重试', icon: 'none' });
+  } finally {
+    uni.hideLoading();
+    this.submitting = false;
+  }
+},
+
+}
 }
 </script>
 

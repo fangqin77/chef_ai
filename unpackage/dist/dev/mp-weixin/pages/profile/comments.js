@@ -102,12 +102,23 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  var g0 = _vm.items.length
+  var g0 = _vm.comments.length
+  var l0 = !!g0
+    ? _vm.__map(_vm.comments, function (comment, __i0__) {
+        var $orig = _vm.__get_orig(comment)
+        var m0 = _vm.formatTime(comment.createTime)
+        return {
+          $orig: $orig,
+          m0: m0,
+        }
+      })
+    : null
   _vm.$mp.data = Object.assign(
     {},
     {
       $root: {
         g0: g0,
+        l0: l0,
       },
     }
   )
@@ -146,85 +157,125 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 /* WEBPACK VAR INJECTION */(function(uni) {
 
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ 4);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
+var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 var _default = {
   data: function data() {
     return {
-      items: [],
-      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
+      comments: [],
+      fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
+      loading: false
     };
   },
   onShow: function onShow() {
-    this.load();
+    var _this = this;
+    return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
+      return _regenerator.default.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              _context.next = 2;
+              return _this.loadComments();
+            case 2:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }))();
   },
   methods: {
-    meName: function meName() {
-      try {
-        var v = uni.getStorageSync('profile_info') || {};
-        var name = String(v.name || '').trim();
-        return name || '我';
-      } catch (e) {
-        return '我';
-      }
-    },
-    load: function load() {
-      var me = this.meName();
-      var cm = {};
-      try {
-        cm = uni.getStorageSync('social_comments') || {};
-      } catch (e) {
-        cm = {};
-      }
-      var list = [];
-      Object.keys(cm).forEach(function (pid) {
-        var arr = Array.isArray(cm[pid]) ? cm[pid] : [];
-        arr.forEach(function (c, idx) {
-          if (String(c.name || '').trim() === me) {
-            list.push({
-              key: pid + '_' + idx,
-              postId: String(pid),
-              name: c.name || '我',
-              text: c.text || '',
-              time: c.time || '刚刚',
-              avatar: c.avatar || ''
-            });
+    // 加载评论列表
+    loadComments: function loadComments() {
+      var _this2 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
+        var token, response;
+        return _regenerator.default.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                if (!_this2.loading) {
+                  _context2.next = 2;
+                  break;
+                }
+                return _context2.abrupt("return");
+              case 2:
+                _context2.prev = 2;
+                _this2.loading = true;
+
+                // 检查用户是否登录
+                token = uni.getStorageSync('token');
+                if (token) {
+                  _context2.next = 9;
+                  break;
+                }
+                uni.showToast({
+                  title: '请先登录',
+                  icon: 'none'
+                });
+                _this2.comments = [];
+                return _context2.abrupt("return");
+              case 9:
+                _context2.next = 11;
+                return (0, _recipes.getUserComments)(1, 20);
+              case 11:
+                response = _context2.sent;
+                console.log('获取评论列表响应:', response);
+                if (response && response.list) {
+                  _this2.comments = response.list.map(function (comment) {
+                    return _objectSpread(_objectSpread({}, comment), {}, {
+                      id: String(comment.id),
+                      postId: String(comment.postId || comment.postId)
+                    });
+                  });
+                  console.log("\u83B7\u53D6\u5230 ".concat(_this2.comments.length, " \u6761\u8BC4\u8BBA\u8BB0\u5F55"));
+                } else {
+                  console.error('接口返回数据格式错误:', response);
+                  _this2.comments = [];
+                }
+                _context2.next = 21;
+                break;
+              case 16:
+                _context2.prev = 16;
+                _context2.t0 = _context2["catch"](2);
+                console.error('获取评论列表失败:', _context2.t0);
+                uni.showToast({
+                  title: '获取评论失败',
+                  icon: 'none'
+                });
+                _this2.comments = [];
+              case 21:
+                _context2.prev = 21;
+                _this2.loading = false;
+                return _context2.finish(21);
+              case 24:
+              case "end":
+                return _context2.stop();
+            }
           }
-        });
-      });
-      // 可按时间简排序（这里保持插入顺序）
-      this.items = list;
+        }, _callee2, null, [[2, 16, 21, 24]]);
+      }))();
+    },
+    // 格式化时间显示
+    formatTime: function formatTime(timestamp) {
+      if (!timestamp) return '刚刚';
+      var date = new Date(timestamp);
+      var now = new Date();
+      var diff = now.getTime() - date.getTime();
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+      if (diff < 2592000000) return Math.floor(diff / 86400000) + '天前';
+      return date.toLocaleDateString();
     },
     goSocial: function goSocial() {
       uni.switchTab ? uni.switchTab({
@@ -233,10 +284,11 @@ var _default = {
         url: '/pages/social/index'
       });
     },
-    open: function open(it) {
-      if (!it || !it.postId) return;
+    open: function open(comment) {
+      if (!comment || !comment.postId) return;
+      // 跳转到对应的帖子详情页
       uni.navigateTo({
-        url: '/pages/social/index?postId=' + encodeURIComponent(String(it.postId))
+        url: "/pages/social/detail?id=".concat(encodeURIComponent(comment.postId))
       });
     }
   }

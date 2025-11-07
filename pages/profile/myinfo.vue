@@ -25,27 +25,90 @@
 </template>
 
 <script>
+import { getUserNotifications } from '@/api/recipes';
+
 export default {
   data() {
     return {
       fallbackImg: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
-      notices: []
+      notices: [],
+      loading: false
     }
   },
   onShow() {
-    this.buildNotices()
+    this.loadNotifications()
   },
   methods: {
-    basePosts() {
-      let local = []
-      try { local = uni.getStorageSync('social_posts') || [] } catch(e) {}
-      return Array.isArray(local) ? local : []
+    async loadNotifications() {
+      this.loading = true
+      try {
+        // 检查是否有token
+        const token = uni.getStorageSync('token')
+        if (!token) {
+          // 如果没有token，使用本地数据
+          this.notices = this.buildLocalNotices()
+          return
+        }
+
+        // 调用后端API
+        const response = await getUserNotifications()
+        if (response && response.code === 200 && response.data) {
+          // 成功获取后端数据
+          const backendNotices = this.formatBackendNotifications(response.data)
+          // 合并本地通知
+          const localNotices = this.buildLocalNotices()
+          const allNotices = [...backendNotices, ...localNotices]
+          
+          // 去重
+          const seen = new Set(), uniq = []
+          allNotices.forEach(n => {
+            const k = [n.postId, n.title, n.brief].join('|')
+            if (!seen.has(k)) { seen.add(k); uniq.push(n) }
+          })
+          this.notices = uniq
+        } else {
+          // 后端API失败，使用本地数据
+          this.notices = this.buildLocalNotices()
+        }
+      } catch (error) {
+        console.error('获取通知失败:', error)
+        // 失败时使用本地数据
+        this.notices = this.buildLocalNotices()
+      } finally {
+        this.loading = false
+      }
     },
-    commentsMap() {
-      try { return uni.getStorageSync('social_comments') || {} } catch(e) { return {} }
+
+    formatBackendNotifications(notifications) {
+      if (!Array.isArray(notifications)) return []
+      
+      return notifications.map(notif => ({
+        type: notif.type || 'notification',
+        postId: notif.postId || notif.relatedId || '',
+        title: notif.title || '新通知',
+        brief: notif.content || notif.message || '',
+        time: this.formatTime(notif.createTime || notif.timestamp),
+        avatar: notif.avatar || notif.senderAvatar || ''
+      }))
     },
-    buildNotices() {
-      // 从本地资料读取昵称（如果之前保存过），否则默认“我”
+
+    formatTime(timestamp) {
+      if (!timestamp) return '刚刚'
+      
+      const now = new Date()
+      const time = new Date(timestamp)
+      const diff = now - time
+      
+      if (diff < 60000) return '刚刚'
+      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
+      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
+      if (diff < 604800000) return Math.floor(diff / 86400000) + '天前'
+      
+      return time.toLocaleDateString()
+    },
+
+    buildLocalNotices() {
+      // 从本地资料读取昵称（如果之前保存过），否则默认"我"
       let me = '我'
       try {
         const v = uni.getStorageSync('profile_info') || {}
@@ -105,7 +168,17 @@ export default {
         const k = [n.postId, n.title, n.brief].join('|')
         if (!seen.has(k)) { seen.add(k); uniq.push(n) }
       })
-      this.notices = uniq
+      
+      return uniq
+    },
+
+    basePosts() {
+      let local = []
+      try { local = uni.getStorageSync('social_posts') || [] } catch(e) {}
+      return Array.isArray(local) ? local : []
+    },
+    commentsMap() {
+      try { return uni.getStorageSync('social_comments') || {} } catch(e) { return {} }
     },
     clearNotices() {
       uni.removeStorageSync('profile_notifications')

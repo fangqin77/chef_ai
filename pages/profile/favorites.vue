@@ -4,14 +4,14 @@
       <text class="title">我的收藏</text>
     </view>
 
-    <view class="list" v-if="ids.length">
-      <view class="item" v-for="id in ids" :key="id" @click="open(id)">
-        <image class="cover" :src="(map[id] && map[id].cover) || fallback" mode="aspectFill" />
+    <view class="list" v-if="favorites.length">
+      <view class="item" v-for="item in favorites" :key="item.id" @click="open(item.id)">
+        <image class="cover" :src="(item.images && item.images[0]) || fallback" mode="aspectFill" />
         <view class="info">
-          <text class="name">{{ (map[id] && map[id].name) || '作品' }}</text>
-          <text class="desc ellipsis">{{ (map[id] && map[id].text) || '' }}</text>
+          <text class="name">{{ item.name || item.content || '作品' }}</text>
+          <text class="desc ellipsis">{{ item.content || item.text || '' }}</text>
         </view>
-        <button class="del" @click.stop="remove(id)">删除</button>
+        <button class="del" @click.stop="remove(item.id)">删除</button>
         <text class="arrow">›</text>
       </view>
     </view>
@@ -24,36 +24,92 @@
 </template>
 
 <script>
+import { getUserFavorites, likePost, cancelLikePost } from '@/api/recipes';
+
 export default {
   data() {
     return {
-      map: {},
-      ids: [],
-      fallback: '/static/yuan_97e57f821c79b841651df5b413309328.jpg'
+      favorites: [],
+      fallback: '/static/yuan_97e57f821c79b841651df5b413309328.jpg',
+      loading: false
     }
   },
-  onShow() {
-    const fav = uni.getStorageSync('my_fav_posts') || {}
-    this.map = fav
-    this.ids = Object.keys(fav)
+  async onShow() {
+    await this.loadFavorites();
   },
   methods: {
-    remove(id) {
+    // 加载收藏列表
+    async loadFavorites() {
+      if (this.loading) return;
+      
       try {
-        let fav = uni.getStorageSync('my_fav_posts') || {}
-        if (fav[id]) delete fav[id]
-        uni.setStorageSync('my_fav_posts', fav)
-        this.map = fav
-        this.ids = Object.keys(fav)
-        uni.showToast({ title: '已删除收藏', icon: 'none' })
-      } catch(e) {
-        uni.showToast({ title: '删除失败', icon: 'none' })
+        this.loading = true;
+        
+        // 检查用户是否登录
+        const token = uni.getStorageSync('token');
+        if (!token) {
+          uni.showToast({ title: '请先登录', icon: 'none' });
+          this.favorites = [];
+          return;
+        }
+        
+        // 从后端API获取收藏列表
+        const response = await getUserFavorites(1, 20);
+        console.log('获取收藏列表响应:', response);
+        
+        if (response && response.list) {
+          this.favorites = response.list.map(item => ({
+            ...item,
+            id: String(item.id)
+          }));
+          console.log(`获取到 ${this.favorites.length} 条收藏记录`);
+        } else {
+          console.error('接口返回数据格式错误:', response);
+          this.favorites = [];
+        }
+      } catch (error) {
+        console.error('获取收藏列表失败:', error);
+        uni.showToast({ title: '获取收藏失败', icon: 'none' });
+        this.favorites = [];
+      } finally {
+        this.loading = false;
       }
     },
-    open(id) {
-      // 打开美食圈并滚动到对应项（简单跳转到美食圈即可）
-      uni.switchTab ? uni.switchTab({ url: '/pages/social/index' }) : uni.navigateTo({ url: '/pages/social/index' })
+    
+    // 取消收藏
+    async remove(id) {
+      uni.showModal({
+        title: '取消收藏',
+        content: '确定要取消收藏该作品吗？',
+        success: async (res) => {
+          if (res.confirm) {
+            try {
+      // 调用取消点赞接口实现取消收藏
+      const response = await cancelLikePost(id);
+              
+              if (response && response.success) {
+                // 从本地列表中移除
+                this.favorites = this.favorites.filter(item => String(item.id) !== id);
+                uni.showToast({ title: '取消收藏成功', icon: 'success' });
+              } else {
+                uni.showToast({ title: response?.message || '取消收藏失败', icon: 'none' });
+              }
+            } catch (error) {
+              console.error('取消收藏失败:', error);
+              uni.showToast({ title: '取消收藏失败，请重试', icon: 'none' });
+            }
+          }
+        }
+      });
     },
+    
+    open(id) {
+      // 打开美食圈并跳转到对应帖子详情页
+      uni.navigateTo({ 
+        url: `/pages/social/detail?id=${encodeURIComponent(id)}` 
+      });
+    },
+    
     goSocial() {
       uni.switchTab ? uni.switchTab({ url: '/pages/social/index' }) : uni.navigateTo({ url: '/pages/social/index' })
     }

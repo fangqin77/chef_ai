@@ -148,9 +148,10 @@ var _slicedToArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runt
 var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
 var _user = __webpack_require__(/*! ../../api/user.js */ 30);
 var _request = __webpack_require__(/*! ../../api/request.js */ 31);
+var _data$onLoad$onShow$o;
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
-var _default = {
+var _default = (_data$onLoad$onShow$o = {
   data: function data() {
     return {
       userInfo: {
@@ -186,247 +187,153 @@ var _default = {
       }, _callee);
     }))();
   },
-  methods: {
-    // 检查登录状态
-    checkLoginStatus: function checkLoginStatus() {
-      var token = uni.getStorageSync('token');
-      console.log('检查登录状态，token:', token); // 调试日志
-      if (token) {
-        this.loadUserInfo();
-      } else {
-        // 未登录状态使用默认数据
-        this.userInfo = {
-          avatar: '/static/avatar-default.png',
-          nickname: '用户',
-          followCount: 0,
-          fansCount: 0,
-          likeCount: 0,
-          isLoggedIn: false
-        };
-        console.log('未登录状态，userInfo:', this.userInfo); // 调试日志
-      }
-    },
-    // 点击卡片事件
-    handleUserCardClick: function handleUserCardClick() {
-      uni.navigateTo({
-        url: '/pages/profile/edit'
-      });
-    },
-    // 显示微信授权弹窗
-    showWechatAuthModal: function showWechatAuthModal() {
-      var _this2 = this;
-      uni.showModal({
-        title: '微信授权登录',
-        content: '请授权登录以使用完整功能',
-        confirmText: '授权登录',
-        cancelText: '取消',
-        success: function success(res) {
-          if (res.confirm) {
-            _this2.handleWechatLogin();
+  onShow: function onShow() {
+    var _this2 = this;
+    return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
+      var token;
+      return _regenerator.default.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              // 每次显示页面时重新加载用户信息
+              token = uni.getStorageSync('token');
+              if (token) {
+                _this2.loadUserInfo(); // 从服务器获取最新信息
+              } else {
+                _this2.checkLoginStatus();
+              }
+            case 2:
+            case "end":
+              return _context2.stop();
           }
         }
-      });
-    },
-    // 微信授权登录
-    handleWechatLogin: function handleWechatLogin() {
-      var _this3 = this;
-      uni.login({
-        provider: 'weixin',
-        success: function success(loginRes) {
-          console.log('获取到微信code:', loginRes.code);
-          // 使用code调用后端登录接口
-          _this3.loginWithCode(loginRes.code);
-        },
-        fail: function fail(err) {
-          console.error('微信登录失败:', err);
-          uni.showToast({
-            title: '登录失败',
-            icon: 'none'
-          });
+      }, _callee2);
+    }))();
+  }
+}, (0, _defineProperty2.default)(_data$onLoad$onShow$o, "onLoad", function onLoad() {
+  var _this3 = this;
+  // 监听用户信息更新事件
+  uni.$on('userInfoUpdated', function () {
+    console.log('收到用户信息更新事件，重新加载用户信息');
+    _this3.loadUserInfo();
+  });
+}), (0, _defineProperty2.default)(_data$onLoad$onShow$o, "onUnload", function onUnload() {
+  // 移除事件监听
+  uni.$off('userInfoUpdated');
+}), (0, _defineProperty2.default)(_data$onLoad$onShow$o, "onLoad", function onLoad() {
+  var _this4 = this;
+  // 监听用户信息更新事件
+  uni.$on('userInfoUpdated', function () {
+    console.log('收到用户信息更新事件，重新加载用户信息');
+    _this4.loadUserInfo();
+  });
+}), (0, _defineProperty2.default)(_data$onLoad$onShow$o, "onUnload", function onUnload() {
+  // 移除事件监听
+  uni.$off('userInfoUpdated');
+}), (0, _defineProperty2.default)(_data$onLoad$onShow$o, "methods", {
+  // 检查登录状态
+  checkLoginStatus: function checkLoginStatus() {
+    var token = uni.getStorageSync('token');
+    console.log('检查登录状态，token:', token); // 调试日志
+    if (token) {
+      this.loadUserInfo();
+    } else {
+      // 未登录状态使用默认数据
+      this.userInfo = {
+        avatar: '/static/avatar-default.png',
+        nickname: '用户',
+        followCount: 0,
+        fansCount: 0,
+        likeCount: 0,
+        isLoggedIn: false
+      };
+      console.log('未登录状态，userInfo:', this.userInfo); // 调试日志
+    }
+  },
+  // 点击卡片事件
+  handleUserCardClick: function handleUserCardClick() {
+    uni.navigateTo({
+      url: '/pages/profile/edit'
+    });
+  },
+  // 显示微信授权弹窗
+  showWechatAuthModal: function showWechatAuthModal() {
+    var _this5 = this;
+    uni.showModal({
+      title: '微信授权登录',
+      content: '请授权登录以使用完整功能',
+      confirmText: '授权登录',
+      cancelText: '取消',
+      success: function success(res) {
+        if (res.confirm) {
+          _this5.handleWechatLogin();
         }
-      });
-    },
-    // 使用code调用后端登录接口
-    loginWithCode: function loginWithCode(code) {
-      var _this4 = this;
-      (0, _user.wechatLogin)(code).then(function (res) {
-        if (res && res.success) {
-          var _res$data;
-          // 保存token到本地存储
-          uni.setStorageSync('token', res.token || ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.token));
-          uni.showToast({
-            title: '登录成功'
-          });
-          _this4.checkLoginStatus(); // 刷新页面状态
-        } else {
-          uni.showToast({
-            title: res.msg || '登录失败',
-            icon: 'none'
-          });
-        }
-      }).catch(function (err) {
-        console.error('调用登录接口失败:', err);
+      }
+    });
+  },
+  // 微信授权登录
+  handleWechatLogin: function handleWechatLogin() {
+    var _this6 = this;
+    uni.login({
+      provider: 'weixin',
+      success: function success(loginRes) {
+        console.log('获取到微信code:', loginRes.code);
+        // 使用code调用后端登录接口
+        _this6.loginWithCode(loginRes.code);
+      },
+      fail: function fail(err) {
+        console.error('微信登录失败:', err);
         uni.showToast({
-          title: '网络错误，请重试',
+          title: '登录失败',
           icon: 'none'
         });
+      }
+    });
+  },
+  // 使用code调用后端登录接口
+  loginWithCode: function loginWithCode(code) {
+    var _this7 = this;
+    (0, _user.wechatLogin)(code).then(function (res) {
+      if (res && res.success) {
+        var _res$data;
+        // 保存token到本地存储
+        uni.setStorageSync('token', res.token || ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.token));
+        uni.showToast({
+          title: '登录成功'
+        });
+        _this7.checkLoginStatus(); // 刷新页面状态
+      } else {
+        uni.showToast({
+          title: res.msg || '登录失败',
+          icon: 'none'
+        });
+      }
+    }).catch(function (err) {
+      console.error('调用登录接口失败:', err);
+      uni.showToast({
+        title: '网络错误，请重试',
+        icon: 'none'
       });
-    },
-    // 加载用户信息（已登录状态）
-    loadUserInfo: function loadUserInfo() {
-      var _this5 = this;
-      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
-        var token, _yield$Promise, _yield$Promise2, res, err;
-        return _regenerator.default.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                _context2.prev = 0;
-                token = uni.getStorageSync('token');
-                console.log('当前 token:', token, '存储时间:', new Date().toISOString());
-                if (token) {
-                  _context2.next = 6;
-                  break;
-                }
-                // 未登录状态使用默认数据
-                _this5.userInfo = {
-                  avatar: '/static/avatar-default.png',
-                  nickname: '用户',
-                  followCount: 0,
-                  fansCount: 0,
-                  likeCount: 0,
-                  isLoggedIn: false
-                };
-                return _context2.abrupt("return");
-              case 6:
-                if (!(token.length < 10)) {
-                  _context2.next = 10;
-                  break;
-                }
-                uni.showToast({
-                  title: '登录凭证无效，请重新登录',
-                  icon: 'none'
-                });
-                uni.navigateTo({
-                  url: '/pages/login/index'
-                });
-                return _context2.abrupt("return");
-              case 10:
-                _context2.next = 12;
-                return new Promise(function (resolve) {
-                  var requestConfig = {
-                    url: 'http://172.20.10.3:9000/api/user/info',
-                    method: 'GET',
-                    header: {
-                      'token': token.trim(),
-                      // 修改为后端预期的头名称
-                      'Content-Type': 'application/json'
-                    },
-                    timeout: 10000,
-                    withCredentials: true
-                  };
-                  console.log('请求配置:', JSON.stringify(requestConfig, null, 2)); // 打印完整配置
-
-                  uni.request(_objectSpread(_objectSpread({}, requestConfig), {}, {
-                    complete: function complete(response) {
-                      console.log('请求用户信息完成:', response);
-                      if (response.statusCode === 401) {
-                        console.error('Token 无效，后端返回:', response.data);
-                      }
-                      resolve([response, null]);
-                    },
-                    fail: function fail(error) {
-                      console.error('请求用户信息失败:', error);
-                      resolve([null, error]);
-                    }
-                  }));
-                });
-              case 12:
-                _yield$Promise = _context2.sent;
-                _yield$Promise2 = (0, _slicedToArray2.default)(_yield$Promise, 2);
-                res = _yield$Promise2[0];
-                err = _yield$Promise2[1];
-                if (!(err || !res || res.statusCode !== 200)) {
-                  _context2.next = 19;
-                  break;
-                }
-                if ((res === null || res === void 0 ? void 0 : res.statusCode) === 401) {
-                  uni.removeStorageSync('token');
-                  uni.showToast({
-                    title: '登录已过期，请重新登录',
-                    icon: 'none'
-                  });
-                  uni.navigateTo({
-                    url: '/pages/login/index'
-                  });
-                } else {
-                  uni.showToast({
-                    title: '网络错误，请重试',
-                    icon: 'none'
-                  });
-                }
-                return _context2.abrupt("return");
-              case 19:
-                // 更新用户信息
-                _this5.userInfo = _objectSpread(_objectSpread({}, res.data), {}, {
-                  isLoggedIn: true
-                });
-                _context2.next = 26;
+    });
+  },
+  // 加载用户信息（已登录状态）
+  loadUserInfo: function loadUserInfo() {
+    var _this8 = this;
+    return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3() {
+      var token, _yield$Promise, _yield$Promise2, res, err, apiData;
+      return _regenerator.default.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.prev = 0;
+              token = uni.getStorageSync('token');
+              console.log('当前 token:', token, '存储时间:', new Date().toISOString());
+              if (token) {
+                _context3.next = 6;
                 break;
-              case 22:
-                _context2.prev = 22;
-                _context2.t0 = _context2["catch"](0);
-                console.error('获取用户信息失败:', _context2.t0);
-                uni.showToast({
-                  title: '获取信息失败',
-                  icon: 'none'
-                });
-              case 26:
-              case "end":
-                return _context2.stop();
-            }
-          }
-        }, _callee2, null, [[0, 22]]);
-      }))();
-    },
-    goHistory: function goHistory() {
-      uni.navigateTo({
-        url: '/pages/profile/history'
-      });
-    },
-    goFavorites: function goFavorites() {
-      uni.navigateTo({
-        url: '/pages/profile/favorites'
-      });
-    },
-    goMyComments: function goMyComments() {
-      uni.navigateTo({
-        url: '/pages/profile/comments'
-      });
-    },
-    goMyWorks: function goMyWorks() {
-      uni.navigateTo({
-        url: '/pages/profile/works'
-      });
-    },
-    goMyInfo: function goMyInfo() {
-      uni.navigateTo({
-        url: '/pages/profile/myinfo'
-      });
-    },
-    // 退出登录
-    handleLogout: function handleLogout() {
-      var _this6 = this;
-      uni.showModal({
-        title: '确认退出',
-        content: '确定要退出登录吗？',
-        success: function success(res) {
-          if (res.confirm) {
-            // 调用退出登录接口
-            (0, _request.request)('/api/logout', {}, 'POST').then(function () {
-              // 清除本地存储的 token 和用户信息
-              uni.removeStorageSync('token');
-              _this6.userInfo = {
+              }
+              // 未登录状态使用默认数据
+              _this8.userInfo = {
                 avatar: '/static/avatar-default.png',
                 nickname: '用户',
                 followCount: 0,
@@ -434,23 +341,169 @@ var _default = {
                 likeCount: 0,
                 isLoggedIn: false
               };
+              return _context3.abrupt("return");
+            case 6:
+              if (!(token.length < 10)) {
+                _context3.next = 10;
+                break;
+              }
               uni.showToast({
-                title: '退出登录成功',
+                title: '登录凭证无效，请重新登录',
                 icon: 'none'
               });
-            }).catch(function (err) {
-              console.error('退出登录失败:', err);
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+              return _context3.abrupt("return");
+            case 10:
+              _context3.next = 12;
+              return new Promise(function (resolve) {
+                var requestConfig = {
+                  url: 'http://172.20.10.3:9000/api/user/info',
+                  method: 'GET',
+                  header: {
+                    'Token': token.trim(),
+                    // 修改为后端预期的头名称
+                    'Content-Type': 'application/json'
+                  },
+                  timeout: 10000,
+                  withCredentials: true
+                };
+                console.log('请求配置:', JSON.stringify(requestConfig, null, 2)); // 打印完整配置
+
+                uni.request(_objectSpread(_objectSpread({}, requestConfig), {}, {
+                  complete: function complete(response) {
+                    console.log('请求用户信息完成:', response);
+                    if (response.statusCode === 401) {
+                      console.error('Token 无效，后端返回:', response.data);
+                    }
+                    resolve([response, null]);
+                  },
+                  fail: function fail(error) {
+                    console.error('请求用户信息失败:', error);
+                    resolve([null, error]);
+                  }
+                }));
+              });
+            case 12:
+              _yield$Promise = _context3.sent;
+              _yield$Promise2 = (0, _slicedToArray2.default)(_yield$Promise, 2);
+              res = _yield$Promise2[0];
+              err = _yield$Promise2[1];
+              if (!(err || !res || res.statusCode !== 200)) {
+                _context3.next = 19;
+                break;
+              }
+              if ((res === null || res === void 0 ? void 0 : res.statusCode) === 401) {
+                uni.removeStorageSync('token');
+                uni.showToast({
+                  title: '登录已过期，请重新登录',
+                  icon: 'none'
+                });
+                uni.navigateTo({
+                  url: '/pages/login/index'
+                });
+              } else {
+                uni.showToast({
+                  title: '网络错误，请重试',
+                  icon: 'none'
+                });
+              }
+              return _context3.abrupt("return");
+            case 19:
+              // 更新用户信息 - 正确处理API返回的数据结构
+              apiData = res.data.data || res.data;
+              if (apiData) {
+                // 映射后端字段到前端字段
+                _this8.userInfo = {
+                  avatarUrl: apiData.avatarUrl || apiData.avatar,
+                  // 后端返回 avatarUrl
+                  nickname: apiData.nickname,
+                  followCount: apiData.followCount || 0,
+                  fansCount: apiData.fansCount || 0,
+                  likeCount: apiData.likeCount || 0,
+                  isLoggedIn: true
+                };
+              }
+              _context3.next = 27;
+              break;
+            case 23:
+              _context3.prev = 23;
+              _context3.t0 = _context3["catch"](0);
+              console.error('获取用户信息失败:', _context3.t0);
               uni.showToast({
-                title: '退出登录失败',
+                title: '获取信息失败',
                 icon: 'none'
               });
-            });
+            case 27:
+            case "end":
+              return _context3.stop();
           }
         }
-      });
-    }
+      }, _callee3, null, [[0, 23]]);
+    }))();
+  },
+  goHistory: function goHistory() {
+    uni.navigateTo({
+      url: '/pages/profile/history'
+    });
+  },
+  goFavorites: function goFavorites() {
+    uni.navigateTo({
+      url: '/pages/profile/favorites'
+    });
+  },
+  goMyComments: function goMyComments() {
+    uni.navigateTo({
+      url: '/pages/profile/comments'
+    });
+  },
+  goMyWorks: function goMyWorks() {
+    uni.navigateTo({
+      url: '/pages/profile/works'
+    });
+  },
+  goMyInfo: function goMyInfo() {
+    uni.navigateTo({
+      url: '/pages/profile/myinfo'
+    });
+  },
+  // 退出登录
+  handleLogout: function handleLogout() {
+    var _this9 = this;
+    uni.showModal({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      success: function success(res) {
+        if (res.confirm) {
+          // 调用退出登录接口
+          (0, _request.request)('/api/logout', {}, 'POST').then(function () {
+            // 清除本地存储的 token 和用户信息
+            uni.removeStorageSync('token');
+            _this9.userInfo = {
+              avatar: '/static/avatar-default.png',
+              nickname: '用户',
+              followCount: 0,
+              fansCount: 0,
+              likeCount: 0,
+              isLoggedIn: false
+            };
+            uni.showToast({
+              title: '退出登录成功',
+              icon: 'none'
+            });
+          }).catch(function (err) {
+            console.error('退出登录失败:', err);
+            uni.showToast({
+              title: '退出登录失败',
+              icon: 'none'
+            });
+          });
+        }
+      }
+    });
   }
-};
+}), _data$onLoad$onShow$o);
 exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
