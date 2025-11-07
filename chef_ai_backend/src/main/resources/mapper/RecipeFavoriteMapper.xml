@@ -92,11 +92,14 @@
     WHERE user_id = #{userId} AND recipe_id = #{recipeId}
   </update>
 
-  <!-- 每日菜谱查询（按计划日期） -->
+  <!-- 每日菜谱查询（按计划日期），当未传 targetDate 时返回所有有计划日期的收藏 -->
   <select id="selectDailyFavorites" resultMap="RecipeFavoriteMap">
     SELECT * FROM recipe_favorites
-    WHERE user_id = #{userId} 
+    WHERE user_id = #{userId}
+      AND plan_cook_date IS NOT NULL
+    <if test="targetDate != null">
       AND plan_cook_date = #{targetDate}
+    </if>
     ORDER BY plan_cook_date ASC
   </select>
 </mapper>
