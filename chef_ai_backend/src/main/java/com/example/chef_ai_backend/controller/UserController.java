@@ -18,7 +18,10 @@ public class UserController {
     // 获取用户信息（需要 Token）
     @GetMapping("/info")
     public Map<String, Object> getUserInfo(HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("loginUserId");
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return Map.of("success", false, "message", "未登录");
+        }
         User user = userService.getById(userId);
         return Map.of("success", true, "data", user);
     }
@@ -27,7 +30,10 @@ public class UserController {
     @PostMapping("/update")
     public Map<String, Object> updateUserInfo(HttpServletRequest request,
                                               @RequestBody User payload) {
-        Long userId = (Long) request.getAttribute("loginUserId");
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return Map.of("success", false, "message", "未登录");
+        }
         payload.setId(userId);
         userService.updateUserSelective(payload);
         return Map.of("success", true, "msg", "更新成功");
@@ -37,7 +43,10 @@ public class UserController {
     @PostMapping("/update-avatar")
     public Map<String, Object> updateAvatar(HttpServletRequest request,
                                             @RequestBody Map<String, String> body) {
-        Long userId = (Long) request.getAttribute("loginUserId");
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return Map.of("success", false, "message", "未登录");
+        }
         String avatar = body.get("avatar");
         userService.updateAvatar(userId, avatar);
         return Map.of("success", true, "msg", "头像更新成功");

@@ -7,8 +7,19 @@
     <id property="id" column="id"/>
     <result property="openid" column="openid"/>
     <result property="sessionKey" column="session_key"/>
+    <result property="token" column="token"/>
+    <result property="tokenExpireAt" column="token_expire_at"/>
+    <result property="unionid" column="unionid"/>
     <result property="nickname" column="nickname"/>
     <result property="avatarUrl" column="avatar_url"/>
+    <result property="gender" column="gender"/>
+    <result property="phone" column="phone"/>
+    <result property="province" column="province"/>
+    <result property="city" column="city"/>
+    <result property="country" column="country"/>
+    <result property="status" column="status"/>
+    <result property="lastLoginAt" column="last_login_at"/>
+    <result property="loginCount" column="login_count"/>
     <result property="createdAt" column="created_at"/>
     <result property="updatedAt" column="updated_at"/>
   </resultMap>
@@ -32,14 +43,19 @@
     SET nickname = #{nickname},
         session_key = #{sessionKey},
         avatar_url = #{avatarUrl},
-        updated_at = #{updatedAt}
+        gender = #{gender},
+        phone = #{phone},
+        province = #{province},
+        city = #{city},
+        country = #{country},
+        updated_at = NOW()
     WHERE id = #{id}
   </update>
   
   <!-- 插入新用户 -->
   <insert id="insert" parameterType="com.example.chef_ai_backend.model.User" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO `userss` (openid, session_key, nickname, avatar_url, created_at, updated_at)
-    VALUES (#{openid}, #{sessionKey}, #{nickname}, #{avatarUrl}, #{createdAt}, #{updatedAt})
+    INSERT INTO `userss` (openid, session_key, token, token_expire_at, unionid, nickname, avatar_url, gender, phone, province, city, country, status, last_login_at, login_count, created_at, updated_at)
+    VALUES (#{openid}, #{sessionKey}, #{token}, #{tokenExpireAt}, #{unionid}, #{nickname}, #{avatarUrl}, #{gender}, #{phone}, #{province}, #{city}, #{country}, #{status}, #{lastLoginAt}, #{loginCount}, #{createdAt}, #{updatedAt})
   </insert>
   
   <!-- 根据ID查询 -->
@@ -54,8 +70,15 @@
       <if test="nickname != null">nickname = #{nickname},</if>
       <if test="sessionKey != null">session_key = #{sessionKey},</if>
       <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
-      <if test="updatedAt != null">updated_at = #{updatedAt},</if>
-      <!-- 如有 phone/province/city 等列，可继续加 -->
+      <if test="gender != null">gender = #{gender},</if>
+      <if test="phone != null">phone = #{phone},</if>
+      <if test="province != null">province = #{province},</if>
+      <if test="city != null">city = #{city},</if>
+      <if test="country != null">country = #{country},</if>
+      <if test="status != null">status = #{status},</if>
+      <if test="lastLoginAt != null">last_login_at = #{lastLoginAt},</if>
+      <if test="loginCount != null">login_count = #{loginCount},</if>
+      updated_at = NOW()
     </set>
     WHERE id = #{id}
   </update>
