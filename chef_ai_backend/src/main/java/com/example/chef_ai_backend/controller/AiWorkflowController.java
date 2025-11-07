@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * Dify 工作流代理控制器：
- * - 前端调用本接口，后端携带密钥转发到 Dify 工作流
+ * Dify 对话流代理控制器（chat-messages）：
+ * - 前端调用本接口，后端携带密钥转发到 Dify 对话流
  * - 目的：避免在前端暴露 Dify API Key，并统一做鉴权/限流/日志
  */
 @RestController
@@ -45,6 +45,11 @@ public class AiWorkflowController {
         String lang = body == null ? null : (String) body.get("lang");
         Object context = body == null ? null : body.get("context");
         Object variables = body == null ? null : body.get("variables");
+        // 可选会话ID，前端可以传 conversationId 实现多轮对话
+        Object conversationId = body == null ? null : body.get("conversationId");
+        if (context instanceof Map && conversationId != null) {
+            ((Map) context).put("conversationId", conversationId);
+        }
 
         Map<String, Object> result = aiWorkflowService.executeWorkflow(userId, query, lang, context, variables);
         return result;

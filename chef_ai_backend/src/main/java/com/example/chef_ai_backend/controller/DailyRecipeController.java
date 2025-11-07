@@ -9,9 +9,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 @RestController
 @RequestMapping("/api/recipes")
 @CrossOrigin(origins = "*")
+@ConditionalOnProperty(name = "feature.dailyRecipeController.enabled", havingValue = "true", matchIfMissing = false)
 public class DailyRecipeController {
     
     @Autowired
