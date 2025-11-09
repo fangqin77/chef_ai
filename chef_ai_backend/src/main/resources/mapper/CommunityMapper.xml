@@ -212,6 +212,47 @@
     WHERE id = #{postId} AND user_id = #{ownerId} AND status = 'normal'
   </update>
 
+  <!-- 编辑帖子（仅作者） -->
+  <update id="updatePost">
+    UPDATE posts
+    SET 
+      content = #{content},
+      media_json = #{mediaJson},
+      visibility = #{visibility},
+      updated_at = NOW()
+    WHERE id = #{postId} AND user_id = #{ownerId} AND status = 'normal'
+  </update>
+
+  <!-- 收藏的帖子列表：仅展示正常+已审核 -->
+  <select id="listFavoritePosts" resultMap="PostMap">
+    SELECT p.*
+    FROM posts p
+    JOIN favorites f ON f.post_id = p.id
+    WHERE f.user_id = #{userId}
+      AND p.status = 'normal' AND p.audit_status = 'approved'
+    ORDER BY p.id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="countFavoritePosts" resultType="int">
+    SELECT COUNT(1)
+    FROM posts p
+    JOIN favorites f ON f.post_id = p.id
+    WHERE f.user_id = #{userId}
+      AND p.status = 'normal' AND p.audit_status = 'approved'
+  </select>
+
+  <!-- 我发表的评论列表（正常） -->
+  <select id="listMyComments" resultMap="CommentMap">
+    SELECT * FROM comments
+    WHERE user_id = #{userId} AND status = 'normal'
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+  <select id="countMyComments" resultType="int">
+    SELECT COUNT(1) FROM comments
+    WHERE user_id = #{userId} AND status = 'normal'
+  </select>
+
   <!-- 评论：仅展示通过+正常；parentId 为空查一级 -->
   <select id="listApprovedComments" resultMap="CommentMap">
     SELECT * FROM comments

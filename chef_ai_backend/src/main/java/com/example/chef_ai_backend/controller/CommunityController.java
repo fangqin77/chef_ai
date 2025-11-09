@@ -27,7 +27,7 @@ public class CommunityController {
 
     // 工具：从拦截器放入的属性中获取当前登录用户ID
     private Long currentUserId(HttpServletRequest req) {
-        Object v = req.getAttribute("loginUserId");
+        Object v = req.getAttribute("userId");
         return v == null ? null : (Long) v;
     }
 
@@ -41,7 +41,7 @@ public class CommunityController {
     }
 
     // 查询本人帖子（含待审/驳回）
-    @GetMapping("/my/posts")
+    @GetMapping("/posts/my")
     public Map<String, Object> listMyPosts(@RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "10") int pageSize,
                                            HttpServletRequest request) {
@@ -186,5 +186,45 @@ public class CommunityController {
         String text = (String) body.get("text");
         communityService.report(targetType, targetId, uid, reasonCode, text);
         return Map.of("status", "pending");
+    }
+
+    // 编辑社区帖子（仅作者可编辑）
+    @PutMapping("/posts/{id}")
+    public Map<String, Object> updatePost(@PathVariable Long id,
+                                          @RequestBody Map<String, Object> body,
+                                          HttpServletRequest request) {
+        Long uid = currentUserId(request);
+        if (uid == null) return Map.of("success", false, "message", "未登录");
+        String content = (String) body.get("content");
+        Object mediaList = body.get("mediaList");
+        String mediaJson = com.alibaba.fastjson2.JSON.toJSONString(mediaList == null ? new Object[0] : mediaList);
+        Integer visibility = 1;
+        Object visibilityObj = body.get("visibility");
+        if (visibilityObj instanceof Number) visibility = ((Number) visibilityObj).intValue();
+        else if (visibilityObj instanceof String) {
+            try { visibility = Integer.parseInt((String) visibilityObj); } catch (Exception ignored) {}
+        }
+        boolean ok = communityService.updatePost(uid, id, content, mediaJson, visibility);
+        return Map.of("success", ok);
+    }
+
+    // 获取当前用户收藏的帖子列表
+    @GetMapping("/posts/favorites")
+    public Map<String, Object> listFavoritePosts(@RequestParam(defaultValue = "1") int page,
+                                                 @RequestParam(defaultValue = "20") int pageSize,
+                                                 HttpServletRequest request) {
+        Long uid = currentUserId(request);
+        if (uid == null) return Map.of("success", false, "message", "未登录");
+        return communityService.listFavoritePosts(uid, page, pageSize);
+    }
+
+    // 获取当前用户发表的评论列表
+    @GetMapping("/comments/my")
+    public Map<String, Object> listMyComments(@RequestParam(defaultValue = "1") int page,
+                                              @RequestParam(defaultValue = "20") int pageSize,
+                                              HttpServletRequest request) {
+        Long uid = currentUserId(request);
+        if (uid == null) return Map.of("success", false, "message", "未登录");
+        return communityService.listMyComments(uid, page, pageSize);
     }
 }

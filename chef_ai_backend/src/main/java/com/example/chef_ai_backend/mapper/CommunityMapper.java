@@ -63,6 +63,25 @@ public interface CommunityMapper {
                      @Param("reasonCode") String reasonCode,
                      @Param("text") String text);
 
+    // 编辑帖子（仅作者）
+    int updatePost(@Param("postId") Long postId,
+                   @Param("ownerId") Long ownerId,
+                   @Param("content") String content,
+                   @Param("mediaJson") String mediaJson,
+                   @Param("visibility") Integer visibility);
+
+    // 收藏的帖子列表
+    List<Post> listFavoritePosts(@Param("userId") Long userId,
+                                 @Param("offset") int offset,
+                                 @Param("limit") int limit);
+    int countFavoritePosts(@Param("userId") Long userId);
+
+    // 我的评论列表
+    List<Comment> listMyComments(@Param("userId") Long userId,
+                                 @Param("offset") int offset,
+                                 @Param("limit") int limit);
+    int countMyComments(@Param("userId") Long userId);
+
     // ===== 管理端（Admin） =====
     List<Post> listAdminPosts(@Param("keyword") String keyword,
                               @Param("auditStatus") String auditStatus,

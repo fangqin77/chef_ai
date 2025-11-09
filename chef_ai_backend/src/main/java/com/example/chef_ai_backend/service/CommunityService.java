@@ -125,4 +125,27 @@ public class CommunityService {
         communityMapper.insertReport(targetType, targetId, reporterId, reasonCode, text);
         return 1L;
     }
+
+    // 编辑帖子（仅作者）
+    @Transactional
+    public boolean updatePost(Long ownerId, Long postId, String content, String mediaJson, Integer visibility) {
+        int ok = communityMapper.updatePost(postId, ownerId, content, mediaJson, visibility);
+        return ok > 0;
+    }
+
+    // 收藏的帖子列表（已审核+正常）
+    public Map<String, Object> listFavoritePosts(Long userId, int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        List<Post> list = communityMapper.listFavoritePosts(userId, offset, pageSize);
+        int total = communityMapper.countFavoritePosts(userId);
+        return toPageResult(list, total, page, pageSize);
+    }
+
+    // 我发表的评论列表（正常）
+    public Map<String, Object> listMyComments(Long userId, int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        List<Comment> list = communityMapper.listMyComments(userId, offset, pageSize);
+        int total = communityMapper.countMyComments(userId);
+        return toPageResult(list, total, page, pageSize);
+    }
 }
