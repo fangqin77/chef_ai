@@ -3,7 +3,9 @@ package com.example.chef_ai_backend.controller;
 import com.alibaba.fastjson2.JSON;
 import com.example.chef_ai_backend.model.Post;
 import com.example.chef_ai_backend.service.CommunityService;
+import com.example.chef_ai_backend.util.TokenUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -19,16 +21,43 @@ import java.util.Map;
 @RequestMapping("/api/community")
 @CrossOrigin(origins = "*")
 public class CommunityController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CommunityController.class);
+
     private final CommunityService communityService;
+
+    @Autowired
+    private TokenUtil tokenUtil;
 
     public CommunityController(CommunityService communityService) {
         this.communityService = communityService;
     }
 
-    // 工具：从拦截器放入的属性中获取当前登录用户ID
+    // 工具：从拦截器放入的属性中获取当前登录用户ID；若没有则从请求头兜底解析 Token
     private Long currentUserId(HttpServletRequest req) {
         Object v = req.getAttribute("userId");
-        return v == null ? null : (Long) v;
+        if (v instanceof Long) {
+            Long id = (Long) v;
+            log.info("currentUserId: 来自拦截器的 userId={}", id);
+            return id;
+        }
+        // 兜底：从请求头读取 Token 或 Authorization 并校验
+        String token = req.getHeader("Token");
+        String tokenSource = "Token";
+        if (token == null || token.isEmpty()) {
+            String auth = req.getHeader("Authorization");
+            if (auth != null) {
+                if (auth.startsWith("Bearer ")) token = auth.substring(7);
+                else token = auth;
+                tokenSource = "Authorization";
+            }
+        }
+        if (token == null || token.isEmpty()) {
+            log.warn("currentUserId: 请求头未携带 Token/Authorization");
+            return null;
+        }
+        Long uid = tokenUtil.validateToken(token);
+        log.info("currentUserId: 通过{}头校验 token 结果 userId={}", tokenSource, uid);
+        return uid;
     }
 
     // 帖子列表（仅返回审核通过且正常的内容）
@@ -61,14 +90,18 @@ public class CommunityController {
     public Map<String, Object> createPost(@RequestBody Map<String, Object> body,
                                           HttpServletRequest request) {
         try {
-            System.out.println("接收参数：" + body);
+            log.info("接收参数：{}", body);
             Long uid = currentUserId(request);
-            System.out.println("当前用户 ID：" + uid);
-            // 检查用户是否已登录
+            log.info("当前用户 ID：{}", uid);
             if (uid == null) {
-                return Map.of("success", false, "message", "用户未登录");
+                // 更具体的消息，便于前端与排查
+                return Map.of(
+                    "success", false,
+                    "code", 401,
+                    "message", "未登录或Token无效，请重新登录后重试"
+                );
             }
-            
+
             String content = (String) body.get("content");
             // 检查内容是否为空
             if (content == null || content.trim().isEmpty()) {
@@ -110,6 +143,7 @@ public class CommunityController {
     @DeleteMapping("/posts/{id}")
     public Map<String, Object> deletePost(@PathVariable Long id, HttpServletRequest request) {
         Long uid = currentUserId(request);
+        if (uid == null) return Map.of("success", false, "code", 401, "message", "未登录或Token无效");
         boolean ok = communityService.deleteMyPost(uid, id);
         return Map.of("success", ok);
     }
