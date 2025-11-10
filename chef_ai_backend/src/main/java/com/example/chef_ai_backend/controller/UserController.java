@@ -26,6 +26,17 @@ public class UserController {
         return Map.of("success", true, "data", user);
     }
 
+    // 新增：获取用户简介（昵称/头像/简介）
+    @GetMapping("/introduction")
+    public Map<String, Object> getUserIntroduction(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return Map.of("success", false, "message", "未登录");
+        }
+        Map<String, Object> data = userService.getUserIntroWithStats(userId);
+        return Map.of("success", true, "data", data);
+    }
+
     // 更新用户信息（允许更新昵称/地区/电话等：根据你的表字段调整）
     @PostMapping("/update")
     public Map<String, Object> updateUserInfo(HttpServletRequest request,
@@ -49,6 +60,13 @@ public class UserController {
         }
         String avatar = body.get("avatar");
         userService.updateAvatar(userId, avatar);
-        return Map.of("success", true, "msg", "头像更新成功");
+        // 更新后立即查询并返回最新头像，避免前端缓存导致不刷新
+        User fresh = userService.getById(userId);
+        return Map.of("success", true, "msg", "头像更新成功", "data", Map.of(
+            "avatar_url", fresh != null ? fresh.getAvatarUrl() : avatar,
+            "avatar", fresh != null ? fresh.getAvatarUrl() : avatar,
+            // 提示前端可在URL上加时间戳参数避免缓存，如 avatar_url + '?t=' + Date.now()
+            "version", System.currentTimeMillis()
+        ));
     }
 }

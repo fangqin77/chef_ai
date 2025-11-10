@@ -16,4 +16,13 @@ public interface UserMapper {
     int updateSelective(User user);
 
     int updateAvatar(User user);
+
+    // 新增：查询用户简介（昵称/头像/简介）
+    User selectUserIntroduction(@Param("userId") Long userId);
+
+    // 统计：该用户所有帖子获赞总数（SUM posts.like_count）
+    Integer sumUserPostLikes(@Param("userId") Long userId);
+
+    // 统计：该用户帖子被收藏的用户数（去重）
+    Integer countUserPostFans(@Param("userId") Long userId);
 }

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chef_ai_backend.mapper.UserFollowMapper">
+
+  <insert id="insertFollow">
+    INSERT IGNORE INTO user_follows (follower_id, followee_id, created_at)
+    VALUES (#{followerId}, #{followeeId}, NOW())
+  </insert>
+
+  <delete id="deleteFollow">
+    DELETE FROM user_follows WHERE follower_id = #{followerId} AND followee_id = #{followeeId}
+  </delete>
+
+  <select id="countFollowing" parameterType="long" resultType="int">
+    SELECT COUNT(1) FROM user_follows WHERE follower_id = #{userId}
+  </select>
+
+  <select id="countFollowers" parameterType="long" resultType="int">
+    SELECT COUNT(1) FROM user_follows WHERE followee_id = #{userId}
+  </select>
+
+  <select id="listFollowing" parameterType="long" resultType="long">
+    SELECT followee_id FROM user_follows WHERE follower_id = #{userId}
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="listFollowers" parameterType="long" resultType="long">
+    SELECT follower_id FROM user_follows WHERE followee_id = #{userId}
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="isFollowing" parameterType="map" resultType="boolean">
+    SELECT CASE WHEN EXISTS (
+      SELECT 1 FROM user_follows WHERE follower_id = #{followerId} AND followee_id = #{followeeId}
+    ) THEN TRUE ELSE FALSE END
+  </select>
+</mapper>

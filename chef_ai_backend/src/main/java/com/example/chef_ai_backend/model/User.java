@@ -11,6 +11,8 @@ public class User {
     private String unionid;                // 微信unionid（多账号关联）
     private String nickname;               // 用户昵称
     private String avatarUrl;              // 用户头像URL
+    private String introduction;           // 用户简介（可为空）
+    private String description;            // 用户描述（新增，可为空）
     private Integer gender;                // 性别（1-男，2-女，0-未知）
     private String phone;                  // 手机号
     private String province;               // 省份
@@ -45,6 +47,12 @@ public class User {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getIntroduction() { return introduction; }
+    public void setIntroduction(String introduction) { this.introduction = introduction; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public Integer getGender() { return gender; }
     public void setGender(Integer gender) { this.gender = gender; }

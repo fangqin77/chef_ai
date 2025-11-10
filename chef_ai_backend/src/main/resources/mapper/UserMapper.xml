@@ -12,6 +12,7 @@
     <result property="unionid" column="unionid"/>
     <result property="nickname" column="nickname"/>
     <result property="avatarUrl" column="avatar_url"/>
+    <result property="description" column="description"/>
     <result property="gender" column="gender"/>
     <result property="phone" column="phone"/>
     <result property="province" column="province"/>
@@ -63,6 +64,26 @@
     SELECT * FROM `userss` WHERE id = #{id}
   </select>
 
+  <!-- 新增：查询用户简介（昵称、头像、简介） -->
+  <select id="selectUserIntroduction" parameterType="long" resultMap="UserMap">
+    SELECT id, nickname, avatar_url, description FROM `userss` WHERE id = #{userId}
+  </select>
+
+  <!-- 统计该用户所有帖子获赞总数 -->
+  <select id="sumUserPostLikes" parameterType="long" resultType="int">
+    SELECT COALESCE(SUM(p.like_count), 0)
+    FROM posts p
+    WHERE p.user_id = #{userId}
+  </select>
+
+  <!-- 统计该用户帖子被收藏的用户数（去重） -->
+  <select id="countUserPostFans" parameterType="long" resultType="int">
+    SELECT COALESCE(COUNT(DISTINCT f.user_id), 0)
+    FROM favorites f
+    JOIN posts p ON p.id = f.post_id
+    WHERE p.user_id = #{userId}
+  </select>
+
   <!-- 动态选择性更新（只更新非空字段） -->
   <update id="updateSelective" parameterType="com.example.chef_ai_backend.model.User">
     UPDATE `userss`
@@ -70,6 +91,7 @@
       <if test="nickname != null">nickname = #{nickname},</if>
       <if test="sessionKey != null">session_key = #{sessionKey},</if>
       <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+      <if test="description != null">description = #{description},</if>
       <if test="gender != null">gender = #{gender},</if>
       <if test="phone != null">phone = #{phone},</if>
       <if test="province != null">province = #{province},</if>
