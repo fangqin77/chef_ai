@@ -33,7 +33,25 @@ public class BrowsingHistoryController {
                                                       HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
-            return Map.of("success", false, "message", "未登录");
+            // 兜底兼容：从请求头或查询参数读取 token
+            String token = request.getHeader("Token");
+            if (token == null || token.isEmpty()) {
+                String xToken = request.getHeader("X-Token");
+                String lowerToken = request.getHeader("token");
+                if (xToken != null && !xToken.isEmpty()) token = xToken;
+                else if (lowerToken != null && !lowerToken.isEmpty()) token = lowerToken;
+            }
+            if ((token == null || token.isEmpty())) {
+                String auth = request.getHeader("Authorization");
+                if (auth != null && !auth.isEmpty()) token = auth.startsWith("Bearer ") ? auth.substring(7) : auth;
+            }
+            if ((token == null || token.isEmpty())) {
+                String queryToken = request.getParameter("token");
+                if (queryToken != null && !queryToken.isEmpty()) token = queryToken;
+            }
+            if (token == null || token.isEmpty()) {
+                return Map.of("success", false, "message", "未登录");
+            }
         }
         return browsingHistoryService.getUserBrowsingHistory(userId, page, pageSize);
     }

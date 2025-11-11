@@ -16,9 +16,17 @@
     ON DUPLICATE KEY UPDATE browse_time = NOW()
   </insert>
 
-  <select id="listUserBrowsingHistory" resultMap="BrowsingHistoryMap">
-    SELECT h.id, h.user_id, h.post_id, h.browse_time
+  <!-- 浏览历史列表（含用户昵称与头像） -->
+  <select id="listUserBrowsingHistory" resultType="map">
+    SELECT 
+      h.id,
+      h.user_id,
+      h.post_id,
+      h.browse_time,
+      u.nickname  AS user_nickname,
+      u.avatar_url AS user_avatar_url
     FROM browsing_history h
+    LEFT JOIN userss u ON u.id = h.user_id
     WHERE h.user_id = #{userId}
     ORDER BY h.browse_time DESC
     LIMIT #{limit} OFFSET #{offset}

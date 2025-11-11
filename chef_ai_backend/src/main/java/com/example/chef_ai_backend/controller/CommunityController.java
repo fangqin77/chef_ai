@@ -22,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/community")
 @CrossOrigin(origins = "*")
-public class CommunityController {
+public class  CommunityController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CommunityController.class);
 
     private final CommunityService communityService;
@@ -44,23 +44,40 @@ public class CommunityController {
             log.info("currentUserId: 来自拦截器的 userId={}", id);
             return id;
         }
-        // 兜底：从请求头读取 Token 或 Authorization 并校验
+        // 兜底：从请求头或查询参数读取 Token 并校验（兼容小程序）
         String token = req.getHeader("Token");
         String tokenSource = "Token";
         if (token == null || token.isEmpty()) {
+            // 兼容常见小程序/前端头名称
+            String xToken = req.getHeader("X-Token");
+            String lowerToken = req.getHeader("token");
+            if (xToken != null && !xToken.isEmpty()) {
+                token = xToken; tokenSource = "X-Token";
+            } else if (lowerToken != null && !lowerToken.isEmpty()) {
+                token = lowerToken; tokenSource = "token";
+            }
+        }
+        if (token == null || token.isEmpty()) {
             String auth = req.getHeader("Authorization");
-            if (auth != null) {
+            if (auth != null && !auth.isEmpty()) {
                 if (auth.startsWith("Bearer ")) token = auth.substring(7);
                 else token = auth;
                 tokenSource = "Authorization";
             }
         }
         if (token == null || token.isEmpty()) {
-            log.warn("currentUserId: 请求头未携带 Token/Authorization");
+            // 兼容通过查询参数传递 token
+            String queryToken = req.getParameter("token");
+            if (queryToken != null && !queryToken.isEmpty()) {
+                token = queryToken; tokenSource = "query.token";
+            }
+        }
+        if (token == null || token.isEmpty()) {
+            log.warn("currentUserId: 请求未携带 Token/Authorization/X-Token/token 或 query.token");
             return null;
         }
         Long uid = tokenUtil.validateToken(token);
-        log.info("currentUserId: 通过{}头校验 token 结果 userId={}", tokenSource, uid);
+        log.info("currentUserId: 通过{}校验 token 结果 userId={}", tokenSource, uid);
         return uid;
     }
 
@@ -172,8 +189,19 @@ public class CommunityController {
     public Map<String, Object> deletePost(@PathVariable Long id, HttpServletRequest request) {
         Long uid = currentUserId(request);
         if (uid == null) return Map.of("success", false, "code", 401, "message", "未登录或Token无效");
-        boolean ok = communityService.deleteMyPost(uid, id);
-        return Map.of("success", ok);
+        // 改为硬删除（真实删除数据库记录）
+        Map<String, Object> res = communityService.deleteMyPostWithReason(uid, id);
+        return res;
+    }
+
+    // 兼容小程序：使用 POST 方法删除本人帖子
+    @PostMapping("/posts/{id}/delete")
+    public Map<String, Object> deletePostByPost(@PathVariable Long id, HttpServletRequest request) {
+        Long uid = currentUserId(request);
+        if (uid == null) return Map.of("success", false, "code", 401, "message", "未登录或Token无效");
+        // 改为硬删除（真实删除数据库记录）
+        Map<String, Object> res = communityService.deleteMyPostWithReason(uid, id);
+        return res;
     }
 
     // 帖子评论列表

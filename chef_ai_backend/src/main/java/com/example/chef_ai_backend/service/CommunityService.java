@@ -69,6 +69,23 @@ public class CommunityService {
         return communityMapper.softDeletePost(postId, userId) > 0;
     }
 
+    @org.springframework.transaction.annotation.Transactional
+    public Map<String, Object> deleteMyPostWithReason(Long userId, Long postId) {
+        Post p = communityMapper.getPostById(postId);
+        if (p == null) {
+            return Map.of("success", false, "code", "NOT_FOUND", "message", "帖子不存在");
+        }
+        if (!java.util.Objects.equals(p.getUserId(), userId)) {
+            return Map.of("success", false, "code", "NOT_OWNER", "message", "无权限删除他人帖子");
+        }
+        // 硬删除：先删关联数据，再删帖子本身
+        communityMapper.deleteCommentsByPostId(postId);
+        communityMapper.deletePostLikesByPostId(postId);
+        communityMapper.deleteFavoritesByPostId(postId);
+        int rows = communityMapper.hardDeletePost(postId);
+        return rows > 0 ? Map.of("success", true) : Map.of("success", false, "code", "DELETE_FAILED", "message", "删除失败");
+    }
+
     public Map<String, Object> listComments(Long postId, Long parentId, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
         List<Comment> list = communityMapper.listApprovedComments(postId, parentId, offset, pageSize);

@@ -31,16 +31,20 @@
 
   <!-- 列表：仅展示审核通过且正常的帖子 -->
   <select id="listApprovedPosts" resultMap="PostMap">
+    <![CDATA[
     SELECT * FROM posts
     WHERE audit_status = 'approved' AND status = 'normal'
+    ]]>
     <if test="keyword != null and keyword != ''">
       AND content LIKE CONCAT('%', #{keyword}, '%')
     </if>
     <if test="userId != null">
       AND user_id = #{userId}
     </if>
+    <![CDATA[
     ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
+    ]]>
   </select>
 
   <!-- 列表视图：联表作者信息（昵称/头像） -->
@@ -55,7 +59,7 @@
     <if test="userId != null">
       AND p.user_id = #{userId}
     </if>
-    ORDER BY p.id DESC
+    ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
@@ -72,23 +76,31 @@
 
   <!-- 本人帖子（含待审/驳回） -->
   <select id="listMyPosts" resultMap="PostMap">
+    <![CDATA[
     SELECT * FROM posts
     WHERE user_id = #{ownerId}
+      AND status <> 'deleted'
     ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
+    ]]>
   </select>
 
   <!-- 我的作品视图：联表用户昵称/头像（Map） -->
   <select id="listMyPostsView" resultType="map">
+    <![CDATA[
     SELECT p.*, u.nickname AS user_nickname, u.avatar_url AS user_avatar_url
     FROM posts p
     LEFT JOIN userss u ON u.id = p.user_id
     WHERE p.user_id = #{ownerId}
-    ORDER BY p.id DESC
+      AND p.status <> 'deleted'
+    ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
+    ]]>
   </select>
   <select id="countMyPosts" resultType="int">
-    SELECT COUNT(1) FROM posts WHERE user_id = #{ownerId}
+    <![CDATA[
+    SELECT COUNT(1) FROM posts WHERE user_id = #{ownerId} AND status <> 'deleted'
+    ]]>
   </select>
 
   <!-- 详情：非作者只能看 approved+normal；作者可见自己的任何状态 -->
@@ -123,7 +135,7 @@
     <if test="userId != null">
       AND user_id = #{userId}
     </if>
-    ORDER BY p.id DESC
+    ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
@@ -145,7 +157,7 @@
     <if test="userId != null">
       AND p.user_id = #{userId}
     </if>
-    ORDER BY p.id DESC
+    ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
@@ -257,9 +269,11 @@
   </update>
 
   <update id="softDeletePost">
+    <![CDATA[
     UPDATE posts
     SET status = 'deleted'
-    WHERE id = #{postId} AND user_id = #{ownerId} AND status = 'normal'
+    WHERE id = #{postId} AND user_id = #{ownerId} AND status <> 'deleted'
+    ]]>
   </update>
 
   <!-- 编辑帖子（仅作者） -->
@@ -279,7 +293,7 @@
     JOIN favorites f ON f.post_id = p.id
     WHERE f.user_id = #{userId}
       AND p.status = 'normal' AND p.audit_status = 'approved'
-    ORDER BY p.id DESC
+    ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
   <select id="countFavoritePosts" resultType="int">

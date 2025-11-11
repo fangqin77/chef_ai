@@ -22,7 +22,7 @@ public class BrowsingHistoryService {
 
     public Map<String, Object> getUserBrowsingHistory(Long userId, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        List<BrowsingHistory> list = browsingHistoryMapper.listUserBrowsingHistory(userId, offset, pageSize);
+        java.util.List<java.util.Map<String, Object>> list = browsingHistoryMapper.listUserBrowsingHistory(userId, offset, pageSize);
         int total = browsingHistoryMapper.countUserBrowsingHistory(userId);
         Map<String, Object> result = new HashMap<>();
         result.put("list", list);
