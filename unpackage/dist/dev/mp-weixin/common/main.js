@@ -100,8 +100,13 @@ exports.default = void 0;
 var _user = __webpack_require__(/*! ./api/user.js */ 30);
 var _default = {
   onLaunch: function onLaunch() {
+    var _this = this;
     console.log('App Launch');
     this.checkLoginStatus();
+    // 监听登录触发事件
+    uni.$on('triggerLogin', function () {
+      _this.handleWechatLogin();
+    });
   },
   onShow: function onShow() {
     console.log('App Show');
@@ -110,18 +115,11 @@ var _default = {
     console.log('App Hide');
   },
   methods: {
-    // 检查登录状态
+    // 检查登录状态（不自动弹出登录提示）
     checkLoginStatus: function checkLoginStatus() {
-      var _this = this;
       var token = uni.getStorageSync('token');
-      console.log('App启动检查登录状态，token:', token);
-
-      // 如果未登录，延迟显示授权弹窗（避免与页面加载冲突）
-      if (!token) {
-        setTimeout(function () {
-          _this.showLoginModal();
-        }, 1000); // 延迟1秒显示，让页面先加载完成
-      }
+      console.log('App启动检查登录状态，token:', token ? 'token存在' : '未登录');
+      // 不再自动弹出登录提示，让用户在需要时手动登录
     },
     // 显示登录授权弹窗
     showLoginModal: function showLoginModal() {
@@ -203,6 +201,10 @@ var _default = {
           uni.$emit('userLoginSuccess');
           // 触发全局重试事件
           uni.$emit('retryFailedRequests');
+          // 触发登录成功事件（用于首页接口调用）
+          uni.$emit('loginSuccess');
+          // 触发登录成功事件（用于首页接口调用）
+          uni.$emit('loginSuccess');
         } else {
           uni.showToast({
             title: (res === null || res === void 0 ? void 0 : res.msg) || '登录失败',

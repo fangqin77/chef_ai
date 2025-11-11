@@ -102,6 +102,15 @@ var render = function () {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
+  var g0 = (_vm.userInfo.description || "").length
+  _vm.$mp.data = Object.assign(
+    {},
+    {
+      $root: {
+        g0: g0,
+      },
+    }
+  )
 }
 var recyclableRender = false
 var staticRenderFns = []
@@ -142,10 +151,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 43));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 45));
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
 var _user = __webpack_require__(/*! @/api/user.js */ 30);
+var _recipes = __webpack_require__(/*! @/api/recipes.js */ 42);
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 var _default = {
@@ -153,7 +163,8 @@ var _default = {
     return {
       userInfo: {
         avatar: '',
-        nickname: ''
+        nickname: '',
+        description: ''
       },
       submitting: false // 添加这一行
     };
@@ -174,100 +185,137 @@ var _default = {
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
         success: function success(res) {
-          // 设置为临时路径，上传后会更新为服务器URL  // 添加这行注释
-          _this.userInfo.avatar = res.tempFilePaths[0];
+          var tempPath = res.tempFilePaths[0];
+          console.log('选择头像成功，临时路径:', tempPath);
+          // 设置为临时路径，上传后会更新为服务器URL
+          _this.userInfo.avatar = tempPath;
+          uni.showToast({
+            title: '新头像已上传成功',
+            icon: 'none',
+            duration: 2000
+          });
+        },
+        fail: function fail(err) {
+          console.error('选择头像失败:', err);
+          uni.showToast({
+            title: '选择头像失败',
+            icon: 'none'
+          });
         }
       });
     },
-    // 上传头像到服务器
-    uploadAvatarToServer: function uploadAvatarToServer() {
+    saveProfile: function saveProfile() {
       var _this2 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
+        var avatarUpdated, avatarUrl, avatarResponse, response, userInfoToSave;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                return _context.abrupt("return", new Promise(function (resolve, reject) {
-                  uni.uploadFile({
-                    url: 'http://172.20.10.3:9000/api/user/upload-avatar',
-                    filePath: _this2.userInfo.avatar,
-                    name: 'avatar',
-                    header: {
-                      'Token': uni.getStorageSync('token') // 修复为 Token
-                    },
-
-                    success: function success(res) {
-                      try {
-                        var data = JSON.parse(res.data);
-                        if (data && data.success && data.data && data.data.avatarUrl) {
-                          _this2.userInfo.avatar = data.data.avatarUrl;
-                          resolve();
-                        } else {
-                          reject(new Error(data.message || '头像上传失败'));
-                        }
-                      } catch (e) {
-                        reject(new Error('头像上传响应解析失败'));
-                      }
-                    },
-                    fail: function fail(error) {
-                      reject(error);
-                    }
-                  });
-                }));
-              case 1:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee);
-      }))();
-    },
-    saveProfile: function saveProfile() {
-      var _this3 = this;
-      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
-        var response, userInfoToSave;
-        return _regenerator.default.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                if (!_this3.submitting) {
-                  _context2.next = 2;
+                if (!_this2.submitting) {
+                  _context.next = 2;
                   break;
                 }
-                return _context2.abrupt("return");
+                return _context.abrupt("return");
               case 2:
-                if (!(!_this3.userInfo.nickname || _this3.userInfo.nickname.trim() === '')) {
-                  _context2.next = 5;
+                if (!(!_this2.userInfo.nickname || _this2.userInfo.nickname.trim() === '')) {
+                  _context.next = 5;
                   break;
                 }
                 uni.showToast({
                   title: '昵称不能为空',
                   icon: 'none'
                 });
-                return _context2.abrupt("return");
+                return _context.abrupt("return");
               case 5:
-                _this3.submitting = true;
+                _this2.submitting = true;
                 uni.showLoading({
                   title: '保存中...'
                 });
-                _context2.prev = 7;
-                if (!(_this3.userInfo.avatar && _this3.userInfo.avatar.startsWith('wxfile://'))) {
-                  _context2.next = 11;
+                _context.prev = 7;
+                avatarUpdated = false;
+                avatarUrl = _this2.userInfo.avatar;
+                console.log('保存前头像路径:', avatarUrl);
+
+                // 如果头像有更新（是临时文件路径），先上传头像
+                if (!(_this2.userInfo.avatar && (_this2.userInfo.avatar.startsWith('wxfile://') || _this2.userInfo.avatar.startsWith('http://tmp') || _this2.userInfo.avatar.includes('temp')))) {
+                  _context.next = 30;
                   break;
                 }
-                _context2.next = 11;
-                return _this3.uploadAvatarToServer();
-              case 11:
-                _context2.next = 13;
-                return (0, _user.updateUserInfo)({
-                  nickname: _this3.userInfo.nickname
+                console.log('检测到需要上传头像，开始上传...');
+                _context.prev = 13;
+                _context.next = 16;
+                return (0, _recipes.uploadMedia)(_this2.userInfo.avatar);
+              case 16:
+                avatarUrl = _context.sent;
+                _this2.userInfo.avatar = avatarUrl;
+                avatarUpdated = true;
+                console.log('头像上传成功，服务器返回URL:', avatarUrl);
+                uni.showToast({
+                  title: '头像上传成功',
+                  icon: 'none'
                 });
-              case 13:
-                response = _context2.sent;
+                _context.next = 28;
+                break;
+              case 23:
+                _context.prev = 23;
+                _context.t0 = _context["catch"](13);
+                console.error('头像上传失败:', _context.t0);
+                uni.showToast({
+                  title: '头像上传失败，请重试',
+                  icon: 'none'
+                });
+                throw _context.t0;
+              case 28:
+                _context.next = 31;
+                break;
+              case 30:
+                console.log('头像无需上传，使用现有URL:', avatarUrl);
+              case 31:
+                if (!(avatarUpdated && avatarUrl)) {
+                  _context.next = 47;
+                  break;
+                }
+                console.log('调用头像更新接口...');
+                _context.prev = 33;
+                _context.next = 36;
+                return (0, _user.updateUserAvatar)(avatarUrl);
+              case 36:
+                avatarResponse = _context.sent;
+                if (!(!avatarResponse || !avatarResponse.success)) {
+                  _context.next = 39;
+                  break;
+                }
+                throw new Error('头像更新失败：' + ((avatarResponse === null || avatarResponse === void 0 ? void 0 : avatarResponse.message) || '未知错误'));
+              case 39:
+                console.log('头像信息更新成功');
+                _context.next = 47;
+                break;
+              case 42:
+                _context.prev = 42;
+                _context.t1 = _context["catch"](33);
+                console.error('头像信息更新失败:', _context.t1);
+                uni.showToast({
+                  title: '头像信息更新失败',
+                  icon: 'none'
+                });
+                throw _context.t1;
+              case 47:
+                // 更新用户信息（昵称、简介）
+                console.log('更新用户信息...');
+                _context.next = 50;
+                return (0, _user.updateUserInfo)({
+                  nickname: _this2.userInfo.nickname,
+                  description: _this2.userInfo.description || ''
+                });
+              case 50:
+                response = _context.sent;
                 if (response && response.success) {
                   // 保存到本地存储，同时确保头像字段正确映射
-                  userInfoToSave = _objectSpread(_objectSpread({}, _this3.userInfo), {}, {
-                    avatarUrl: _this3.userInfo.avatar // 确保头像URL字段正确
+                  userInfoToSave = _objectSpread(_objectSpread({}, _this2.userInfo), {}, {
+                    avatar: avatarUrl,
+                    // 使用更新后的头像URL
+                    avatarUrl: avatarUrl // 同时设置avatarUrl字段
                   });
 
                   uni.setStorageSync('userInfo', userInfoToSave);
@@ -276,43 +324,40 @@ var _default = {
                     icon: 'none'
                   });
 
-                  // 返回上一页并触发刷新
-                  uni.navigateBack({
-                    success: function success() {
-                      // 通过事件总线或全局事件通知父页面刷新
-                      setTimeout(function () {
-                        // 触发全局事件，让"我的"页面重新加载用户信息
-                        uni.$emit('userInfoUpdated');
-                      }, 500);
-                    }
-                  });
+                  // 直接触发全局事件，确保更新能传播到我的页面
+                  uni.$emit('userInfoUpdated');
+
+                  // 延迟返回，确保事件被处理
+                  setTimeout(function () {
+                    uni.navigateBack();
+                  }, 300);
                 } else {
                   uni.showToast({
                     title: response.message || '保存失败',
                     icon: 'none'
                   });
                 }
-                _context2.next = 21;
+                _context.next = 58;
                 break;
-              case 17:
-                _context2.prev = 17;
-                _context2.t0 = _context2["catch"](7);
-                console.error('保存用户信息失败:', _context2.t0);
+              case 54:
+                _context.prev = 54;
+                _context.t2 = _context["catch"](7);
+                console.error('保存用户信息失败:', _context.t2);
                 uni.showToast({
                   title: '网络错误，请重试',
                   icon: 'none'
                 });
-              case 21:
-                _context2.prev = 21;
+              case 58:
+                _context.prev = 58;
                 uni.hideLoading();
-                _this3.submitting = false;
-                return _context2.finish(21);
-              case 25:
+                _this2.submitting = false;
+                return _context.finish(58);
+              case 62:
               case "end":
-                return _context2.stop();
+                return _context.stop();
             }
           }
-        }, _callee2, null, [[7, 17, 21, 25]]);
+        }, _callee, null, [[7, 54, 58, 62], [13, 23], [33, 42]]);
       }))();
     }
   }

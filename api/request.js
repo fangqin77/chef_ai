@@ -25,9 +25,24 @@ function request(path, data = {}, method = 'GET', customHeaders = {}) {
         ...customHeaders
       }
       
-      // 添加 Token 头（跳过登录接口）
+      // 定义不需要登录的公共接口路径
+      const publicPaths = [
+        '/api/recipes/list',
+        '/api/recipes/random',
+        '/api/recipes/by-category',
+        '/api/recipes/search',
+        '/api/recipes/all-categories'
+      ];
+      
+      // 添加 Token 头（跳过登录接口和公共接口）
       if (token && !path.includes('/api/user/login')) {
         headers['Authorization'] = `Bearer ${token}`;
+      } else if (!token && !path.includes('/api/user/login') && !publicPaths.some(publicPath => path.includes(publicPath))) {
+        // 如果token为空且不是登录接口或公共接口，直接跳转到登录页面
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        uni.navigateTo({ url: '/pages/login/index' });
+        reject(new Error('用户未登录'));
+        return;
       }
 
       // 统一处理日期字段（确保 yyyy-MM-dd 格式）
@@ -47,31 +62,50 @@ function request(path, data = {}, method = 'GET', customHeaders = {}) {
           try {
             console.log('请求响应:', res.statusCode, res.data)
             
-            // 处理 401 未授权或 success: false
-            if (res.statusCode === 401 || (res.data && res.data.success === false && res.data.code === 401)) {
-              uni.removeStorageSync('token');
-              uni.showToast({
-                title: res.data?.msg || '登录已过期，请重新登录',
-                icon: 'none'
-              });
-              uni.navigateTo({ url: '/pages/login/index' });
-              reject(new Error(res.data?.msg || '未授权，请重新登录'));
+            // 解析响应数据（可能是字符串格式的JSON）
+            let responseData = res.data;
+            if (typeof responseData === 'string') {
+              try {
+                responseData = JSON.parse(responseData);
+              } catch (parseError) {
+                console.warn('解析响应数据失败:', parseError);
+              }
+            }
+            
+            // 处理 401 未授权或用户未登录错误
+            if (res.statusCode === 401 || 
+                (responseData && responseData.success === false && (responseData.code === 401 || responseData.message === '用户未登录'))) {
+              // 不自动清除token，只返回错误信息，让调用方决定如何处理
+              console.warn('Token已失效，但不自动清除');
+              
+              if (responseData?.msg || responseData?.message) {
+                reject(new Error(responseData.msg || responseData.message));
+              } else {
+                reject(new Error('用户登录状态已失效，请重新登录'));
+              }
               return;
             }
             
             // 处理其他错误状态码或 success: false
-            if (res.statusCode !== 200 || (res.data && res.data.success === false)) {
+            if (res.statusCode !== 200 || (responseData && responseData.success === false)) {
               // 特殊处理"已收藏"的情况，将success改为true，因为操作实际上是成功的
-              if (res.data && res.data.message && res.data.message.includes('已收藏')) {
+              if (responseData && responseData.message && responseData.message.includes('已收藏')) {
                 resolve({
-                  ...res.data,
+                  ...responseData,
                   success: true,
                   message: '收藏成功'
                 });
                 return;
               }
               
-              const errorMsg = res.data?.msg || res.data?.message || '请求失败，请重试';
+              // 为DELETE操作提供更具体的错误信息
+              let errorMsg = responseData?.msg || responseData?.message;
+              if (!errorMsg && method === 'DELETE') {
+                errorMsg = '删除失败，可能原因：权限不足、帖子不存在或已被删除';
+              } else if (!errorMsg) {
+                errorMsg = '请求失败，请重试';
+              }
+              
               uni.showToast({ title: errorMsg, icon: 'none' });
               reject(new Error(errorMsg));
               return;

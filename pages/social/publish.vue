@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { createCommunityPost } from '@/api/recipes';
+import { createCommunityPost, uploadImages } from '@/api/recipes';
 
 export default {
   data() {
@@ -68,6 +68,14 @@ export default {
     },
     async submit() {
       if (this.submitting) return
+      
+      // 检查登录状态
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        uni.showToast({ title: '请先登录后再发布', icon: 'none' })
+        return
+      }
+      
       const text = (this.text || '').trim()
       if (text.length > 200) {
         uni.showToast({ title: '文字最多 200 字', icon: 'none' })
@@ -81,20 +89,66 @@ export default {
         uni.showToast({ title: '最多上传 9 张图片', icon: 'none' })
         return
       }
+      
       this.submitting = true
+      uni.showLoading({ title: '发布中...', mask: true })
+      
       try {
-        // 调用发布帖子接口
-        const response = await createCommunityPost(text, this.images, 1);
+        let mediaList = []
+        
+        // 如果有图片，先上传图片到服务器
+        if (this.images.length > 0) {
+          uni.showLoading({ title: '上传图片中...', mask: true })
+          
+        try {
+          // 上传图片到服务器
+          mediaList = await uploadImages(this.images)
+          
+          if (mediaList.length === 0) {
+            uni.hideLoading()
+            uni.showToast({ title: '图片上传失败，请重试', icon: 'none' })
+            return
+          }
+          
+          console.log('图片上传成功，mediaList:', mediaList)
+          
+        } catch (uploadError) {
+          console.error('图片上传失败:', uploadError)
+          uni.hideLoading()
+          uni.showToast({ title: '图片上传失败，请重试', icon: 'none' })
+          return
+        }
+        }
+        
+        uni.showLoading({ title: '发布帖子中...', mask: true })
+        
+        // 再次检查token状态，确保发布前token有效
+        const currentToken = uni.getStorageSync('token')
+        if (!currentToken) {
+          uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+          throw new Error('登录已过期，请重新登录')
+        }
+        
+        console.log('发布前token检查:', currentToken ? 'token存在' : 'token不存在')
+        
+        // 调用发布帖子接口，传入服务器返回的图片URL
+        const response = await createCommunityPost(text, mediaList, 1);
+        
         if (response && response.success) {
-          uni.showToast({ title: '已发布', icon: 'none' });
+          uni.hideLoading()
+          uni.showToast({ title: '发布成功', icon: 'success' });
+          
           setTimeout(() => {
             // 返回到美食圈首页
             uni.navigateBack({ delta: 1 });
-          }, 400);
+          }, 1000);
         } else {
-          uni.showToast({ title: '发布失败，请重试', icon: 'none' });
+          uni.hideLoading()
+          uni.showToast({ title: response?.message || '发布失败，请重试', icon: 'none' });
         }
       } catch(e) {
+        console.error('发布失败:', e)
+        uni.hideLoading()
         uni.showToast({ title: '发布失败，请重试', icon: 'none' });
       } finally {
         this.submitting = false;

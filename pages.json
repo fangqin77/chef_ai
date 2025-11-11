@@ -61,6 +61,10 @@
     {
       "path": "pages/profile/edit",
       "style": { "navigationBarTitleText": "编辑资料" }
+    },
+    {
+      "path": "pages/profile/user-detail",
+      "style": { "navigationBarTitleText": "用户简介" }
     }
   ],
   "tabBar": {

@@ -60,18 +60,18 @@ export default {
     }
   },
   onShow() {
-    // 调用随机菜谱接口
-    getRandomRecipes(5).then((res) => {
-      const list = Array.isArray(res) ? res : []
-      this.recommendedRecipes = list.map((r) => ({
-        id: r.id || String(Math.random()).slice(2),
-        name: r.name || '菜谱',
-        image: r.feature || '/static/default-recipe-cover.jpg'
-      }))
-      this.currentIndex = 0
-    }).catch(() => {
-      // 静默失败，保留空数组
-    })
+    console.log('首页 onShow 生命周期触发');
+    // 直接调用菜谱接口，用户无需登录即可查看内容
+    this.loadRecommendations();
+    
+    // 延迟1秒后显示登录弹窗，让用户先看到内容
+    setTimeout(() => {
+      const token = uni.getStorageSync('token');
+      if (!token) {
+        console.log('用户未登录，延迟显示登录弹窗');
+        this.showLoginChoice();
+      }
+    }, 1000); // 1秒后显示
   },
   methods: {
     goChat() {
@@ -82,7 +82,7 @@ export default {
       uni.navigateTo({ url: '/pages/recipes/random' });
     },
     goPlan() {
-      // 跳到“每日菜谱”（购物车样式）
+      // 跳到"每日菜谱"（购物车样式）
       uni.navigateTo({ url: '/pages/recipes/daily' })
     },
     goRecipeDetail(item) {
@@ -96,6 +96,101 @@ export default {
     nextSlide() {
       if (!this.recommendedRecipes.length) return
       this.currentIndex = (this.currentIndex + 1) % this.recommendedRecipes.length
+    },
+    // 检查登录状态并显示登录选项
+    checkLoginAndAutoAuth() {
+      const token = uni.getStorageSync('token');
+      console.log('首页检查登录状态:', token ? '已登录' : '未登录');
+      
+      // 如果已登录，直接调用接口
+      if (token) {
+        console.log('用户已登录，直接调用接口');
+        this.loadRecommendations();
+      } else {
+        console.log('用户未登录，准备显示登录弹窗');
+        // 延迟执行，让页面先加载完成
+        setTimeout(() => {
+          console.log('执行延迟登录弹窗');
+          this.showLoginChoice();
+        }, 1000); // 增加延迟时间到1秒
+      }
+    },
+    // 显示登录选择弹窗
+    showLoginChoice() {
+      console.log('开始调用 uni.showModal');
+      
+      // 尝试使用微信小程序的 wx.showModal
+      if (typeof wx !== 'undefined' && wx.showModal) {
+        console.log('使用 wx.showModal');
+        wx.showModal({
+          title: '欢迎使用Chef AI',
+          content: '请授权登录以体验完整功能',
+          confirmText: '微信登录', // 改为4个字符以内
+          cancelText: '稍后', // 改为2个字符
+          confirmColor: '#ff8a34',
+          success: (res) => {
+            console.log('wx.showModal 回调成功，用户选择:', res.confirm ? '确认' : '取消');
+            if (res.confirm) {
+              this.triggerWechatLogin();
+            } else {
+              console.log('用户选择稍后登录');
+            }
+          },
+          fail: (err) => {
+            console.error('wx.showModal 调用失败:', err);
+          }
+        });
+      } else {
+        // 回退到 uni.showModal
+        uni.showModal({
+          title: '欢迎使用Chef AI',
+          content: '请授权登录以体验完整功能',
+          confirmText: '微信登录', // 也改为4个字符以内
+          cancelText: '稍后', // 改为2个字符
+          confirmColor: '#ff8a34',
+          success: (res) => {
+            console.log('uni.showModal 回调成功，用户选择:', res.confirm ? '确认' : '取消');
+            if (res.confirm) {
+              this.triggerWechatLogin();
+            } else {
+              console.log('用户选择稍后登录');
+            }
+          },
+          fail: (err) => {
+            console.error('uni.showModal 调用失败:', err);
+          }
+        });
+      }
+    },
+    // 触发微信授权登录
+    triggerWechatLogin() {
+      console.log('触发微信授权登录');
+      // 触发全局登录事件，App.vue中会处理微信授权
+      uni.$emit('triggerLogin');
+      
+      // 监听登录成功事件
+      this.$once('loginSuccess', () => {
+        console.log('登录成功，开始调用接口');
+        this.loadRecommendations();
+      });
+    },
+    
+    // 加载推荐菜谱
+    loadRecommendations() {
+      console.log('开始调用随机菜谱接口');
+      getRandomRecipes(5).then((res) => {
+        const list = Array.isArray(res) ? res : []
+        this.recommendedRecipes = list.map((r) => ({
+          id: r.id || String(Math.random()).slice(2),
+          name: r.name || '菜谱',
+          image: r.feature || '/static/default-recipe-cover.jpg'
+        }))
+        this.currentIndex = 0
+        console.log('菜谱接口调用成功，推荐列表:', this.recommendedRecipes.length);
+      }).catch((err) => {
+        console.error('菜谱接口调用失败:', err);
+        // 静默失败，保留空数组
+      })
     }
   }
 }

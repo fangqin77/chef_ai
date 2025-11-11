@@ -103,11 +103,39 @@ var render = function () {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   var g0 = _vm.favorites.length
+  var l1 = g0
+    ? _vm.__map(_vm.favorites, function (item, __i0__) {
+        var $orig = _vm.__get_orig(item)
+        var g1 = item.images && item.images.length > 0
+        var m0 = g1 ? _vm.getGridCols(item.images) : null
+        var l0 = g1
+          ? _vm.__map(item.images.slice(0, 3), function (img, idx) {
+              var $orig = _vm.__get_orig(img)
+              var m1 = _vm.getImageUrl(img)
+              return {
+                $orig: $orig,
+                m1: m1,
+              }
+            })
+          : null
+        var g2 = g1 ? item.images.length : null
+        var g3 = g1 && g2 > 3 ? item.images.length : null
+        return {
+          $orig: $orig,
+          g1: g1,
+          m0: m0,
+          l0: l0,
+          g2: g2,
+          g3: g3,
+        }
+      })
+    : null
   _vm.$mp.data = Object.assign(
     {},
     {
       $root: {
         g0: g0,
+        l1: l1,
       },
     }
   )
@@ -151,9 +179,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 43));
 var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 45));
 var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
@@ -187,7 +215,7 @@ var _default = {
     loadFavorites: function loadFavorites() {
       var _this2 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
-        var token, response;
+        var token, favoritesList, likedPosts, response, _favoritesList, _likedPosts;
         return _regenerator.default.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
@@ -214,9 +242,23 @@ var _default = {
                 _this2.favorites = [];
                 return _context2.abrupt("return");
               case 9:
-                _context2.next = 11;
+                // 优先从本地存储获取收藏列表
+                favoritesList = uni.getStorageSync('favorites_list') || {};
+                likedPosts = uni.getStorageSync('liked_posts') || {}; // 如果本地有收藏数据，使用本地数据
+                if (!(Object.keys(favoritesList).length > 0)) {
+                  _context2.next = 16;
+                  break;
+                }
+                _this2.favorites = Object.values(favoritesList).filter(function (item) {
+                  return likedPosts[item.id];
+                });
+                console.log("\u4ECE\u672C\u5730\u5B58\u50A8\u83B7\u53D6\u5230 ".concat(_this2.favorites.length, " \u6761\u6536\u85CF\u8BB0\u5F55"));
+                _context2.next = 21;
+                break;
+              case 16:
+                _context2.next = 18;
                 return (0, _recipes.getUserFavorites)(1, 20);
-              case 11:
+              case 18:
                 response = _context2.sent;
                 console.log('获取收藏列表响应:', response);
                 if (response && response.list) {
@@ -225,37 +267,117 @@ var _default = {
                       id: String(item.id)
                     });
                   });
-                  console.log("\u83B7\u53D6\u5230 ".concat(_this2.favorites.length, " \u6761\u6536\u85CF\u8BB0\u5F55"));
+                  console.log("\u4ECEAPI\u83B7\u53D6\u5230 ".concat(_this2.favorites.length, " \u6761\u6536\u85CF\u8BB0\u5F55"));
                 } else {
                   console.error('接口返回数据格式错误:', response);
                   _this2.favorites = [];
                 }
-                _context2.next = 21;
+              case 21:
+                _context2.next = 27;
                 break;
-              case 16:
-                _context2.prev = 16;
+              case 23:
+                _context2.prev = 23;
                 _context2.t0 = _context2["catch"](2);
                 console.error('获取收藏列表失败:', _context2.t0);
-                uni.showToast({
-                  title: '获取收藏失败',
-                  icon: 'none'
-                });
-                _this2.favorites = [];
-              case 21:
-                _context2.prev = 21;
+                // 如果API调用失败，尝试使用本地数据
+                try {
+                  _favoritesList = uni.getStorageSync('favorites_list') || {};
+                  _likedPosts = uni.getStorageSync('liked_posts') || {};
+                  _this2.favorites = Object.values(_favoritesList).filter(function (item) {
+                    return _likedPosts[item.id];
+                  });
+                  console.log("API\u5931\u8D25\uFF0C\u4F7F\u7528\u672C\u5730\u5B58\u50A8\u6570\u636E: ".concat(_this2.favorites.length, " \u6761\u6536\u85CF\u8BB0\u5F55"));
+                } catch (localError) {
+                  console.error('本地数据获取失败:', localError);
+                  uni.showToast({
+                    title: '获取收藏失败',
+                    icon: 'none'
+                  });
+                  _this2.favorites = [];
+                }
+              case 27:
+                _context2.prev = 27;
                 _this2.loading = false;
-                return _context2.finish(21);
-              case 24:
+                return _context2.finish(27);
+              case 30:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, null, [[2, 16, 21, 24]]);
+        }, _callee2, null, [[2, 23, 27, 30]]);
       }))();
+    },
+    // 获取图片网格列数
+    getGridCols: function getGridCols(images) {
+      if (!images || images.length === 0) return 1;
+      if (images.length === 1) return 1;
+      if (images.length === 2) return 2;
+      return 3;
+    },
+    // 处理图片URL
+    getImageUrl: function getImageUrl(img) {
+      if (!img) return '/static/picture/profile.png';
+
+      // 检查是否是有效的URL
+      if (img.startsWith('http://') || img.startsWith('https://')) {
+        return img;
+      }
+
+      // 处理微信小程序临时文件路径
+      if (img.startsWith('http://tmp/')) {
+        return img.replace('http://tmp/', 'wxfile://tmp/');
+      }
+
+      // 处理开发服务器临时文件路径
+      if (img.startsWith('http://127.0.0.1')) {
+        return '/static/picture/profile.png';
+      }
+
+      // 处理wxfile协议路径
+      if (img.startsWith('wxfile://')) {
+        return img;
+      }
+
+      // 处理data URI图片
+      if (img.startsWith('data:image/')) {
+        return img;
+      }
+
+      // 处理相对路径
+      if (img.startsWith('/')) {
+        return img;
+      }
+      return '/static/picture/profile.png';
+    },
+    // 图片预览
+    previewImage: function previewImage(images, currentIndex) {
+      var _this3 = this;
+      if (!images || images.length === 0) return;
+      var urls = images.map(function (img) {
+        return _this3.getImageUrl(img);
+      });
+      var current = urls[currentIndex] || '';
+      uni.previewImage({
+        current: current,
+        urls: urls,
+        indicator: 'number',
+        loop: true,
+        longPressActions: {
+          itemList: ['发送给朋友', '保存图片', '收藏']
+        }
+      });
+    },
+    // 图片加载失败处理
+    onImageError: function onImageError(e) {
+      console.warn('图片加载失败:', e.detail);
+      var imageElement = e.target || e.currentTarget;
+      if (imageElement) {
+        imageElement.src = '/static/picture/profile.png';
+      }
     },
     // 取消收藏
     remove: function remove(id) {
-      var _this3 = this;
+      var _this4 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
         return _regenerator.default.wrap(function _callee4$(_context4) {
           while (1) {
@@ -266,7 +388,7 @@ var _default = {
                   content: '确定要取消收藏该作品吗？',
                   success: function () {
                     var _success = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3(res) {
-                      var response;
+                      var response, likedPosts, favoritesList;
                       return _regenerator.default.wrap(function _callee3$(_context3) {
                         while (1) {
                           switch (_context3.prev = _context3.next) {
@@ -282,9 +404,25 @@ var _default = {
                               response = _context3.sent;
                               if (response && response.success) {
                                 // 从本地列表中移除
-                                _this3.favorites = _this3.favorites.filter(function (item) {
+                                _this4.favorites = _this4.favorites.filter(function (item) {
                                   return String(item.id) !== id;
                                 });
+
+                                // 同时更新本地存储
+                                try {
+                                  // 移除收藏状态
+                                  likedPosts = uni.getStorageSync('liked_posts') || {};
+                                  delete likedPosts[id];
+                                  uni.setStorageSync('liked_posts', likedPosts);
+
+                                  // 移除收藏列表中的帖子信息
+                                  favoritesList = uni.getStorageSync('favorites_list') || {};
+                                  delete favoritesList[id];
+                                  uni.setStorageSync('favorites_list', favoritesList);
+                                  console.log('已从本地存储移除收藏:', id);
+                                } catch (storageError) {
+                                  console.error('更新本地存储失败:', storageError);
+                                }
                                 uni.showToast({
                                   title: '取消收藏成功',
                                   icon: 'success'

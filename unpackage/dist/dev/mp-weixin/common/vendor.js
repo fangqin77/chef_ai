@@ -9577,7 +9577,7 @@ internalMixin(Vue);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _require = __webpack_require__(/*! ./request.js */ 31),
+/* WEBPACK VAR INJECTION */(function(uni) {var _require = __webpack_require__(/*! ./request.js */ 31),
   request = _require.request;
 
 // 微信授权登录
@@ -9610,13 +9610,40 @@ function updateUserAvatar(avatarUrl) {
     avatar: avatarUrl
   }, 'POST');
 }
+function getUserInfoById(userId) {
+  // 如果后端没有实现按用户ID获取信息的接口，暂时返回默认信息
+  // 或者调用当前用户信息接口（如果用户已登录）
+  return new Promise(function (resolve, reject) {
+    try {
+      var currentUser = uni.getStorageSync('userInfo');
+      if (currentUser && currentUser.id === userId) {
+        // 如果是当前用户，返回当前用户信息
+        resolve(currentUser);
+      } else {
+        // 如果不是当前用户，返回默认信息
+        resolve({
+          nickname: "\u7528\u6237".concat(userId),
+          avatar: '/static/picture/profile.png'
+        });
+      }
+    } catch (error) {
+      // 如果获取失败，返回默认信息
+      resolve({
+        nickname: "\u7528\u6237".concat(userId),
+        avatar: '/static/picture/profile.png'
+      });
+    }
+  });
+}
 module.exports = {
   wechatLogin: wechatLogin,
   logout: logout,
   getUserInfo: getUserInfo,
   updateUserInfo: updateUserInfo,
-  updateUserAvatar: updateUserAvatar
+  updateUserAvatar: updateUserAvatar,
+  getUserInfoById: getUserInfoById
 };
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
 /* 31 */
@@ -9657,9 +9684,25 @@ function request(path) {
         'Content-Type': 'application/json'
       }, customHeaders);
 
-      // 添加 Token 头（跳过登录接口）
+      // 定义不需要登录的公共接口路径
+      var publicPaths = ['/api/recipes/list', '/api/recipes/random', '/api/recipes/by-category', '/api/recipes/search', '/api/recipes/all-categories'];
+
+      // 添加 Token 头（跳过登录接口和公共接口）
       if (token && !path.includes('/api/user/login')) {
         headers['Authorization'] = "Bearer ".concat(token);
+      } else if (!token && !path.includes('/api/user/login') && !publicPaths.some(function (publicPath) {
+        return path.includes(publicPath);
+      })) {
+        // 如果token为空且不是登录接口或公共接口，直接跳转到登录页面
+        uni.showToast({
+          title: '请先登录',
+          icon: 'none'
+        });
+        uni.navigateTo({
+          url: '/pages/login/index'
+        });
+        reject(new Error('用户未登录'));
+        return;
       }
 
       // 统一处理日期字段（确保 yyyy-MM-dd 格式）
@@ -9678,33 +9721,48 @@ function request(path) {
           try {
             console.log('请求响应:', res.statusCode, res.data);
 
-            // 处理 401 未授权或 success: false
-            if (res.statusCode === 401 || res.data && res.data.success === false && res.data.code === 401) {
-              var _res$data, _res$data2;
-              uni.removeStorageSync('token');
-              uni.showToast({
-                title: ((_res$data = res.data) === null || _res$data === void 0 ? void 0 : _res$data.msg) || '登录已过期，请重新登录',
-                icon: 'none'
-              });
-              uni.navigateTo({
-                url: '/pages/login/index'
-              });
-              reject(new Error(((_res$data2 = res.data) === null || _res$data2 === void 0 ? void 0 : _res$data2.msg) || '未授权，请重新登录'));
+            // 解析响应数据（可能是字符串格式的JSON）
+            var responseData = res.data;
+            if (typeof responseData === 'string') {
+              try {
+                responseData = JSON.parse(responseData);
+              } catch (parseError) {
+                console.warn('解析响应数据失败:', parseError);
+              }
+            }
+
+            // 处理 401 未授权或用户未登录错误
+            if (res.statusCode === 401 || responseData && responseData.success === false && (responseData.code === 401 || responseData.message === '用户未登录')) {
+              var _responseData, _responseData2;
+              // 不自动清除token，只返回错误信息，让调用方决定如何处理
+              console.warn('Token已失效，但不自动清除');
+              if ((_responseData = responseData) !== null && _responseData !== void 0 && _responseData.msg || (_responseData2 = responseData) !== null && _responseData2 !== void 0 && _responseData2.message) {
+                reject(new Error(responseData.msg || responseData.message));
+              } else {
+                reject(new Error('用户登录状态已失效，请重新登录'));
+              }
               return;
             }
 
             // 处理其他错误状态码或 success: false
-            if (res.statusCode !== 200 || res.data && res.data.success === false) {
-              var _res$data3, _res$data4;
+            if (res.statusCode !== 200 || responseData && responseData.success === false) {
+              var _responseData3, _responseData4;
               // 特殊处理"已收藏"的情况，将success改为true，因为操作实际上是成功的
-              if (res.data && res.data.message && res.data.message.includes('已收藏')) {
-                resolve(_objectSpread(_objectSpread({}, res.data), {}, {
+              if (responseData && responseData.message && responseData.message.includes('已收藏')) {
+                resolve(_objectSpread(_objectSpread({}, responseData), {}, {
                   success: true,
                   message: '收藏成功'
                 }));
                 return;
               }
-              var errorMsg = ((_res$data3 = res.data) === null || _res$data3 === void 0 ? void 0 : _res$data3.msg) || ((_res$data4 = res.data) === null || _res$data4 === void 0 ? void 0 : _res$data4.message) || '请求失败，请重试';
+
+              // 为DELETE操作提供更具体的错误信息
+              var errorMsg = ((_responseData3 = responseData) === null || _responseData3 === void 0 ? void 0 : _responseData3.msg) || ((_responseData4 = responseData) === null || _responseData4 === void 0 ? void 0 : _responseData4.message);
+              if (!errorMsg && method === 'DELETE') {
+                errorMsg = '删除失败，可能原因：权限不足、帖子不存在或已被删除';
+              } else if (!errorMsg) {
+                errorMsg = '请求失败，请重试';
+              }
               uni.showToast({
                 title: errorMsg,
                 icon: 'none'
@@ -9911,13 +9969,8 @@ function normalizeComponent (
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createCommunityPost = createCommunityPost;
+/* WEBPACK VAR INJECTION */(function(uni) {var _regeneratorRuntime = __webpack_require__(/*! @babel/runtime/regenerator */ 43);
+var _asyncToGenerator = __webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 45);
 var _require = __webpack_require__(/*! ./request */ 31),
   request = _require.request;
 
@@ -9995,11 +10048,6 @@ function mapTypeIdToCat(typeId) {
 // 默认封面图片URL（可以根据需要替换）
 var DEFAULT_COVER = '/static/default-recipe-cover.jpg';
 
-// 获取用户信息
-function getUserInfo() {
-  return request('/api/user/info', {}, 'GET');
-}
-
 // ========== 收藏与计划管理接口（RecipePlanController） ==========
 
 // 1. 设置收藏并选择计划日期（幂等操作）
@@ -10064,16 +10112,51 @@ function createCommunityPost(content) {
     mediaList: mediaList,
     visibility: visibility
   });
-  return request('/api/community/posts', {
-    content: content,
-    mediaList: mediaList,
-    visibility: visibility
-  }, 'POST').then(function (response) {
-    console.log('createCommunityPost 接口响应:', response);
-    return response;
-  }).catch(function (error) {
-    console.error('createCommunityPost 接口错误:', error);
-    throw error;
+
+  // 检查当前token状态
+  var currentToken = uni.getStorageSync('token');
+  console.log('当前token状态:', currentToken ? 'token存在' : 'token不存在');
+  if (!currentToken) {
+    console.error('发布失败: token不存在');
+    return Promise.reject(new Error('发布失败：请先登录后再发布内容'));
+  }
+
+  // 添加额外的token验证请求，确认token有效性
+  return new Promise(function (resolve, reject) {
+    // 先验证token是否有效
+    uni.request({
+      url: 'http://172.20.10.3:9000/api/user/info',
+      method: 'GET',
+      header: {
+        'Authorization': "Bearer ".concat(currentToken),
+        'Content-Type': 'application/json'
+      },
+      success: function success(res) {
+        // 如果token验证通过，再调用发布接口
+        request('/api/community/posts', {
+          content: content,
+          mediaList: mediaList,
+          visibility: visibility
+        }, 'POST').then(function (response) {
+          console.log('createCommunityPost 接口响应:', response);
+          resolve(response);
+        }).catch(function (error) {
+          console.error('createCommunityPost 接口错误:', error);
+
+          // 如果是401错误，提供更友好的错误信息
+          if (error.message.includes('用户未登录') || error.message.includes('未授权') || error.message.includes('登录状态已失效')) {
+            console.error('发布失败原因: 用户登录状态失效，当前token:', currentToken);
+            reject(new Error('发布失败：登录状态已失效，请重新登录'));
+          } else {
+            reject(error);
+          }
+        });
+      },
+      fail: function fail(err) {
+        console.error('token验证失败:', err);
+        reject(new Error('登录状态已失效，请重新登录'));
+      }
+    });
   });
 }
 
@@ -10109,7 +10192,31 @@ function updateCommunityPost(postId, content) {
 
 // 删除社区帖子
 function deleteCommunityPost(postId) {
-  return request("/api/community/posts/".concat(postId), {}, 'DELETE');
+  return request("/api/community/posts/".concat(postId, "/delete"), {}, 'POST');
+}
+
+// 删除评论
+function deleteComment(commentId) {
+  return request("/api/community/comments/".concat(commentId), {}, 'DELETE');
+}
+
+// 修改评论
+function updateComment(commentId, content) {
+  return request("/api/community/comments/".concat(commentId), {
+    content: content
+  }, 'PUT');
+}
+
+// 删除评论
+function deleteComment(commentId) {
+  return request("/api/community/comments/".concat(commentId), {}, 'DELETE');
+}
+
+// 修改评论
+function updateComment(commentId, content) {
+  return request("/api/community/comments/".concat(commentId), {
+    content: content
+  }, 'PUT');
 }
 
 // 获取用户收藏的帖子列表
@@ -10132,6 +10239,18 @@ function getUserComments() {
   }, 'GET');
 }
 
+// 删除评论
+function deleteComment(commentId) {
+  return request("/api/community/comments/".concat(commentId), {}, 'DELETE');
+}
+
+// 修改评论
+function updateComment(commentId, content) {
+  return request("/api/community/comments/".concat(commentId), {
+    content: content
+  }, 'PUT');
+}
+
 // 获取用户通知
 function getUserNotifications() {
   return request('/api/notifications', {}, 'GET');
@@ -10146,6 +10265,266 @@ function getUserBrowsingHistory() {
     pageSize: pageSize
   }, 'GET');
 }
+
+// 获取用户发布的帖子列表（包含用户昵称和头像）
+function getUserPublishedPosts() {
+  var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+  var pageSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
+  return request('/api/community/posts/my/view', {
+    page: page,
+    pageSize: pageSize
+  }, 'GET');
+}
+
+// 通过评论ID获取对应帖子详情
+function getPostByCommentId(commentId) {
+  return request("/api/community/comments/".concat(commentId, "/post"), {}, 'GET');
+}
+
+// 记录浏览历史
+function recordBrowsingHistory(postId) {
+  return request("/api/browsing/history/record?postId=".concat(postId), {}, 'POST');
+}
+
+// 清空浏览历史
+function clearBrowsingHistory() {
+  return request('/api/browsing/history', {}, 'DELETE');
+}
+
+// 获取用户简介信息
+function getUserIntroduction() {
+  return request('/api/user/introduction', {}, 'GET');
+}
+
+// ========== 关注功能接口 ==========
+
+// 关注用户
+function followUser(targetId) {
+  return request("/api/user/follows/".concat(targetId), {}, 'POST');
+}
+
+// 取消关注用户
+function unfollowUser(targetId) {
+  return request("/api/user/follows/".concat(targetId), {}, 'DELETE');
+}
+
+// 获取关注/粉丝统计
+function getFollowStats() {
+  return request('/api/user/follows/stats', {}, 'GET');
+}
+
+// 获取我关注的列表
+function getFollowingList() {
+  var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+  var pageSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 20;
+  return request('/api/user/follows/following', {
+    page: page,
+    pageSize: pageSize
+  }, 'GET');
+}
+
+// 获取我的粉丝列表
+function getFollowersList() {
+  var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+  var pageSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 20;
+  return request('/api/user/follows/followers', {
+    page: page,
+    pageSize: pageSize
+  }, 'GET');
+}
+
+// 检查是否已关注该用户
+function checkIsFollowed(targetId) {
+  return request("/api/user/follows/check/".concat(targetId), {}, 'GET');
+}
+
+// ========== 图片上传接口 ==========
+
+// 上传媒体文件（图片/视频）
+// 方法/路径：POST /api/media/upload
+// 请求：multipart/form-data，字段 file
+function uploadMedia(filePath) {
+  var retryCount = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  return new Promise(function (resolve, reject) {
+    // 验证文件路径
+    if (!filePath || filePath.trim() === '') {
+      reject(new Error('文件路径为空'));
+      return;
+    }
+
+    // 检查文件是否存在（在微信小程序中有限制）
+    uni.getFileInfo({
+      filePath: filePath,
+      success: function success(fileInfo) {
+        if (fileInfo.size === 0) {
+          reject(new Error('文件为空'));
+          return;
+        }
+
+        // 检查文件大小（限制为10MB）
+        var maxSize = 10 * 1024 * 1024; // 10MB
+        if (fileInfo.size > maxSize) {
+          reject(new Error("\u6587\u4EF6\u8FC7\u5927\uFF0C\u8BF7\u9009\u62E9\u5C0F\u4E8E10MB\u7684\u6587\u4EF6"));
+          return;
+        }
+
+        // 检查token是否存在
+        var token = uni.getStorageSync('token');
+        if (!token) {
+          reject(new Error('用户未登录，请先登录'));
+          return;
+        }
+
+        // 开始上传
+        uni.uploadFile({
+          url: 'http://172.20.10.3:9000/api/media/upload',
+          filePath: filePath,
+          name: 'file',
+          header: {
+            'Authorization': "Bearer ".concat(token)
+            // 不要手动设置Content-Type，uni.uploadFile会自动处理multipart边界
+          },
+
+          success: function success(res) {
+            console.log('上传响应状态码:', res.statusCode, '数据:', res.data);
+            try {
+              var data = JSON.parse(res.data || '{}');
+
+              // 处理 401 未授权或用户未登录错误
+              if (res.statusCode === 401 || data && data.success === false && (data.code === 401 || data.message === '用户未登录')) {
+                console.error('图片上传时token失效，但不自动清除token');
+                if (data !== null && data !== void 0 && data.msg || data !== null && data !== void 0 && data.message) {
+                  reject(new Error((data === null || data === void 0 ? void 0 : data.msg) || (data === null || data === void 0 ? void 0 : data.message)));
+                } else {
+                  reject(new Error('图片上传失败：用户登录状态已失效'));
+                }
+                return;
+              }
+              if (res.statusCode === 200 && data.success && data.url) {
+                // 直接返回服务器返回的URL
+                resolve(data.url);
+              } else {
+                // 如果是网络错误，尝试重试
+                if (retryCount < 2 && res.statusCode >= 500) {
+                  console.log("\u4E0A\u4F20\u5931\u8D25\uFF0C\u7B2C".concat(retryCount + 1, "\u6B21\u91CD\u8BD5..."));
+                  setTimeout(function () {
+                    uploadMedia(filePath, retryCount + 1).then(resolve).catch(reject);
+                  }, 1000);
+                  return;
+                }
+                var errorMsg = data.message || "\u4E0A\u4F20\u5931\u8D25: ".concat(res.statusCode);
+                reject(new Error(errorMsg));
+              }
+            } catch (error) {
+              reject(new Error('解析响应失败: ' + res.data));
+            }
+          },
+          fail: function fail(err) {
+            // 如果是网络错误，尝试重试
+            if (retryCount < 2) {
+              console.log("\u4E0A\u4F20\u8BF7\u6C42\u5931\u8D25\uFF0C\u7B2C".concat(retryCount + 1, "\u6B21\u91CD\u8BD5..."));
+              setTimeout(function () {
+                uploadMedia(filePath, retryCount + 1).then(resolve).catch(reject);
+              }, 1000);
+              return;
+            }
+            reject(new Error('上传请求失败: ' + err.errMsg));
+          }
+        });
+      },
+      fail: function fail(err) {
+        reject(new Error('文件不存在或无法访问: ' + err.errMsg));
+      }
+    });
+  });
+}
+
+// 更新用户头像
+// 方法/路径：POST /api/user/update-avatar
+// Header： Token
+// Body： { "avatar": "<上一步返回的url>" }
+function updateUserAvatar(avatarUrl) {
+  return request('/api/user/update-avatar', {
+    avatar: avatarUrl
+  }, 'POST');
+}
+
+// 获取当前用户信息
+// 方法/路径：GET /api/user/info
+// Header： Token
+function getUserInfo() {
+  return request('/api/user/info', {}, 'GET');
+}
+
+// 批量上传图片
+function uploadImages(_x) {
+  return _uploadImages.apply(this, arguments);
+}
+function _uploadImages() {
+  _uploadImages = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(filePaths) {
+    var currentToken, uploadPromises, uploadedUrls, failedUploads;
+    return _regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            console.log('开始批量上传图片，数量:', filePaths.length);
+
+            // 检查当前token状态
+            currentToken = uni.getStorageSync('token');
+            console.log('图片上传前token状态:', currentToken ? 'token存在' : 'token不存在');
+            if (currentToken) {
+              _context.next = 5;
+              break;
+            }
+            throw new Error('用户未登录，请先登录后再上传图片');
+          case 5:
+            uploadPromises = filePaths.map(function (filePath) {
+              return uploadMedia(filePath);
+            });
+            _context.prev = 6;
+            _context.next = 9;
+            return Promise.all(uploadPromises);
+          case 9:
+            uploadedUrls = _context.sent;
+            // 检查是否有图片上传失败
+            failedUploads = uploadedUrls.filter(function (url) {
+              return !url;
+            });
+            if (!(failedUploads.length > 0)) {
+              _context.next = 14;
+              break;
+            }
+            console.warn('部分图片上传失败:', failedUploads.length);
+            // 只返回成功上传的URL
+            return _context.abrupt("return", uploadedUrls.filter(function (url) {
+              return url;
+            }));
+          case 14:
+            console.log('图片批量上传成功，URL数量:', uploadedUrls.length);
+            return _context.abrupt("return", uploadedUrls);
+          case 18:
+            _context.prev = 18;
+            _context.t0 = _context["catch"](6);
+            console.error('图片批量上传失败:', _context.t0);
+
+            // 如果是401错误，说明token在图片上传过程中失效了
+            if (!(_context.t0.message.includes('未授权') || _context.t0.message.includes('用户未登录'))) {
+              _context.next = 24;
+              break;
+            }
+            console.error('图片上传过程中token失效，当前token:', currentToken);
+            throw new Error('图片上传失败：用户登录状态已失效，请重新登录后再试');
+          case 24:
+            throw _context.t0;
+          case 25:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee, null, [[6, 18]]);
+  }));
+  return _uploadImages.apply(this, arguments);
+}
 module.exports = {
   getRecipes: getRecipes,
   getRecipeDetail: getRecipeDetail,
@@ -10155,6 +10534,8 @@ module.exports = {
   getRandomRecipes: getRandomRecipes,
   mapTypeIdToCat: mapTypeIdToCat,
   DEFAULT_COVER: DEFAULT_COVER,
+  uploadMedia: uploadMedia,
+  updateUserAvatar: updateUserAvatar,
   getUserInfo: getUserInfo,
   // 收藏与计划管理接口
   addFavoriteWithDate: addFavoriteWithDate,
@@ -10173,29 +10554,31 @@ module.exports = {
   deleteCommunityPost: deleteCommunityPost,
   getUserFavorites: getUserFavorites,
   getUserComments: getUserComments,
+  deleteComment: deleteComment,
+  updateComment: updateComment,
   // 新添加的接口
   getUserNotifications: getUserNotifications,
-  getUserBrowsingHistory: getUserBrowsingHistory
+  getUserBrowsingHistory: getUserBrowsingHistory,
+  getUserPublishedPosts: getUserPublishedPosts,
+  getPostByCommentId: getPostByCommentId,
+  // 新增接口
+  recordBrowsingHistory: recordBrowsingHistory,
+  clearBrowsingHistory: clearBrowsingHistory,
+  getUserIntroduction: getUserIntroduction,
+  // 图片上传接口
+  uploadImages: uploadImages,
+  // 关注功能接口
+  followUser: followUser,
+  unfollowUser: unfollowUser,
+  getFollowStats: getFollowStats,
+  getFollowingList: getFollowingList,
+  getFollowersList: getFollowersList,
+  checkIsFollowed: checkIsFollowed
 };
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))
 
 /***/ }),
-/* 43 */,
-/* 44 */,
-/* 45 */,
-/* 46 */,
-/* 47 */,
-/* 48 */,
-/* 49 */,
-/* 50 */,
-/* 51 */,
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */,
-/* 59 */
+/* 43 */
 /*!************************************************************************************************!*\
   !*** ./node_modules/@dcloudio/vue-cli-plugin-uni/packages/@babel/runtime/regenerator/index.js ***!
   \************************************************************************************************/
@@ -10204,11 +10587,11 @@ module.exports = {
 
 // TODO(Babel 8): Remove this file.
 
-var runtime = __webpack_require__(/*! @babel/runtime/helpers/regeneratorRuntime */ 60)();
+var runtime = __webpack_require__(/*! @babel/runtime/helpers/regeneratorRuntime */ 44)();
 module.exports = runtime;
 
 /***/ }),
-/* 60 */
+/* 44 */
 /*!*******************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/regeneratorRuntime.js ***!
   \*******************************************************************/
@@ -10529,7 +10912,7 @@ function _regeneratorRuntime() {
 module.exports = _regeneratorRuntime, module.exports.__esModule = true, module.exports["default"] = module.exports;
 
 /***/ }),
-/* 61 */
+/* 45 */
 /*!*****************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/asyncToGenerator.js ***!
   \*****************************************************************/
@@ -10569,6 +10952,22 @@ function _asyncToGenerator(fn) {
 module.exports = _asyncToGenerator, module.exports.__esModule = true, module.exports["default"] = module.exports;
 
 /***/ }),
+/* 46 */,
+/* 47 */,
+/* 48 */,
+/* 49 */,
+/* 50 */,
+/* 51 */,
+/* 52 */,
+/* 53 */,
+/* 54 */,
+/* 55 */,
+/* 56 */,
+/* 57 */,
+/* 58 */,
+/* 59 */,
+/* 60 */,
+/* 61 */,
 /* 62 */,
 /* 63 */,
 /* 64 */,

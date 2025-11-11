@@ -103,11 +103,36 @@ var render = function () {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   var g0 = _vm.posts.length
+  var l0 = !!g0
+    ? _vm.__map(_vm.posts, function (p, __i0__) {
+        var $orig = _vm.__get_orig(p)
+        var m0 = !p._editing ? _vm.getFirstImage(p) || _vm.fallbackImg : null
+        var m1 = !p._editing ? _vm.getImageCount(p) : null
+        var m2 = !p._editing && m1 > 1 ? _vm.getImageCount(p) : null
+        var m3 = !p._editing ? _vm.formatPostTime(p) : null
+        var g1 = !!p._editing
+          ? (p._editForm.images || p.images || []).length
+          : null
+        var g2 = !!p._editing
+          ? (p._editForm.images || p.images || []).length
+          : null
+        return {
+          $orig: $orig,
+          m0: m0,
+          m1: m1,
+          m2: m2,
+          m3: m3,
+          g1: g1,
+          g2: g2,
+        }
+      })
+    : null
   _vm.$mp.data = Object.assign(
     {},
     {
       $root: {
         g0: g0,
+        l0: l0,
       },
     }
   )
@@ -152,14 +177,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 var _objectWithoutProperties2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/objectWithoutProperties */ 126));
-var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 43));
 var _toConsumableArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ 18));
-var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/defineProperty */ 11));
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 45));
 var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
 var _excluded = ["_editing", "_editForm"];
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 var _default = {
   data: function data() {
     return {
@@ -179,7 +201,7 @@ var _default = {
       var _arguments = arguments,
         _this = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
-        var refresh, token, response, posts;
+        var refresh, token, response, postList, posts;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -220,21 +242,59 @@ var _default = {
                 }
                 return _context.abrupt("return");
               case 13:
-                _context.next = 15;
-                return (0, _recipes.getCommunityPosts)(_this.currentPage, _this.pageSize, null, 'current');
-              case 15:
+                _context.prev = 13;
+                _context.next = 16;
+                return (0, _recipes.getUserPublishedPosts)(_this.currentPage, _this.pageSize);
+              case 16:
                 response = _context.sent;
-                console.log('获取我的作品响应:', response);
-                if (response && response.list) {
-                  // 处理返回的数据，添加编辑状态
-                  posts = response.list.map(function (post) {
-                    var processedPost = _objectSpread(_objectSpread({}, post), {}, {
+                console.log('获取我的作品响应 (新接口):', response);
+                _context.next = 27;
+                break;
+              case 20:
+                _context.prev = 20;
+                _context.t0 = _context["catch"](13);
+                console.log('新接口调用失败，尝试使用旧接口:', _context.t0);
+                // 如果新接口失败，回退到旧接口
+                _context.next = 25;
+                return (0, _recipes.getCommunityPosts)(_this.currentPage, _this.pageSize, null, 'current');
+              case 25:
+                response = _context.sent;
+                console.log('获取我的作品响应 (旧接口):', response);
+              case 27:
+                if (response && (response.list || response.data)) {
+                  // 处理返回的数据，兼容不同接口的数据结构
+                  postList = response.list || response.data || [];
+                  posts = postList.map(function (post) {
+                    // 处理图片数据，优先使用 media_json 字段
+                    var images = [];
+                    if (post.media_json) {
+                      try {
+                        images = JSON.parse(post.media_json);
+                      } catch (e) {
+                        console.error('解析 media_json 失败:', e);
+                        images = post.images || post.mediaList || [];
+                      }
+                    } else {
+                      images = post.images || post.mediaList || [];
+                    }
+
+                    // 处理字段映射，兼容不同接口的字段名
+                    var processedPost = {
+                      id: post.id || post.postId,
+                      name: post.name || post.title || '',
+                      text: post.text || post.content || '',
+                      content: post.content || post.text || '',
+                      images: images,
+                      media_json: post.media_json,
+                      // 保留原始字段
+                      time: post.createTime || post.createdAt || post.time || '刚刚',
+                      visibility: post.visibility || 1,
                       _editing: false,
                       _editForm: {
-                        name: post.name || '',
+                        name: post.name || post.title || '',
                         text: post.content || post.text || ''
                       }
-                    });
+                    };
 
                     // 确保有ID
                     if (typeof processedPost.id === 'undefined' || processedPost.id === null) {
@@ -242,7 +302,7 @@ var _default = {
                     }
                     return processedPost;
                   }); // 判断是否还有更多数据
-                  _this.hasMore = response.list.length === _this.pageSize;
+                  _this.hasMore = postList.length === _this.pageSize;
                   if (refresh) {
                     // 刷新时替换所有数据
                     _this.posts = posts;
@@ -262,12 +322,12 @@ var _default = {
                     _this.posts = [];
                   }
                 }
-                _context.next = 25;
+                _context.next = 35;
                 break;
-              case 20:
-                _context.prev = 20;
-                _context.t0 = _context["catch"](3);
-                console.error('获取我的作品失败:', _context.t0);
+              case 30:
+                _context.prev = 30;
+                _context.t1 = _context["catch"](3);
+                console.error('获取我的作品失败:', _context.t1);
                 uni.showToast({
                   title: '获取作品失败',
                   icon: 'none'
@@ -275,16 +335,16 @@ var _default = {
                 if (refresh) {
                   _this.posts = [];
                 }
-              case 25:
-                _context.prev = 25;
+              case 35:
+                _context.prev = 35;
                 _this.loading = false;
-                return _context.finish(25);
-              case 28:
+                return _context.finish(35);
+              case 38:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[3, 20, 25, 28]]);
+        }, _callee, null, [[3, 30, 35, 38], [13, 20]]);
       }))();
     },
     // 下拉刷新
@@ -318,152 +378,389 @@ var _default = {
       this.$set(p, '_editing', true);
       this.$set(p, '_editForm', {
         name: p.name || '',
-        text: p.text || ''
+        text: p.text || '',
+        images: p.images || []
       });
+    },
+    // 更换图片（支持多张）
+    changeImage: function changeImage(p) {
+      var _this2 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3() {
+        return _regenerator.default.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                uni.chooseImage({
+                  count: 9,
+                  // 最多选择9张图片
+                  sizeType: ['compressed'],
+                  sourceType: ['album', 'camera'],
+                  success: function () {
+                    var _success = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2(res) {
+                      var tempFilePaths, uploadedUrls;
+                      return _regenerator.default.wrap(function _callee2$(_context2) {
+                        while (1) {
+                          switch (_context2.prev = _context2.next) {
+                            case 0:
+                              tempFilePaths = res.tempFilePaths;
+                              if (!(tempFilePaths && tempFilePaths.length > 0)) {
+                                _context2.next = 17;
+                                break;
+                              }
+                              _context2.prev = 2;
+                              uni.showLoading({
+                                title: '上传图片中...'
+                              });
+
+                              // 调用上传接口上传图片
+                              _context2.next = 6;
+                              return (0, _recipes.uploadImages)(tempFilePaths);
+                            case 6:
+                              uploadedUrls = _context2.sent;
+                              if (uploadedUrls && uploadedUrls.length > 0) {
+                                // 更新编辑表单中的图片URL
+                                _this2.$set(p._editForm, 'images', uploadedUrls);
+                                console.log('图片上传成功，URL数量:', uploadedUrls.length);
+                                uni.showToast({
+                                  title: "\u5DF2\u4E0A\u4F20".concat(uploadedUrls.length, "\u5F20\u56FE\u7247"),
+                                  icon: 'none'
+                                });
+                              } else {
+                                uni.showToast({
+                                  title: '图片上传失败，请重试',
+                                  icon: 'none'
+                                });
+                              }
+                              _context2.next = 14;
+                              break;
+                            case 10:
+                              _context2.prev = 10;
+                              _context2.t0 = _context2["catch"](2);
+                              console.error('图片上传失败:', _context2.t0);
+                              uni.showToast({
+                                title: '图片上传失败，请重试',
+                                icon: 'none'
+                              });
+                            case 14:
+                              _context2.prev = 14;
+                              uni.hideLoading();
+                              return _context2.finish(14);
+                            case 17:
+                            case "end":
+                              return _context2.stop();
+                          }
+                        }
+                      }, _callee2, null, [[2, 10, 14, 17]]);
+                    }));
+                    function success(_x) {
+                      return _success.apply(this, arguments);
+                    }
+                    return success;
+                  }(),
+                  fail: function fail(err) {
+                    console.error('选择图片失败:', err);
+                    uni.showToast({
+                      title: '选择图片失败',
+                      icon: 'none'
+                    });
+                  }
+                });
+              case 1:
+              case "end":
+                return _context3.stop();
+            }
+          }
+        }, _callee3);
+      }))();
+    },
+    // 删除单张图片
+    removeImage: function removeImage(p, index) {
+      var images = (0, _toConsumableArray2.default)(p._editForm.images || []);
+      images.splice(index, 1);
+      this.$set(p._editForm, 'images', images);
     },
     cancelEdit: function cancelEdit(p) {
       this.$set(p, '_editing', false);
       // 取消不修改原数据
     },
     saveEdit: function saveEdit(p) {
-      var _this2 = this;
-      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
-        var form, name, text, response;
-        return _regenerator.default.wrap(function _callee2$(_context2) {
+      var _this3 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
+        var form, name, text, images, finalImages, hasTempImage, response;
+        return _regenerator.default.wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
                 form = p._editForm || {};
                 name = String(form.name || '').trim();
                 text = String(form.text || '').trim();
+                images = form.images || p.images || [];
                 if (!(text.length > 200)) {
-                  _context2.next = 6;
+                  _context4.next = 7;
                   break;
                 }
                 uni.showToast({
                   title: '文案超出 200 字',
                   icon: 'none'
                 });
-                return _context2.abrupt("return");
-              case 6:
-                _context2.prev = 6;
-                _context2.next = 9;
-                return (0, _recipes.updateCommunityPost)(p.id, text, p.images || [], p.visibility || 1);
-              case 9:
-                response = _context2.sent;
+                return _context4.abrupt("return");
+              case 7:
+                _context4.prev = 7;
+                // 如果有新图片需要上传
+                finalImages = images; // 检查是否有临时图片（需要上传）
+                hasTempImage = images.some(function (img) {
+                  return img && img.includes('http://tmp/');
+                });
+                if (hasTempImage) {
+                  uni.showLoading({
+                    title: '上传图片中...'
+                  });
+
+                  // 这里需要实现图片上传逻辑
+                  // 暂时先使用本地图片路径，实际项目中需要调用上传接口
+                  console.log('检测到临时图片，需要上传:', images);
+
+                  // 临时处理：如果是临时图片，先保持原样，实际项目中需要替换为上传后的URL
+                  finalImages = images;
+                }
+
+                // 调用后端API更新帖子
+                _context4.next = 13;
+                return (0, _recipes.updateCommunityPost)(p.id, text, finalImages, p.visibility || 1);
+              case 13:
+                response = _context4.sent;
                 if (response && response.success) {
                   // 更新本地数据
-                  _this2.$set(p, 'name', name);
-                  _this2.$set(p, 'text', text);
-                  _this2.$set(p, 'content', text); // 同步 content 字段
-                  _this2.$set(p, 'time', _this2.formatNow());
-                  _this2.$set(p, '_editing', false);
+                  _this3.$set(p, 'name', name);
+                  _this3.$set(p, 'text', text);
+                  _this3.$set(p, 'content', text); // 同步 content 字段
+                  _this3.$set(p, 'images', finalImages);
+                  _this3.$set(p, 'time', _this3.formatNow());
+                  _this3.$set(p, '_editing', false);
+                  uni.hideLoading();
                   uni.showToast({
                     title: '修改成功',
                     icon: 'success'
                   });
                 } else {
+                  uni.hideLoading();
                   uni.showToast({
                     title: (response === null || response === void 0 ? void 0 : response.message) || '修改失败',
                     icon: 'none'
                   });
                 }
-                _context2.next = 17;
+                _context4.next = 22;
                 break;
-              case 13:
-                _context2.prev = 13;
-                _context2.t0 = _context2["catch"](6);
-                console.error('修改作品失败:', _context2.t0);
+              case 17:
+                _context4.prev = 17;
+                _context4.t0 = _context4["catch"](7);
+                console.error('修改作品失败:', _context4.t0);
+                uni.hideLoading();
                 uni.showToast({
                   title: '修改失败，请重试',
                   icon: 'none'
                 });
-              case 17:
+              case 22:
               case "end":
-                return _context2.stop();
+                return _context4.stop();
             }
           }
-        }, _callee2, null, [[6, 13]]);
+        }, _callee4, null, [[7, 17]]);
       }))();
     },
     deletePost: function deletePost(p) {
-      var _this3 = this;
-      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
+      var _this4 = this;
+      return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee6() {
         var id;
-        return _regenerator.default.wrap(function _callee4$(_context4) {
+        return _regenerator.default.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
                 id = String(p.id);
                 uni.showModal({
                   title: '删除作品',
                   content: '确定要删除该作品吗？删除后不可恢复',
                   success: function () {
-                    var _success = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3(res) {
-                      var response, next;
-                      return _regenerator.default.wrap(function _callee3$(_context3) {
+                    var _success2 = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee5(res) {
+                      var response, next, errorMsg;
+                      return _regenerator.default.wrap(function _callee5$(_context5) {
                         while (1) {
-                          switch (_context3.prev = _context3.next) {
+                          switch (_context5.prev = _context5.next) {
                             case 0:
                               if (!res.confirm) {
-                                _context3.next = 12;
+                                _context5.next = 13;
                                 break;
                               }
-                              _context3.prev = 1;
-                              _context3.next = 4;
+                              _context5.prev = 1;
+                              _context5.next = 4;
                               return (0, _recipes.deleteCommunityPost)(id);
                             case 4:
-                              response = _context3.sent;
-                              if (response && response.success) {
+                              response = _context5.sent;
+                              console.log('删除响应:', response);
+
+                              // 检查后端返回的success字段
+                              if (response && response.success === true) {
                                 // 从本地列表中移除
-                                next = _this3.posts.filter(function (item) {
+                                next = _this4.posts.filter(function (item) {
                                   return String(item.id) !== id;
                                 });
-                                _this3.posts = next;
+                                _this4.posts = next;
                                 uni.showToast({
                                   title: '删除成功',
                                   icon: 'success'
                                 });
                               } else {
+                                // 后端返回success:false，显示具体错误信息
+                                errorMsg = (response === null || response === void 0 ? void 0 : response.message) || (response === null || response === void 0 ? void 0 : response.msg) || '删除失败，请检查权限或联系管理员';
                                 uni.showToast({
-                                  title: (response === null || response === void 0 ? void 0 : response.message) || '删除失败',
+                                  title: errorMsg,
                                   icon: 'none'
                                 });
+                                console.error('删除失败，后端返回:', response);
                               }
-                              _context3.next = 12;
+                              _context5.next = 13;
                               break;
-                            case 8:
-                              _context3.prev = 8;
-                              _context3.t0 = _context3["catch"](1);
-                              console.error('删除作品失败:', _context3.t0);
+                            case 9:
+                              _context5.prev = 9;
+                              _context5.t0 = _context5["catch"](1);
+                              console.error('删除作品失败:', _context5.t0);
                               uni.showToast({
                                 title: '删除失败，请重试',
                                 icon: 'none'
                               });
-                            case 12:
+                            case 13:
                             case "end":
-                              return _context3.stop();
+                              return _context5.stop();
                           }
                         }
-                      }, _callee3, null, [[1, 8]]);
+                      }, _callee5, null, [[1, 9]]);
                     }));
-                    function success(_x) {
-                      return _success.apply(this, arguments);
+                    function success(_x2) {
+                      return _success2.apply(this, arguments);
                     }
                     return success;
                   }()
                 });
               case 2:
               case "end":
-                return _context4.stop();
+                return _context6.stop();
             }
           }
-        }, _callee4);
+        }, _callee6);
       }))();
     },
     formatNow: function formatNow() {
       // 简易时间展示：刚刚
       return '刚刚';
+    },
+    // 获取第一张图片
+    getFirstImage: function getFirstImage(p) {
+      if (!p) return '';
+
+      // 处理 media_json 字段
+      if (p.media_json) {
+        try {
+          var images = JSON.parse(p.media_json);
+          if (Array.isArray(images) && images.length > 0) {
+            return images[0];
+          }
+        } catch (e) {
+          console.error('解析 media_json 失败:', e);
+        }
+      }
+
+      // 处理 images 字段
+      if (Array.isArray(p.images) && p.images.length > 0) {
+        return p.images[0];
+      }
+      return '';
+    },
+    // 获取图片数量
+    getImageCount: function getImageCount(p) {
+      if (!p) return 0;
+
+      // 处理 media_json 字段
+      if (p.media_json) {
+        try {
+          var images = JSON.parse(p.media_json);
+          if (Array.isArray(images)) {
+            return images.length;
+          }
+        } catch (e) {
+          console.error('解析 media_json 失败:', e);
+        }
+      }
+
+      // 处理 images 字段
+      if (Array.isArray(p.images)) {
+        return p.images.length;
+      }
+      return 0;
+    },
+    // 格式化帖子时间
+    formatPostTime: function formatPostTime(p) {
+      if (!p) return '刚刚';
+
+      // 优先使用后端返回的时间字段
+      var timeStr = p.updated_at || p.created_at || p.time;
+      if (!timeStr) return '刚刚';
+
+      // 如果是时间戳格式
+      if (/^\d+$/.test(timeStr)) {
+        var timestamp = parseInt(timeStr);
+        // 如果是秒级时间戳，转换为毫秒
+        var date = timestamp < 1000000000000 ? new Date(timestamp * 1000) : new Date(timestamp);
+        return this.formatRelativeTime(date);
+      }
+
+      // 如果是日期字符串格式
+      try {
+        var _date = new Date(timeStr);
+        if (!isNaN(_date.getTime())) {
+          return this.formatRelativeTime(_date);
+        }
+      } catch (e) {
+        console.error('解析时间失败:', e);
+      }
+      return timeStr;
+    },
+    // 格式化相对时间
+    formatRelativeTime: function formatRelativeTime(date) {
+      var now = new Date();
+      var diff = now.getTime() - date.getTime();
+
+      // 小于1分钟
+      if (diff < 60000) {
+        return '刚刚';
+      }
+
+      // 小于1小时
+      if (diff < 3600000) {
+        var minutes = Math.floor(diff / 60000);
+        return "".concat(minutes, "\u5206\u949F\u524D");
+      }
+
+      // 小于1天
+      if (diff < 86400000) {
+        var hours = Math.floor(diff / 3600000);
+        return "".concat(hours, "\u5C0F\u65F6\u524D");
+      }
+
+      // 小于1个月
+      if (diff < 2592000000) {
+        var days = Math.floor(diff / 86400000);
+        return "".concat(days, "\u5929\u524D");
+      }
+
+      // 小于1年
+      if (diff < 31536000000) {
+        var months = Math.floor(diff / 2592000000);
+        return "".concat(months, "\u4E2A\u6708\u524D");
+      }
+
+      // 超过1年
+      var years = Math.floor(diff / 31536000000);
+      return "".concat(years, "\u5E74\u524D");
     }
   }
 };

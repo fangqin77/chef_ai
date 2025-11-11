@@ -155,8 +155,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 59));
-var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 61));
+var _regenerator = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/regenerator */ 43));
+var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 45));
 var _toConsumableArray2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ 18));
 var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
 //
@@ -239,7 +239,7 @@ var _default = {
     submit: function submit() {
       var _this2 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee() {
-        var text, response;
+        var token, text, mediaList, currentToken, response;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -250,9 +250,21 @@ var _default = {
                 }
                 return _context.abrupt("return");
               case 2:
+                // 检查登录状态
+                token = uni.getStorageSync('token');
+                if (token) {
+                  _context.next = 6;
+                  break;
+                }
+                uni.showToast({
+                  title: '请先登录后再发布',
+                  icon: 'none'
+                });
+                return _context.abrupt("return");
+              case 6:
                 text = (_this2.text || '').trim();
                 if (!(text.length > 200)) {
-                  _context.next = 6;
+                  _context.next = 10;
                   break;
                 }
                 uni.showToast({
@@ -260,9 +272,9 @@ var _default = {
                   icon: 'none'
                 });
                 return _context.abrupt("return");
-              case 6:
+              case 10:
                 if (!(!text && _this2.images.length === 0)) {
-                  _context.next = 9;
+                  _context.next = 13;
                   break;
                 }
                 uni.showToast({
@@ -270,9 +282,9 @@ var _default = {
                   icon: 'none'
                 });
                 return _context.abrupt("return");
-              case 9:
+              case 13:
                 if (!(_this2.images.length > 9)) {
-                  _context.next = 12;
+                  _context.next = 16;
                   break;
                 }
                 uni.showToast({
@@ -280,49 +292,116 @@ var _default = {
                   icon: 'none'
                 });
                 return _context.abrupt("return");
-              case 12:
-                _this2.submitting = true;
-                _context.prev = 13;
-                _context.next = 16;
-                return (0, _recipes.createCommunityPost)(text, _this2.images, 1);
               case 16:
+                _this2.submitting = true;
+                uni.showLoading({
+                  title: '发布中...',
+                  mask: true
+                });
+                _context.prev = 18;
+                mediaList = []; // 如果有图片，先上传图片到服务器
+                if (!(_this2.images.length > 0)) {
+                  _context.next = 39;
+                  break;
+                }
+                uni.showLoading({
+                  title: '上传图片中...',
+                  mask: true
+                });
+                _context.prev = 22;
+                _context.next = 25;
+                return (0, _recipes.uploadImages)(_this2.images);
+              case 25:
+                mediaList = _context.sent;
+                if (!(mediaList.length === 0)) {
+                  _context.next = 30;
+                  break;
+                }
+                uni.hideLoading();
+                uni.showToast({
+                  title: '图片上传失败，请重试',
+                  icon: 'none'
+                });
+                return _context.abrupt("return");
+              case 30:
+                console.log('图片上传成功，mediaList:', mediaList);
+                _context.next = 39;
+                break;
+              case 33:
+                _context.prev = 33;
+                _context.t0 = _context["catch"](22);
+                console.error('图片上传失败:', _context.t0);
+                uni.hideLoading();
+                uni.showToast({
+                  title: '图片上传失败，请重试',
+                  icon: 'none'
+                });
+                return _context.abrupt("return");
+              case 39:
+                uni.showLoading({
+                  title: '发布帖子中...',
+                  mask: true
+                });
+
+                // 再次检查token状态，确保发布前token有效
+                currentToken = uni.getStorageSync('token');
+                if (currentToken) {
+                  _context.next = 44;
+                  break;
+                }
+                uni.showToast({
+                  title: '登录已过期，请重新登录',
+                  icon: 'none'
+                });
+                throw new Error('登录已过期，请重新登录');
+              case 44:
+                console.log('发布前token检查:', currentToken ? 'token存在' : 'token不存在');
+
+                // 调用发布帖子接口，传入服务器返回的图片URL
+                _context.next = 47;
+                return (0, _recipes.createCommunityPost)(text, mediaList, 1);
+              case 47:
                 response = _context.sent;
                 if (response && response.success) {
+                  uni.hideLoading();
                   uni.showToast({
-                    title: '已发布',
-                    icon: 'none'
+                    title: '发布成功',
+                    icon: 'success'
                   });
                   setTimeout(function () {
                     // 返回到美食圈首页
                     uni.navigateBack({
                       delta: 1
                     });
-                  }, 400);
+                  }, 1000);
                 } else {
+                  uni.hideLoading();
                   uni.showToast({
-                    title: '发布失败，请重试',
+                    title: (response === null || response === void 0 ? void 0 : response.message) || '发布失败，请重试',
                     icon: 'none'
                   });
                 }
-                _context.next = 23;
+                _context.next = 56;
                 break;
-              case 20:
-                _context.prev = 20;
-                _context.t0 = _context["catch"](13);
+              case 51:
+                _context.prev = 51;
+                _context.t1 = _context["catch"](18);
+                console.error('发布失败:', _context.t1);
+                uni.hideLoading();
                 uni.showToast({
                   title: '发布失败，请重试',
                   icon: 'none'
                 });
-              case 23:
-                _context.prev = 23;
+              case 56:
+                _context.prev = 56;
                 _this2.submitting = false;
-                return _context.finish(23);
-              case 26:
+                return _context.finish(56);
+              case 59:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[13, 20, 23, 26]]);
+        }, _callee, null, [[18, 51, 56, 59], [22, 33]]);
       }))();
     }
   }

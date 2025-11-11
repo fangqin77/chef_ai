@@ -16,7 +16,7 @@
         </view>
         <view class="profile">
           <text class="name">{{ userInfo.nickname || '用户' }}</text>
-          <text class="desc">美食爱好者</text>
+          <text class="desc">{{ userInfo.description || '美食爱好者' }}</text>
         </view>
       </view>
       <view class="stats">
@@ -107,7 +107,18 @@ export default {
     this.checkLoginStatus();
   },
 
-    async onShow() {
+    async onLoad() {
+    // 监听用户信息更新事件
+    uni.$on('userInfoUpdated', () => {
+      console.log('收到用户信息更新事件，重新加载用户信息');
+      this.loadUserInfo();
+    });
+    
+    // 检查登录状态
+    this.checkLoginStatus();
+  },
+  
+  async onShow() {
     // 每次显示页面时重新加载用户信息
     const token = uni.getStorageSync('token');
     if (token) {
@@ -115,27 +126,6 @@ export default {
     } else {
       this.checkLoginStatus();
     }
-  },
-  
-  onLoad() {
-    // 监听用户信息更新事件
-    uni.$on('userInfoUpdated', () => {
-      console.log('收到用户信息更新事件，重新加载用户信息');
-      this.loadUserInfo();
-    });
-  },
-  
-  onUnload() {
-    // 移除事件监听
-    uni.$off('userInfoUpdated');
-  },
-  
-  onLoad() {
-    // 监听用户信息更新事件
-    uni.$on('userInfoUpdated', () => {
-      console.log('收到用户信息更新事件，重新加载用户信息');
-      this.loadUserInfo();
-    });
   },
   
   onUnload() {
@@ -285,13 +275,18 @@ export default {
         if (apiData) {
           // 映射后端字段到前端字段
           this.userInfo = {
-            avatarUrl: apiData.avatarUrl || apiData.avatar, // 后端返回 avatarUrl
-            nickname: apiData.nickname,
+            avatar: apiData.avatarUrl || apiData.avatar || '/static/avatar-default.png', // 确保头像字段正确
+            avatarUrl: apiData.avatarUrl || apiData.avatar || '/static/avatar-default.png', // 同时保留avatarUrl
+            nickname: apiData.nickname || '用户',
             followCount: apiData.followCount || 0,
             fansCount: apiData.fansCount || 0,
             likeCount: apiData.likeCount || 0,
-            isLoggedIn: true
+            isLoggedIn: true,
+            description: apiData.description || '美食爱好者' // 添加个人简介字段
           };
+          
+          // 保存到本地存储
+          uni.setStorageSync('userInfo', this.userInfo);
         }
       } catch (err) {
         console.error('获取用户信息失败:', err);
@@ -308,7 +303,7 @@ export default {
       uni.navigateTo({ url: '/pages/profile/comments' });
     },
     goMyWorks() {
-      uni.navigateTo({ url: '/pages/profile/works' });
+      uni.navigateTo({ url: '/pages/profile/myworks' });
     },
     goMyInfo() {
       uni.navigateTo({ url: '/pages/profile/myinfo' });

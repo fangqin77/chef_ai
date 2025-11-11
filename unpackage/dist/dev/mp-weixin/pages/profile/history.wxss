@@ -37,4 +37,34 @@
 }
 .tip { font-size: 26rpx; color: #6b7280;
 }
+.clear-section {
+  padding: 20rpx 24rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+.clear-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 24rpx;
+}
+.clear-section {
+  padding: 20rpx 24rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+.clear-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 24rpx;
+}
 
