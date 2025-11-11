@@ -28,6 +28,11 @@ public interface CommunityMapper {
                            @Param("offset") int offset,
                            @Param("limit") int limit);
 
+    // 我的作品视图：联表作者昵称/头像（Map）
+    List<java.util.Map<String, Object>> listMyPostsView(@Param("ownerId") Long ownerId,
+                           @Param("offset") int offset,
+                           @Param("limit") int limit);
+
     int countMyPosts(@Param("ownerId") Long ownerId);
 
     // 帖子详情（若非作者，仅返回 approved+normal；作者可见自己的任何状态）

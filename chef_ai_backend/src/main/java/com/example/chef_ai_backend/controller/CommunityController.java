@@ -82,6 +82,15 @@ public class CommunityController {
         return communityService.listMyPosts(uid, page, pageSize);
     }
 
+    // 我的作品视图（含昵称/头像）
+    @GetMapping("/posts/my/view")
+    public Map<String, Object> listMyPostsView(@RequestParam(defaultValue = "1") int page,
+                                               @RequestParam(defaultValue = "10") int pageSize,
+                                               HttpServletRequest request) {
+        Long uid = currentUserId(request);
+        return communityService.listMyPosts(uid, page, pageSize);
+    }
+
     // 帖子详情（非作者仅可见已审核+正常）
     @GetMapping("/posts/{id}")
     public Map<String, Object> getPost(@PathVariable Long id, HttpServletRequest request) {

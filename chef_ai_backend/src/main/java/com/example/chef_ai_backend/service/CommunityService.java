@@ -36,13 +36,19 @@ public class CommunityService {
 
     public Map<String, Object> listMyPosts(Long ownerId, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        List<Post> list = communityMapper.listMyPosts(ownerId, offset, pageSize);
+        List<java.util.Map<String,Object>> list = communityMapper.listMyPostsView(ownerId, offset, pageSize);
         int total = communityMapper.countMyPosts(ownerId);
         return toPageResult(list, total, page, pageSize);
     }
 
     public Post getPostForViewer(Long postId, Long viewerId) {
         return communityMapper.getPostForViewer(postId, viewerId);
+    }
+
+    public Post getPostByComment(Long commentId, Long viewerId) {
+        com.example.chef_ai_backend.model.Comment c = communityMapper.getCommentById(commentId);
+        if (c == null) return null;
+        return communityMapper.getPostForViewer(c.getPostId(), viewerId);
     }
 
     @Transactional

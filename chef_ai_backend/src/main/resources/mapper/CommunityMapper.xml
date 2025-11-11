@@ -77,6 +77,16 @@
     ORDER BY id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
+
+  <!-- 我的作品视图：联表用户昵称/头像（Map） -->
+  <select id="listMyPostsView" resultType="map">
+    SELECT p.*, u.nickname AS user_nickname, u.avatar_url AS user_avatar_url
+    FROM posts p
+    LEFT JOIN userss u ON u.id = p.user_id
+    WHERE p.user_id = #{ownerId}
+    ORDER BY p.id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
   <select id="countMyPosts" resultType="int">
     SELECT COUNT(1) FROM posts WHERE user_id = #{ownerId}
   </select>
@@ -258,8 +268,7 @@
     SET 
       content = #{content},
       media_json = #{mediaJson},
-      visibility = #{visibility},
-      updated_at = NOW()
+      visibility = #{visibility}
     WHERE id = #{postId} AND user_id = #{ownerId} AND status = 'normal'
   </update>
 
@@ -344,7 +353,7 @@
   <!-- 编辑本人评论（仅正常状态） -->
   <update id="updateComment">
     UPDATE comments
-    SET content = #{content}, updated_at = NOW()
+    SET content = #{content}
     WHERE id = #{commentId} AND user_id = #{ownerId} AND status = 'normal'
   </update>
 
