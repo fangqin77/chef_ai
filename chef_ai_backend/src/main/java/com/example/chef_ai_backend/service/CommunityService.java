@@ -84,13 +84,23 @@ public class CommunityService {
     }
 
     @Transactional
-    public boolean deleteMyComment(Long userId, Long commentId, Long postId) {
+    public boolean deleteMyComment(Long userId, Long commentId) {
+        // 先查询获取该评论所属帖子ID
+        com.example.chef_ai_backend.model.Comment c = communityMapper.getCommentById(commentId);
+        Long postId = c != null ? c.getPostId() : null;
         int ok = communityMapper.softDeleteComment(commentId, userId);
-        if (ok > 0) {
+        if (ok > 0 && postId != null) {
             communityMapper.incrPostCommentCount(postId, -1);
             return true;
         }
-        return false;
+        return ok > 0;
+    }
+
+    // 编辑本人评论
+    @Transactional
+    public boolean updateMyComment(Long userId, Long commentId, String content) {
+        int ok = communityMapper.updateComment(commentId, userId, content);
+        return ok > 0;
     }
 
     @Transactional
@@ -144,7 +154,7 @@ public class CommunityService {
     // 我发表的评论列表（正常）
     public Map<String, Object> listMyComments(Long userId, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        List<Comment> list = communityMapper.listMyComments(userId, offset, pageSize);
+        List<java.util.Map<String,Object>> list = communityMapper.listMyCommentsView(userId, offset, pageSize);
         int total = communityMapper.countMyComments(userId);
         return toPageResult(list, total, page, pageSize);
     }

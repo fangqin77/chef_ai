@@ -191,10 +191,21 @@ public class CommunityController {
     // 删除本人评论（软删除）
     @DeleteMapping("/comments/{id}")
     public Map<String, Object> deleteComment(@PathVariable Long id,
-                                             @RequestParam Long postId,
                                              HttpServletRequest request) {
         Long uid = currentUserId(request);
-        boolean ok = communityService.deleteMyComment(uid, id, postId);
+        boolean ok = communityService.deleteMyComment(uid, id);
+        return Map.of("success", ok);
+    }
+
+    // 编辑本人评论
+    @PutMapping("/comments/{id}")
+    public Map<String, Object> updateComment(@PathVariable Long id,
+                                             @RequestBody Map<String, Object> body,
+                                             HttpServletRequest request) {
+        Long uid = currentUserId(request);
+        if (uid == null) return Map.of("success", false, "code", 401, "message", "未登录或Token无效");
+        String content = (String) body.get("content");
+        boolean ok = communityService.updateMyComment(uid, id, content);
         return Map.of("success", ok);
     }
 

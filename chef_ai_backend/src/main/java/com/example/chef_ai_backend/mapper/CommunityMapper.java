@@ -52,6 +52,11 @@ public interface CommunityMapper {
     int softDeleteComment(@Param("commentId") Long commentId,
                           @Param("ownerId") Long ownerId);
 
+    // 编辑本人评论（仅正常状态）
+    int updateComment(@Param("commentId") Long commentId,
+                      @Param("ownerId") Long ownerId,
+                      @Param("content") String content);
+
     // 点赞/收藏 幂等
     int insertPostLike(@Param("postId") Long postId, @Param("userId") Long userId);
     int deletePostLike(@Param("postId") Long postId, @Param("userId") Long userId);
@@ -86,11 +91,16 @@ public interface CommunityMapper {
                                  @Param("limit") int limit);
     int countFavoritePosts(@Param("userId") Long userId);
 
-    // 我的评论列表
+    // 我的评论列表（原始实体）
     List<Comment> listMyComments(@Param("userId") Long userId,
                                  @Param("offset") int offset,
                                  @Param("limit") int limit);
     int countMyComments(@Param("userId") Long userId);
+
+    // 我的评论列表视图：联表返回昵称与头像
+    List<java.util.Map<String, Object>> listMyCommentsView(@Param("userId") Long userId,
+                                                           @Param("offset") int offset,
+                                                           @Param("limit") int limit);
 
     // ===== 管理端（Admin） =====
     List<Post> listAdminPosts(@Param("keyword") String keyword,
