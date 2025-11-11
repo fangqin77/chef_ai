@@ -12,6 +12,7 @@
           <a-space>
             <a-button size="small" type="primary" @click="resolve(record.id, 'approved')">通过</a-button>
             <a-button size="small" danger @click="resolve(record.id, 'rejected')">驳回</a-button>
+            <a-button size="small" danger v-if="record.target_type==='comment'" @click="doDeleteComment(record.target_id)">删除评论</a-button>
           </a-space>
         </template>
       </template>
@@ -20,8 +21,8 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { fetchReports, resolveReport } from '../services/adminApi';
-import { message } from 'ant-design-vue';
+import { fetchReports, resolveReport, deleteComment } from '../services/adminApi';
+import { message, Modal } from 'ant-design-vue';
 
 const list = ref<any[]>([]);
 const total = ref(0);
@@ -95,4 +96,24 @@ const onTableChange = (pg:any) => {
 };
 
 onMounted(() => loadData(1));
+
+const doDeleteComment = async (commentId:number) => {
+  Modal.confirm({
+    title: '确认删除该评论？该操作不可恢复！',
+    async onOk() {
+      try {
+        const { data } = await deleteComment(commentId);
+        if (data?.success && (data?.data?.deleted ?? true)) {
+          message.success('删除成功');
+          // 删除后刷新列表，避免报告项仍显示
+          await loadData(page.value);
+        } else {
+          message.error(data?.message || '删除失败');
+        }
+      } catch (e:any) {
+        message.error(e?.response?.data?.message || e?.message || '删除异常');
+      }
+    }
+  });
+};
 </script>

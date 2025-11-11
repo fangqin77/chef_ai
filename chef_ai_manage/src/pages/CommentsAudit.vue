@@ -16,6 +16,7 @@
           <a-space>
             <a-button size="small" type="primary" @click="doAudit(record.id, 'approve')">通过</a-button>
             <a-button size="small" danger @click="doAudit(record.id, 'reject')">驳回</a-button>
+            <a-button size="small" danger @click="doDeleteComment(record.id)">删除</a-button>
           </a-space>
         </template>
       </template>
@@ -25,7 +26,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { fetchAdminComments, auditComment } from '../services/adminApi';
+import { fetchAdminComments, auditComment, deleteComment } from '../services/adminApi';
 import { message, Modal } from 'ant-design-vue';
 
 const list = ref<any[]>([]);
@@ -103,4 +104,24 @@ const reset = () => {
 };
 
 onMounted(() => loadData(1));
+
+const doDeleteComment = async (id: number) => {
+  Modal.confirm({
+    title: '确认删除该评论？该操作不可恢复！',
+    async onOk() {
+      try {
+        const { data } = await deleteComment(id);
+        if (data?.success && (data?.data?.deleted ?? true)) {
+          message.success('删除成功');
+          // 删除后刷新列表，保持分页统计一致
+          await loadData(page.value);
+        } else {
+          message.error(data?.message || '删除失败');
+        }
+      } catch (e:any) {
+        message.error(e?.response?.data?.message || e?.message || '删除异常');
+      }
+    }
+  });
+};
 </script>

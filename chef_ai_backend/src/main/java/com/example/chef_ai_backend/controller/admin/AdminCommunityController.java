@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * 管理端社区控制器：提供帖子管理的查询与审核接口。
- * - 支持按审核状态/用户/关键词分页查询
- * - 审核操作支持 approve/reject
+ * 管理端社区控制器：帖子与评论的查询、审核、删除接口。
  */
 @RestController
 @RequestMapping("/admin/community")
@@ -41,5 +39,12 @@ public class AdminCommunityController {
         String action = body.get("action");
         Long adminUserId = (Long) request.getAttribute("adminUserId");
         return adminCommunityService.auditPost(id, action, adminUserId);
+    }
+
+    // 管理端：硬删除帖子（真实删除数据库记录）
+    @DeleteMapping("/posts/{id}")
+    public Map<String, Object> hardDelete(@PathVariable Long id, HttpServletRequest request) {
+        Long adminUserId = (Long) request.getAttribute("adminUserId");
+        return adminCommunityService.deletePostHard(id, adminUserId);
     }
 }

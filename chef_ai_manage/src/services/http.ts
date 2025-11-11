@@ -7,7 +7,13 @@ const http = axios.create({
 
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem('ADMIN_TOKEN');
-  if (token) config.headers['Admin-Token'] = token;
+  if (token) {
+    // 后端拦截器支持 Token 或 Authorization
+    config.headers['Token'] = token;
+    config.headers['Authorization'] = `Bearer ${token}`;
+    // 兼容旧字段
+    config.headers['Admin-Token'] = token;
+  }
   return config;
 });
 

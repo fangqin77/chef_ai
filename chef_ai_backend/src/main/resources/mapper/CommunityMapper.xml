@@ -43,6 +43,22 @@
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
+  <!-- 列表视图：联表作者信息（昵称/头像） -->
+  <select id="listApprovedPostsView" resultType="map">
+    SELECT p.*, u.nickname AS user_nickname, u.avatar_url AS user_avatar_url
+    FROM posts p
+    LEFT JOIN userss u ON u.id = p.user_id
+    WHERE p.audit_status = 'approved' AND p.status = 'normal'
+    <if test="keyword != null and keyword != ''">
+      AND p.content LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+    <if test="userId != null">
+      AND p.user_id = #{userId}
+    </if>
+    ORDER BY p.id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
   <select id="countApprovedPosts" resultType="int">
     SELECT COUNT(1) FROM posts
     WHERE audit_status = 'approved' AND status = 'normal'
@@ -152,6 +168,20 @@
     </if>
   </update>
 
+  <!-- 管理端：硬删除帖子及其关联数据 -->
+  <delete id="deleteCommentsByPostId">
+    DELETE FROM comments WHERE post_id = #{postId}
+  </delete>
+  <delete id="deletePostLikesByPostId">
+    DELETE FROM post_likes WHERE post_id = #{postId}
+  </delete>
+  <delete id="deleteFavoritesByPostId">
+    DELETE FROM favorites WHERE post_id = #{postId}
+  </delete>
+  <delete id="hardDeletePost">
+    DELETE FROM posts WHERE id = #{postId}
+  </delete>
+
   <!-- 管理端：评论分页查询 -->
   <select id="listAdminComments" resultMap="CommentMap">
     SELECT * FROM comments
@@ -186,6 +216,16 @@
       AND audit_status = #{fromStatus}
     </if>
   </update>
+
+  <!-- Admin：按ID查询评论（用于删除前获取post_id） -->
+  <select id="getCommentById" resultMap="CommentMap">
+    SELECT * FROM comments WHERE id = #{commentId} LIMIT 1
+  </select>
+
+  <!-- Admin：硬删除评论 -->
+  <delete id="hardDeleteComment">
+    DELETE FROM comments WHERE id = #{commentId}
+  </delete>
 
   <!-- 管理端：举报分页查询与状态更新 -->
   <select id="listAdminReports" resultType="map">

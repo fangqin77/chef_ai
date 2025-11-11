@@ -2,7 +2,9 @@ package com.example.chef_ai_backend.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.example.chef_ai_backend.model.Post;
+import com.example.chef_ai_backend.model.User;
 import com.example.chef_ai_backend.service.CommunityService;
+import com.example.chef_ai_backend.service.UserService;
 import com.example.chef_ai_backend.util.TokenUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +26,14 @@ public class CommunityController {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CommunityController.class);
 
     private final CommunityService communityService;
+    private final UserService userService;
 
     @Autowired
     private TokenUtil tokenUtil;
 
-    public CommunityController(CommunityService communityService) {
+    public CommunityController(CommunityService communityService, UserService userService) {
         this.communityService = communityService;
+        this.userService = userService;
     }
 
     // 工具：从拦截器放入的属性中获取当前登录用户ID；若没有则从请求头兜底解析 Token
@@ -80,9 +84,24 @@ public class CommunityController {
 
     // 帖子详情（非作者仅可见已审核+正常）
     @GetMapping("/posts/{id}")
-    public Post getPost(@PathVariable Long id, HttpServletRequest request) {
+    public Map<String, Object> getPost(@PathVariable Long id, HttpServletRequest request) {
         Long viewerId = currentUserId(request);
-        return communityService.getPostForViewer(id, viewerId);
+        Post post = communityService.getPostForViewer(id, viewerId);
+        if (post == null) {
+            return Map.of("success", false, "message", "帖子不存在或不可见");
+        }
+        User author = userService.getById(post.getUserId());
+        return Map.of(
+            "success", true,
+            "data", Map.of(
+                "post", post,
+                "author", Map.of(
+                    "id", author != null ? author.getId() : null,
+                    "nickname", author != null ? author.getNickname() : null,
+                    "avatar_url", author != null ? author.getAvatarUrl() : null
+                )
+            )
+        );
     }
 
     // 发表帖子（默认进入待审核状态）

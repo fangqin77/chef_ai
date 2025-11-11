@@ -17,11 +17,19 @@ export const fetchAdminComments = (params: PageParams) =>
 export const auditComment = (id: number | string, action: 'approve' | 'reject', reason?: string) =>
   http.post(`/admin/community/comments/${id}/audit`, { action, reason });
 
+// 管理端评论硬删除（真实删除）
+export const deleteComment = (id: number | string) =>
+  http.delete(`/admin/community/comments/${id}`);
+
 export const fetchReports = (params: PageParams) =>
   http.get('/admin/community/reports', { params });
 
 export const resolveReport = (id: number | string, decision: 'approved' | 'rejected') =>
   http.post(`/admin/community/reports/${id}/resolve`, { decision });
+
+// 管理端帖子硬删除
+export const deletePost = (id: number | string) =>
+  http.delete(`/admin/community/posts/${id}`);
 
 // 菜谱管理
 export const fetchRecipes = (params: PageParams) =>

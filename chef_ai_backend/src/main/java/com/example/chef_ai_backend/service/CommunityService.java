@@ -29,7 +29,7 @@ public class CommunityService {
 
     public Map<String, Object> listPosts(String keyword, Long userId, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
-        List<Post> list = communityMapper.listApprovedPosts(keyword, userId, offset, pageSize);
+        List<java.util.Map<String,Object>> list = communityMapper.listApprovedPostsView(keyword, userId, offset, pageSize);
         int total = communityMapper.countApprovedPosts(keyword, userId);
         return toPageResult(list, total, page, pageSize);
     }

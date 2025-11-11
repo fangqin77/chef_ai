@@ -29,7 +29,17 @@ public class AdminInterceptor implements HandlerInterceptor {
         if ("/admin/auth/login".equals(uri)) {
             return true;
         }
+        // 兼容多种头部：Admin-Token / Token / Authorization: Bearer
         String token = request.getHeader("Admin-Token");
+        if (token == null || token.isBlank()) {
+            token = request.getHeader("Token");
+        }
+        if ((token == null || token.isBlank())) {
+            String auth = request.getHeader("Authorization");
+            if (auth != null && !auth.isBlank()) {
+                token = auth.startsWith("Bearer ") ? auth.substring(7) : auth;
+            }
+        }
         Long adminUserId = adminTokenUtil.validate(token);
         if (adminUserId == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
