@@ -17,6 +17,7 @@
           <a-space>
             <a-button size="small" type="primary" @click="doAudit(record.id, 'approve')">通过</a-button>
             <a-button size="small" danger @click="doAudit(record.id, 'reject')">驳回</a-button>
+            <a-button size="small" danger @click="doDelete(record.id)">删除</a-button>
           </a-space>
         </template>
       </template>
@@ -26,7 +27,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { fetchAuditPosts, auditPost } from '../services/adminApi';
+import { fetchAuditPosts, auditPost, deletePost } from '../services/adminApi';
 import { message, Modal } from 'ant-design-vue';
 
 const list = ref<any[]>([]);
@@ -108,4 +109,26 @@ const logout = () => {
 };
 
 onMounted(() => loadData(1));
+
+const doDelete = async (id: number) => {
+  Modal.confirm({
+    title: '确认删除该帖子？该操作不可恢复！',
+    async onOk() {
+      try {
+        const { data } = await deletePost(id);
+        if (data?.success && (data?.data?.deleted ?? true)) {
+          message.success('删除成功');
+          // 从当前列表移除该项，避免再次请求
+          list.value = list.value.filter(item => item.id !== id);
+          // 如需分页数据同步，可改为重新加载：
+          // await loadData(page.value);
+        } else {
+          message.error(data?.message || '删除失败');
+        }
+      } catch (e:any) {
+        message.error(e?.response?.data?.message || e?.message || '删除异常');
+      }
+    }
+  });
+};
 </script>

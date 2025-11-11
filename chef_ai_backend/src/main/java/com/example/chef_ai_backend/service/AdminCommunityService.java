@@ -96,4 +96,45 @@ public class AdminCommunityService {
         auditLogMapper.insert(log);
         return Map.of("success", true, "data", Map.of("newAuditStatus", to));
     }
+
+    // 管理端：硬删除帖子（真实删除数据库记录及其关联）
+    @Transactional
+    public Map<String, Object> deletePostHard(Long postId, Long operatorId) {
+        // 先删关联数据，再删帖子
+        communityMapper.deleteCommentsByPostId(postId);
+        communityMapper.deletePostLikesByPostId(postId);
+        communityMapper.deleteFavoritesByPostId(postId);
+        int rows = communityMapper.hardDeletePost(postId);
+
+        AuditLog log = new AuditLog();
+        log.setTargetType("post");
+        log.setTargetId(postId);
+        log.setAction("delete");
+        log.setReason("admin hard delete");
+        log.setOperatorId(operatorId);
+        auditLogMapper.insert(log);
+
+        return Map.of("success", rows > 0, "data", Map.of("deleted", rows > 0));
+    }
+
+    // 管理端：硬删除评论（真实删除并同步帖子评论数）
+    @Transactional
+    public Map<String, Object> deleteCommentHard(Long commentId, Long operatorId) {
+        com.example.chef_ai_backend.model.Comment c = communityMapper.getCommentById(commentId);
+        if (c == null) {
+            return Map.of("success", false, "message", "评论不存在");
+        }
+        int rows = communityMapper.hardDeleteComment(commentId);
+        if (rows > 0 && c.getPostId() != null) {
+            communityMapper.incrPostCommentCount(c.getPostId(), -1);
+        }
+        AuditLog log = new AuditLog();
+        log.setTargetType("comment");
+        log.setTargetId(commentId);
+        log.setAction("delete");
+        log.setReason("admin hard delete");
+        log.setOperatorId(operatorId);
+        auditLogMapper.insert(log);
+        return Map.of("success", rows > 0, "data", Map.of("deleted", rows > 0));
+    }
 }

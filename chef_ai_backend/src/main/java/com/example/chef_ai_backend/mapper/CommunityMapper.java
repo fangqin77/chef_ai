@@ -17,6 +17,12 @@ public interface CommunityMapper {
     int countApprovedPosts(@Param("keyword") String keyword,
                            @Param("userId") Long userId);
 
+    // 列表视图：联表返回作者昵称与头像
+    List<java.util.Map<String, Object>> listApprovedPostsView(@Param("keyword") String keyword,
+                                 @Param("userId") Long userId,
+                                 @Param("offset") int offset,
+                                 @Param("limit") int limit);
+
     // 本人帖子（可见 pending/rejected）
     List<Post> listMyPosts(@Param("ownerId") Long ownerId,
                            @Param("offset") int offset,
@@ -55,6 +61,10 @@ public interface CommunityMapper {
     // 计数更新
     int incrPostLikeCount(@Param("postId") Long postId, @Param("delta") int delta);
     int incrPostCommentCount(@Param("postId") Long postId, @Param("delta") int delta);
+
+    // 评论查询/删除（Admin）
+    com.example.chef_ai_backend.model.Comment getCommentById(@Param("commentId") Long commentId);
+    int hardDeleteComment(@Param("commentId") Long commentId);
 
     // 举报
     int insertReport(@Param("targetType") String targetType,
@@ -104,6 +114,12 @@ public interface CommunityMapper {
     int updatePostAuditStatus(@Param("postId") Long postId,
                               @Param("fromStatus") String fromStatus,
                               @Param("toStatus") String toStatus);
+
+    // 管理端：硬删除（真实删除数据库记录）
+    int deleteCommentsByPostId(@Param("postId") Long postId);
+    int deletePostLikesByPostId(@Param("postId") Long postId);
+    int deleteFavoritesByPostId(@Param("postId") Long postId);
+    int hardDeletePost(@Param("postId") Long postId);
 
     // 评论（Admin）
     List<Comment> listAdminComments(@Param("postId") Long postId,
