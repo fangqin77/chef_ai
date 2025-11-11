@@ -178,11 +178,6 @@ function deleteCommunityPost(postId) {
   return request(`/api/community/posts/${postId}/delete`, {}, 'POST');
 }
 
-// 删除评论
-function deleteComment(commentId) {
-  return request(`/api/community/comments/${commentId}`, {}, 'DELETE');
-}
-
 // 修改评论
 function updateComment(commentId, content) {
   return request(`/api/community/comments/${commentId}`, { content }, 'PUT');
@@ -206,16 +201,6 @@ function getUserFavorites(page = 1, pageSize = 20) {
 // 获取用户发表的评论列表
 function getUserComments(page = 1, pageSize = 20) {
   return request('/api/community/comments/my', { page, pageSize }, 'GET');
-}
-
-// 删除评论
-function deleteComment(commentId) {
-  return request(`/api/community/comments/${commentId}`, {}, 'DELETE');
-}
-
-// 修改评论
-function updateComment(commentId, content) {
-  return request(`/api/community/comments/${commentId}`, { content }, 'PUT');
 }
 
 // 获取用户通知

@@ -326,8 +326,13 @@ export default {
         const response = await updateComment(comment.id, comment.editContent.trim());
         
         if (response && response.success) {
+          // 更新本地评论内容
           comment.content = comment.editContent;
           comment.editing = false;
+          
+          // 同步更新美食圈中的评论数据
+          this.syncCommentToSocial(comment.id, comment.editContent, 'edit');
+          
           uni.showToast({ title: '评论修改成功', icon: 'success' });
         } else {
           // 如果后端返回错误，检查是否是字段缺失问题
@@ -363,6 +368,10 @@ export default {
         if (response && response.success) {
           // 从列表中移除删除的评论
           this.comments = this.comments.filter(c => c.id !== this.deletingComment.id);
+          
+          // 同步删除美食圈中的评论数据
+          this.syncCommentToSocial(this.deletingComment.id, '', 'delete');
+          
           uni.showToast({ title: '评论删除成功', icon: 'success' });
         } else {
           throw new Error('删除失败');
@@ -374,6 +383,76 @@ export default {
         uni.hideLoading();
         this.showDeleteModal = false;
         this.deletingComment = null;
+      }
+    },
+    
+    // 同步评论数据到美食圈
+    syncCommentToSocial(commentId, newContent, action) {
+      try {
+        // 获取当前评论信息
+        const comment = this.comments.find(c => String(c.id) === String(commentId));
+        if (!comment) return;
+        
+        console.log('开始同步评论数据，评论ID:', commentId, '评论内容:', comment);
+        
+        // 获取美食圈的评论数据
+        const socialComments = uni.getStorageSync('social_comments') || {};
+        console.log('美食圈评论数据:', socialComments);
+        
+        let foundPostId = null;
+        
+        // 遍历所有帖子的评论
+        Object.keys(socialComments).forEach(postId => {
+          const postComments = socialComments[postId] || [];
+          
+          // 查找当前评论在美食圈中的位置 - 使用多种匹配方式
+          const commentIndex = postComments.findIndex(c => {
+            // 方式1：直接匹配id
+            if (c.id && String(c.id) === String(commentId)) return true;
+            
+            // 方式2：匹配commentId字段
+            if (c.commentId && String(c.commentId) === String(commentId)) return true;
+            
+            // 方式3：匹配内容（最后的手段）
+            if (c.text && c.text === comment.content) return true;
+            if (c.content && c.content === comment.content) return true;
+            
+            return false;
+          });
+          
+          if (commentIndex !== -1) {
+            foundPostId = postId; // 记录找到的帖子ID
+            console.log(`在帖子 ${postId} 中找到评论，索引: ${commentIndex}，评论对象:`, postComments[commentIndex]);
+            
+            if (action === 'edit') {
+              // 更新评论内容
+              postComments[commentIndex].text = newContent;
+              postComments[commentIndex].content = newContent;
+              console.log(`在帖子 ${postId} 中更新评论 ${commentId} 的内容为: ${newContent}`);
+            } else if (action === 'delete') {
+              // 删除评论
+              postComments.splice(commentIndex, 1);
+              console.log(`在帖子 ${postId} 中删除评论 ${commentId}`);
+            }
+            
+            // 更新存储
+            socialComments[postId] = postComments;
+          }
+        });
+        
+        // 保存更新后的评论数据
+        uni.setStorageSync('social_comments', socialComments);
+        console.log('已同步更新美食圈评论数据，找到的postId:', foundPostId);
+        
+        // 发送全局事件通知美食圈页面更新
+        uni.$emit('commentsUpdated', { 
+          commentId, 
+          action, 
+          postId: foundPostId || comment.postId || 'unknown'
+        });
+        
+      } catch (error) {
+        console.error('同步评论数据到美食圈失败:', error);
       }
     }
   }

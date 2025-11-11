@@ -10195,11 +10195,6 @@ function deleteCommunityPost(postId) {
   return request("/api/community/posts/".concat(postId, "/delete"), {}, 'POST');
 }
 
-// 删除评论
-function deleteComment(commentId) {
-  return request("/api/community/comments/".concat(commentId), {}, 'DELETE');
-}
-
 // 修改评论
 function updateComment(commentId, content) {
   return request("/api/community/comments/".concat(commentId), {
@@ -10237,18 +10232,6 @@ function getUserComments() {
     page: page,
     pageSize: pageSize
   }, 'GET');
-}
-
-// 删除评论
-function deleteComment(commentId) {
-  return request("/api/community/comments/".concat(commentId), {}, 'DELETE');
-}
-
-// 修改评论
-function updateComment(commentId, content) {
-  return request("/api/community/comments/".concat(commentId), {
-    content: content
-  }, 'PUT');
 }
 
 // 获取用户通知

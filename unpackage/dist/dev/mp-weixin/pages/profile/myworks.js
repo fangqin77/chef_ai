@@ -571,36 +571,59 @@ var _default = {
     deletePost: function deletePost(p) {
       var _this4 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee6() {
-        var id;
+        var id, token, userInfo;
         return _regenerator.default.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
               case 0:
                 id = String(p.id);
+                console.log('开始删除作品，作品ID:', id, '作品信息:', p);
+
+                // 检查用户登录状态
+                token = uni.getStorageSync('token');
+                if (token) {
+                  _context6.next = 6;
+                  break;
+                }
+                uni.showToast({
+                  title: '请先登录',
+                  icon: 'none'
+                });
+                return _context6.abrupt("return");
+              case 6:
+                // 检查用户信息
+                userInfo = uni.getStorageSync('userInfo');
+                console.log('当前用户信息:', userInfo);
                 uni.showModal({
                   title: '删除作品',
                   content: '确定要删除该作品吗？删除后不可恢复',
                   success: function () {
                     var _success2 = (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee5(res) {
-                      var response, next, errorMsg;
+                      var response, next, _next, errorMsg, suggestion, errorMessage;
                       return _regenerator.default.wrap(function _callee5$(_context5) {
                         while (1) {
                           switch (_context5.prev = _context5.next) {
                             case 0:
                               if (!res.confirm) {
-                                _context5.next = 13;
+                                _context5.next = 20;
                                 break;
                               }
                               _context5.prev = 1;
-                              _context5.next = 4;
+                              uni.showLoading({
+                                title: '删除中...'
+                              });
+                              console.log('调用删除API，帖子ID:', id);
+
+                              // 调用后端API删除帖子
+                              _context5.next = 6;
                               return (0, _recipes.deleteCommunityPost)(id);
-                            case 4:
+                            case 6:
                               response = _context5.sent;
                               console.log('删除响应:', response);
 
                               // 检查后端返回的success字段
                               if (response && response.success === true) {
-                                // 从本地列表中移除
+                                // 删除成功，从本地列表中移除
                                 next = _this4.posts.filter(function (item) {
                                   return String(item.id) !== id;
                                 });
@@ -609,31 +632,69 @@ var _default = {
                                   title: '删除成功',
                                   icon: 'success'
                                 });
-                              } else {
-                                // 后端返回success:false，显示具体错误信息
-                                errorMsg = (response === null || response === void 0 ? void 0 : response.message) || (response === null || response === void 0 ? void 0 : response.msg) || '删除失败，请检查权限或联系管理员';
+
+                                // 删除后刷新列表
+                                setTimeout(function () {
+                                  _this4.loadPosts(true);
+                                }, 1000);
+                              } else if (response && response.code === 'ALREADY_DELETED') {
+                                // 帖子已删除，从本地列表中移除
+                                _next = _this4.posts.filter(function (item) {
+                                  return String(item.id) !== id;
+                                });
+                                _this4.posts = _next;
                                 uni.showToast({
-                                  title: errorMsg,
-                                  icon: 'none'
+                                  title: '帖子已删除',
+                                  icon: 'success'
+                                });
+                                console.log('帖子已从列表中移除:', id);
+                                // 注意：这里不需要调用刷新，因为帖子在服务器端已经被删除
+                                // 只需要从本地列表中移除即可
+                              } else {
+                                // 其他类型的错误，显示具体错误信息
+                                errorMsg = (response === null || response === void 0 ? void 0 : response.message) || (response === null || response === void 0 ? void 0 : response.msg) || '删除失败，请检查权限或联系管理员'; // 根据错误类型提供更具体的建议
+                                suggestion = '';
+                                if (errorMsg.includes('权限不足')) {
+                                  suggestion = '（请检查登录状态或联系管理员）';
+                                } else if (errorMsg.includes('帖子不存在')) {
+                                  suggestion = '（该帖子可能已被删除）';
+                                }
+                                uni.showToast({
+                                  title: errorMsg + suggestion,
+                                  icon: 'none',
+                                  duration: 3000
                                 });
                                 console.error('删除失败，后端返回:', response);
                               }
-                              _context5.next = 13;
+                              _context5.next = 17;
                               break;
-                            case 9:
-                              _context5.prev = 9;
+                            case 11:
+                              _context5.prev = 11;
                               _context5.t0 = _context5["catch"](1);
                               console.error('删除作品失败:', _context5.t0);
+
+                              // 提供更详细的错误信息
+                              errorMessage = '删除失败，请重试';
+                              if (_context5.t0.message && _context5.t0.message.includes('Network')) {
+                                errorMessage = '网络连接失败，请检查网络后重试';
+                              } else if (_context5.t0.message && _context5.t0.message.includes('timeout')) {
+                                errorMessage = '请求超时，请稍后重试';
+                              }
                               uni.showToast({
-                                title: '删除失败，请重试',
-                                icon: 'none'
+                                title: errorMessage,
+                                icon: 'none',
+                                duration: 3000
                               });
-                            case 13:
+                            case 17:
+                              _context5.prev = 17;
+                              uni.hideLoading();
+                              return _context5.finish(17);
+                            case 20:
                             case "end":
                               return _context5.stop();
                           }
                         }
-                      }, _callee5, null, [[1, 9]]);
+                      }, _callee5, null, [[1, 11, 17, 20]]);
                     }));
                     function success(_x2) {
                       return _success2.apply(this, arguments);
@@ -641,7 +702,7 @@ var _default = {
                     return success;
                   }()
                 });
-              case 2:
+              case 9:
               case "end":
                 return _context6.stop();
             }

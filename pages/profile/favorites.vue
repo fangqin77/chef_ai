@@ -43,19 +43,7 @@
           </view>
         </view>
 
-        <!-- 底部统计信息 -->
-        <view class="post-footer">
-          <view class="stats">
-            <view class="stat">
-              <text class="heart-icon">❤</text>
-              <text class="stat-num">{{ item.likes || 0 }}</text>
-            </view>
-            <view class="stat">
-              <text class="comment-icon">💬</text>
-              <text class="stat-num">{{ item.commentCount || 0 }}</text>
-            </view>
-          </view>
-        </view>
+
       </view>
     </view>
 
@@ -375,7 +363,7 @@ export default {
 
 .images-grid {
   display: grid;
-  grid-gap: 8rpx;
+  grid-gap: 12rpx;
   border-radius: 12rpx;
   overflow: hidden;
 }
@@ -394,9 +382,10 @@ export default {
 
 .post-image {
   width: 100%;
-  height: 200rpx;
-  border-radius: 8rpx;
+  height: 450rpx;
+  border-radius: 16rpx;
   background: #f5f5f5;
+  object-fit: cover;
 }
 
 .more-images {
@@ -414,43 +403,7 @@ export default {
   font-weight: 600;
 }
 
-/* 底部统计信息 */
-.post-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: 12rpx;
-  border-top: 1rpx solid #f0f0f0;
-}
 
-.stats {
-  display: flex;
-  align-items: center;
-  gap: 24rpx;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 6rpx;
-}
-
-.heart-icon, .comment-icon {
-  font-size: 24rpx;
-}
-
-.heart-icon {
-  color: #ff4d4f;
-}
-
-.comment-icon {
-  color: #1890ff;
-}
-
-.stat-num {
-  font-size: 22rpx;
-  color: #666;
-}
 
 
 

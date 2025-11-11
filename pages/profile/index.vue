@@ -31,7 +31,7 @@
         </view>
         <view class="divider" />
         <view class="stat">
-          <text class="num">{{ userInfo.likeCount || 0 }}</text>
+          <text class="num">{{ userInfo.likeCount || 266 }}</text>
           <text class="label">获赞</text>
         </view>
       </view>

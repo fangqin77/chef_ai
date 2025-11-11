@@ -341,31 +341,83 @@ export default {
     },
     async deletePost(p) {
       const id = String(p.id)
+      
+      console.log('开始删除作品，作品ID:', id, '作品信息:', p);
+      
+      // 检查用户登录状态
+      const token = uni.getStorageSync('token');
+      if (!token) {
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        return;
+      }
+      
+      // 检查用户信息
+      const userInfo = uni.getStorageSync('userInfo');
+      console.log('当前用户信息:', userInfo);
+      
       uni.showModal({
         title: '删除作品',
         content: '确定要删除该作品吗？删除后不可恢复',
         success: async (res) => {
           if (res.confirm) {
             try {
+              uni.showLoading({ title: '删除中...' });
+              
+              console.log('调用删除API，帖子ID:', id);
+              
               // 调用后端API删除帖子
               const response = await deleteCommunityPost(id);
               console.log('删除响应:', response);
               
               // 检查后端返回的success字段
               if (response && response.success === true) {
-                // 从本地列表中移除
+                // 删除成功，从本地列表中移除
                 const next = this.posts.filter(item => String(item.id) !== id)
                 this.posts = next
                 uni.showToast({ title: '删除成功', icon: 'success' })
+                
+                // 删除后刷新列表
+                setTimeout(() => {
+                  this.loadPosts(true);
+                }, 1000);
+              } else if (response && response.code === 'ALREADY_DELETED') {
+                // 帖子已删除，从本地列表中移除
+                const next = this.posts.filter(item => String(item.id) !== id)
+                this.posts = next
+                uni.showToast({ title: '帖子已删除', icon: 'success' })
+                
+                console.log('帖子已从列表中移除:', id);
+                // 注意：这里不需要调用刷新，因为帖子在服务器端已经被删除
+                // 只需要从本地列表中移除即可
               } else {
-                // 后端返回success:false，显示具体错误信息
+                // 其他类型的错误，显示具体错误信息
                 const errorMsg = response?.message || response?.msg || '删除失败，请检查权限或联系管理员'
-                uni.showToast({ title: errorMsg, icon: 'none' })
+                
+                // 根据错误类型提供更具体的建议
+                let suggestion = '';
+                if (errorMsg.includes('权限不足')) {
+                  suggestion = '（请检查登录状态或联系管理员）';
+                } else if (errorMsg.includes('帖子不存在')) {
+                  suggestion = '（该帖子可能已被删除）';
+                }
+                
+                uni.showToast({ title: errorMsg + suggestion, icon: 'none', duration: 3000 })
                 console.error('删除失败，后端返回:', response)
               }
             } catch (error) {
               console.error('删除作品失败:', error);
-              uni.showToast({ title: '删除失败，请重试', icon: 'none' })
+              
+              // 提供更详细的错误信息
+              let errorMessage = '删除失败，请重试';
+              if (error.message && error.message.includes('Network')) {
+                errorMessage = '网络连接失败，请检查网络后重试';
+              } else if (error.message && error.message.includes('timeout')) {
+                errorMessage = '请求超时，请稍后重试';
+              }
+              
+              uni.showToast({ title: errorMessage, icon: 'none', duration: 3000 })
+            } finally {
+              uni.hideLoading();
             }
           }
         }

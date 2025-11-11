@@ -70,35 +70,42 @@
         <text class="empty-desc">这个用户还没有发布任何作品</text>
       </view>
 
-      <!-- 帖子列表 -->
-      <view class="posts-list" v-else>
-        <view class="post-item" v-for="post in posts" :key="post.id" @click="viewPostDetail(post)">
-          <view class="post-content">
-            <text class="post-text">{{ post.content || '无文字内容' }}</text>
-          </view>
-          
-          <!-- 图片展示 -->
-          <view class="post-images" v-if="hasImages(post)" :class="'cols-' + gridCols(post)">
-            <image v-for="(img, idx) in getImages(post)"
-                   :key="idx"
-                   :src="getImageUrl(img)"
-                   class="post-image"
-                   mode="aspectFill"
-                   @error="onImageError" />
-          </view>
-          
-          <!-- 帖子信息 -->
-          <view class="post-info">
-            <text class="post-time">{{ displayTime(post) }}</text>
-            <view class="post-stats">
-              <view class="stat">
-                <text class="heart-icon" :class="{ 'liked': post.liked }">❤</text>
-                <text class="stat-count">{{ post.likes || 0 }}</text>
+      <!-- 帖子列表 - 两列网格布局 -->
+      <view class="posts-grid" v-else>
+        <view class="post-grid-container">
+          <view class="post-card" v-for="post in posts" :key="post.id" @click="viewPostDetail(post)">
+            <!-- 帖子内容（省略显示） -->
+            <view class="post-content">
+              <text class="post-text">{{ post.content || post.title || post.description || '无文字内容' }}</text>
+            </view>
+            
+            <!-- 作品图片 -->
+            <view class="post-image-section" v-if="hasImages(post)">
+              <image :src="getImageUrl(getImages(post)[0])" 
+                     class="post-image" 
+                     mode="aspectFill" 
+                     @error="onImageError" />
+              <!-- 多图指示器 -->
+              <view v-if="getImages(post).length > 1" class="image-count-badge">
+                <text class="count-text">{{ getImages(post).length }}图</text>
               </view>
-              <view class="stat">
-                <text class="comment-icon">💬</text>
-                <text class="stat-count">{{ getCommentCount(post.id) }}</text>
+            </view>
+            
+            <!-- 帖子的点赞和评论统计 -->
+            <view class="post-footer">
+              <view class="post-stats">
+                <view class="stat">
+                  <text class="heart-icon" :class="{ 'liked': post.liked }">❤</text>
+                  <text class="stat-count">{{ post.likes || 0 }}</text>
+                </view>
+                <view class="stat">
+                  <text class="comment-icon">💬</text>
+                  <text class="stat-count">{{ getCommentCount(post.id) }}</text>
+                </view>
               </view>
+              
+              <!-- 发布时间 -->
+              <text class="post-time">{{ displayTime(post) }}</text>
             </view>
           </view>
         </view>
@@ -118,7 +125,9 @@ import {
   getFollowStats, 
   checkIsFollowed,
   getFollowingList,
-  getFollowersList
+  getFollowersList,
+  getUserIntroduction,
+  getUserPublishedPosts
 } from '@/api/recipes';
 import { getUserInfoById } from '@/api/user';
 
@@ -179,18 +188,20 @@ export default {
         // 检查是否是当前用户
         this.checkIfCurrentUser(userId);
         
-        // 通过API获取真实的用户信息
+        // 通过API获取真实的用户信息（包含统计数据的接口）
         if (userId) {
           await this.loadRealUserInfo(userId);
         }
         
-        // 获取关注统计信息
-        await this.loadFollowStats();
+        // 注意：不再调用loadFollowStats()，因为统计数据应该从用户简介接口获取
+        // 只有当用户简介接口没有返回统计数据时，才需要调用单独的统计接口
         
         // 检查是否已关注该用户
         if (userId && !this.isCurrentUser) {
           await this.checkFollowStatus(userId);
         }
+        
+        console.log('最终用户信息:', this.userInfo);
         
       } catch (error) {
         console.error('加载用户信息失败:', error);
@@ -204,13 +215,40 @@ export default {
     // 通过API获取真实的用户信息
     async loadRealUserInfo(userId) {
       try {
-        const userData = await getUserInfoById(userId);
-        console.log('获取用户信息API响应:', userData);
+        // 优先使用getUserIntroduction接口获取用户简介
+        const introductionResponse = await getUserIntroduction();
+        console.log('获取用户简介响应:', introductionResponse);
         
-        // 更新用户信息为API返回的真实数据
-        this.userInfo.name = userData.nickname || this.userInfo.name;
-        this.userInfo.avatar = userData.avatar || this.userInfo.avatar;
-        this.userInfo.bio = userData.bio || userData.introduction || this.userInfo.bio;
+        if (introductionResponse && introductionResponse.success && introductionResponse.data) {
+          const introData = introductionResponse.data;
+          // 直接使用接口返回的字段名
+          this.userInfo.name = introData.nickname || this.userInfo.name;
+          this.userInfo.avatar = introData.avatar_url || introData.avatar || this.userInfo.avatar;
+          this.userInfo.bio = introData.description || this.userInfo.bio;
+          
+          // 更新统计数据
+          this.userInfo.followCount = introData.followCount || this.userInfo.followCount;
+          this.userInfo.fansCount = introData.fansCount || this.userInfo.fansCount;
+          this.userInfo.likeCount = introData.likeCount || this.userInfo.likeCount;
+          
+          console.log('从简介接口获取的用户信息:', this.userInfo);
+        } else {
+          // 如果简介接口失败，尝试使用getUserInfoById
+          const userData = await getUserInfoById(userId);
+          console.log('获取用户信息API响应:', userData);
+          
+          if (userData && userData.success) {
+            const userInfoData = userData.data || userData;
+            this.userInfo.name = userInfoData.nickname || userInfoData.name || this.userInfo.name;
+            this.userInfo.avatar = userInfoData.avatar || userInfoData.avatar_url || this.userInfo.avatar;
+            this.userInfo.bio = userInfoData.bio || userInfoData.description || userInfoData.introduction || this.userInfo.bio;
+            
+            // 更新统计数据
+            this.userInfo.followCount = userInfoData.followCount || this.userInfo.followCount;
+            this.userInfo.fansCount = userInfoData.fansCount || this.userInfo.fansCount;
+            this.userInfo.likeCount = userInfoData.likeCount || this.userInfo.likeCount;
+          }
+        }
         
         console.log('更新后的用户信息:', this.userInfo);
       } catch (error) {
@@ -244,9 +282,14 @@ export default {
         
         if (response && response.success) {
           const stats = response.data || {};
-          this.userInfo.followCount = stats.followingCount || 0; // 关注数
-          this.userInfo.fansCount = stats.followerCount || 0;     // 粉丝数
-          this.userInfo.likeCount = stats.likeCount || 0;        // 获赞数
+          this.userInfo.followCount = stats.followingCount || stats.following_count || 0; // 关注数
+          this.userInfo.fansCount = stats.followerCount || stats.follower_count || 0;     // 粉丝数
+          this.userInfo.likeCount = stats.likeCount || stats.like_count || 0;        // 获赞数
+        } else if (response && response.code === 200 && response.data) {
+          const stats = response.data || {};
+          this.userInfo.followCount = stats.followingCount || stats.following_count || 0; // 关注数
+          this.userInfo.fansCount = stats.followerCount || stats.follower_count || 0;     // 粉丝数
+          this.userInfo.likeCount = stats.likeCount || stats.like_count || 0;        // 获赞数
         } else {
           console.warn('获取关注统计失败，使用默认值');
         }
@@ -263,6 +306,8 @@ export default {
         
         if (response && response.success) {
           this.userInfo.isFollowed = response.data || false;
+        } else if (response && response.code === 200 && response.data) {
+          this.userInfo.isFollowed = response.data || false;
         } else {
           console.warn('检查关注状态失败，使用默认值');
           this.userInfo.isFollowed = false;
@@ -277,19 +322,37 @@ export default {
     async loadUserPosts(userId) {
       this.loading = true;
       try {
-        // 获取该用户的帖子列表
-        const response = await getCommunityPosts(1, 20, null, userId);
+        // 优先使用 getCommunityPosts 接口获取指定用户的帖子（使用 /api/community/posts?user_id= 接口）
+        let response = await getCommunityPosts(1, 20, null, userId);
         console.log('获取用户帖子响应:', response);
         
-        if (response && response.list) {
-          this.posts = response.list.map(post => ({
+        // 如果 getCommunityPosts 接口失败，尝试使用 getUserPublishedPosts 接口
+        if (!response || (!response.success && response.code !== 200)) {
+          console.log('使用 getCommunityPosts 失败，尝试 getUserPublishedPosts');
+          response = await getUserPublishedPosts(1, 20);
+          console.log('获取用户发布帖子响应:', response);
+        }
+        
+        // 处理响应数据
+        if (response && (response.success || response.code === 200) && response.data) {
+          const postsData = response.data.list || response.data || [];
+          
+          console.log('接口返回的帖子数据:', postsData);
+          
+          this.posts = postsData.map(post => ({
             ...post,
+            // 确保内容字段正确映射
+            content: post.content || post.title || post.description || '',
+            likes: post.likes || post.like_count || 0,
             liked: false // 初始化点赞状态
           }));
+          
+          console.log('处理后的帖子列表:', this.posts);
           
           // 恢复收藏状态
           this.restoreLikedStatus(this.posts);
         } else {
+          console.warn('获取用户帖子失败，响应格式不正确');
           this.posts = [];
         }
       } catch (error) {
@@ -322,7 +385,10 @@ export default {
           console.log('关注列表响应:', response);
           
           if (response && response.success && response.data) {
-            const followingList = response.data.list || [];
+            const followingList = response.data.list || response.data || [];
+            uni.showToast({ title: `关注列表: ${followingList.length}人`, icon: 'none' });
+          } else if (response && response.code === 200 && response.data) {
+            const followingList = response.data.list || response.data || [];
             uni.showToast({ title: `关注列表: ${followingList.length}人`, icon: 'none' });
           } else {
             uni.showToast({ title: '获取关注列表失败', icon: 'none' });
@@ -353,7 +419,10 @@ export default {
           console.log('粉丝列表响应:', response);
           
           if (response && response.success && response.data) {
-            const followersList = response.data.list || [];
+            const followersList = response.data.list || response.data || [];
+            uni.showToast({ title: `粉丝列表: ${followersList.length}人`, icon: 'none' });
+          } else if (response && response.code === 200 && response.data) {
+            const followersList = response.data.list || response.data || [];
             uni.showToast({ title: `粉丝列表: ${followersList.length}人`, icon: 'none' });
           } else {
             uni.showToast({ title: '获取粉丝列表失败', icon: 'none' });
@@ -386,7 +455,7 @@ export default {
         if (this.userInfo.isFollowed) {
           // 取消关注
           const response = await unfollowUser(this.userInfo.id);
-          if (response && response.success) {
+          if ((response && response.success) || (response && response.code === 200)) {
             this.userInfo.isFollowed = false;
             this.userInfo.fansCount = Math.max(0, this.userInfo.fansCount - 1);
             uni.showToast({ title: '已取消关注', icon: 'success' });
@@ -396,7 +465,7 @@ export default {
         } else {
           // 关注用户
           const response = await followUser(this.userInfo.id);
-          if (response && response.success) {
+          if ((response && response.success) || (response && response.code === 200)) {
             this.userInfo.isFollowed = true;
             this.userInfo.fansCount++;
             uni.showToast({ title: '关注成功', icon: 'success' });
@@ -455,6 +524,22 @@ export default {
         }
       }
       
+      // 处理 media_json 字段（后端返回的字段名）
+      if (post.media_json) {
+        try {
+          const media = JSON.parse(post.media_json);
+          if (Array.isArray(media)) {
+            return media.map(item => {
+              if (typeof item === 'string') return item;
+              if (item && item.url) return item.url;
+              return '';
+            }).filter(url => url);
+          }
+        } catch (e) {
+          console.error('解析 media_json 失败:', e);
+        }
+      }
+      
       // 处理 images 字段
       if (Array.isArray(post.images)) {
         return post.images.filter(url => url);
@@ -467,8 +552,13 @@ export default {
     getImageUrl(img) {
       if (!img) return '';
       
-      // 检查是否是有效的URL
-      if (img.startsWith('http://') || img.startsWith('https://')) {
+      // 将HTTP转换为HTTPS，避免小程序不支持HTTP的问题
+      if (img.startsWith('http://')) {
+        return img.replace('http://', 'https://');
+      }
+      
+      // 检查是否是有效的HTTPS URL
+      if (img.startsWith('https://')) {
         return img;
       }
       
@@ -498,13 +588,6 @@ export default {
       }
       
       return img;
-    },
-    
-    // 头像加载失败处理
-    onAvatarError(e) {
-      console.warn('头像加载失败:', e.detail);
-      // 当头像加载失败时，使用默认头像
-      this.userInfo.avatar = '/static/picture/profile.png';
     },
     
     // 头像加载失败处理
@@ -733,85 +816,100 @@ export default {
   margin-left: 12rpx;
 }
 
-/* 帖子列表 */
-.posts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
+/* 两列网格布局帖子列表 */
+.posts-grid {
+  margin: 0 -8rpx;
 }
 
-.post-item {
+.post-grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  padding: 0 8rpx;
+}
+
+.post-card {
   background: #fff;
   border-radius: 16rpx;
-  padding: 24rpx;
+  padding: 20rpx;
   box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  height: 320rpx;
+  transition: all 0.3s ease;
+}
+
+.post-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.12);
 }
 
 .post-content {
-  margin-bottom: 16rpx;
+  margin-bottom: 12rpx;
+  min-height: 40rpx;
 }
 
 .post-text {
-  font-size: 28rpx;
+  font-size: 24rpx;
   color: #333;
-  line-height: 1.5;
+  line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-all;
 }
 
-/* 图片展示 */
-.post-images {
-  margin-bottom: 16rpx;
-  display: grid;
-  grid-gap: 8rpx;
-}
-
-.post-images.cols-1 {
-  grid-template-columns: 1fr;
-}
-
-.post-images.cols-2 {
-  grid-template-columns: 1fr 1fr;
-}
-
-.post-images.cols-3 {
-  grid-template-columns: 1fr 1fr 1fr;
+/* 图片展示区域 */
+.post-image-section {
+  position: relative;
+  margin-bottom: 12rpx;
 }
 
 .post-image {
   width: 100%;
   height: 200rpx;
   border-radius: 12rpx;
-  background: #eee;
+  background: #f5f5f5;
 }
 
-/* 帖子信息 */
-.post-info {
+/* 多图指示器 */
+.image-count-badge {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4rpx 8rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+}
+
+.count-text {
+  font-size: 20rpx;
+}
+
+/* 帖子底部信息 */
+.post-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.post-time {
-  font-size: 24rpx;
-  color: #999;
+  margin-top: auto;
 }
 
 .post-stats {
   display: flex;
-  gap: 24rpx;
+  gap: 16rpx;
 }
 
 .stat {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  gap: 4rpx;
 }
 
 .heart-icon, .comment-icon {
-  font-size: 24rpx;
+  font-size: 22rpx;
 }
 
 .heart-icon.liked {
@@ -819,8 +917,13 @@ export default {
 }
 
 .stat-count {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #666;
+}
+
+.post-time {
+  font-size: 20rpx;
+  color: #999;
 }
 
 /* 加载状态 */

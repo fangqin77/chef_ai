@@ -231,13 +231,16 @@ var _default = {
             case 0:
               _this.loading = true;
 
+              // 添加评论更新监听器
+              _this.setupCommentsUpdateListener();
+
               // 获取URL参数中的postId
               options = getCurrentPages()[getCurrentPages().length - 1].options || {};
               targetPostId = options.postId || null;
-              _context.prev = 3;
-              _context.next = 6;
+              _context.prev = 4;
+              _context.next = 7;
               return (0, _recipes.getCommunityPosts)(1, 50);
-            case 6:
+            case 7:
               response = _context.sent;
               // 增加获取数量
 
@@ -315,27 +318,27 @@ var _default = {
                   }, 1000); // 增加延迟时间，确保帖子列表完全加载
                 });
               }
-              _context.next = 22;
+              _context.next = 23;
               break;
-            case 17:
-              _context.prev = 17;
-              _context.t0 = _context["catch"](3);
+            case 18:
+              _context.prev = 18;
+              _context.t0 = _context["catch"](4);
               console.error('获取所有用户帖子列表失败:', _context.t0);
               uni.showToast({
                 title: '获取帖子列表失败',
                 icon: 'none'
               });
               _this.posts = [];
-            case 22:
-              _context.prev = 22;
+            case 23:
+              _context.prev = 23;
               _this.loading = false;
-              return _context.finish(22);
-            case 25:
+              return _context.finish(23);
+            case 26:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[3, 17, 22, 25]]);
+      }, _callee, null, [[4, 18, 23, 26]]);
     }))();
   },
   onShareAppMessage: function onShareAppMessage(res) {
@@ -357,15 +360,77 @@ var _default = {
     }
   },
   methods: (_methods = {
-    onImageTap: function onImageTap(p, idx) {
+    // 设置评论更新监听器
+    setupCommentsUpdateListener: function setupCommentsUpdateListener() {
       var _this2 = this;
+      // 监听评论更新事件
+      uni.$on('commentsUpdated', function (data) {
+        console.log('收到评论更新事件:', data);
+
+        // 重新加载评论数据
+        _this2.loadCommentsFromStorage();
+
+        // 强制更新视图
+        _this2.$forceUpdate();
+
+        // 如果指定了特定帖子，可以刷新该帖子的评论显示
+        if (data.postId && data.postId !== 'undefined' && data.postId !== 'unknown') {
+          var postId = String(data.postId);
+          console.log("\u5237\u65B0\u5E16\u5B50 ".concat(postId, " \u7684\u8BC4\u8BBA\u663E\u793A"));
+
+          // 重新加载特定帖子的评论
+          _this2.reloadPostComments(postId);
+        } else {
+          // 如果没有指定postId，刷新所有帖子的评论显示
+          console.log('刷新所有帖子的评论显示');
+          _this2.reloadAllPostsComments();
+        }
+      });
+    },
+    // 重新加载特定帖子的评论
+    reloadPostComments: function reloadPostComments(postId) {
+      if (this.posts && this.posts.length > 0) {
+        var post = this.posts.find(function (p) {
+          return String(p.id) === String(postId);
+        });
+        if (post) {
+          // 重新加载该帖子的评论数据
+          var socialComments = uni.getStorageSync('social_comments') || {};
+          post.comments = socialComments[postId] || [];
+
+          // 更新评论数量
+          if (post.commentCount !== undefined) {
+            post.commentCount = post.comments.length;
+          }
+        }
+      }
+    },
+    // 重新加载所有帖子的评论
+    reloadAllPostsComments: function reloadAllPostsComments() {
+      if (this.posts && this.posts.length > 0) {
+        var socialComments = uni.getStorageSync('social_comments') || {};
+        this.posts.forEach(function (post) {
+          var postId = String(post.id);
+          if (socialComments[postId]) {
+            post.comments = socialComments[postId];
+
+            // 更新评论数量
+            if (post.commentCount !== undefined) {
+              post.commentCount = post.comments.length;
+            }
+          }
+        });
+      }
+    },
+    onImageTap: function onImageTap(p, idx) {
+      var _this3 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee2() {
         var urls, current, token, list, key, existingIndex, entry, next;
         return _regenerator.default.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                urls = _this2.getImages(p);
+                urls = _this3.getImages(p);
                 current = urls[idx] || ''; // 写入浏览历史到后端
                 _context2.prev = 2;
                 token = uni.getStorageSync('token');
@@ -559,19 +624,19 @@ var _default = {
       });
     },
     closeAllMenus: function closeAllMenus() {
-      var _this3 = this;
+      var _this4 = this;
       (this.posts || []).forEach(function (item) {
-        if (item && item._menuOpen) _this3.$set(item, '_menuOpen', false);
+        if (item && item._menuOpen) _this4.$set(item, '_menuOpen', false);
       });
     },
     closeAllOverlays: function closeAllOverlays() {
-      var _this4 = this;
+      var _this5 = this;
       (this.posts || []).forEach(function (item) {
         if (!item) return;
-        if (item._menuOpen) _this4.$set(item, '_menuOpen', false);
-        if (item._commenting) _this4.$set(item, '_commenting', false);
+        if (item._menuOpen) _this5.$set(item, '_menuOpen', false);
+        if (item._commenting) _this5.$set(item, '_commenting', false);
         var id = String(item.id);
-        _this4.$set(_this4.focusMap, id, false);
+        _this5.$set(_this5.focusMap, id, false);
       });
     },
     closeOverlayFor: function closeOverlayFor(p) {
@@ -580,14 +645,14 @@ var _default = {
       this.$set(p, '_menuOpen', false);
     },
     toggleMenu: function toggleMenu(p) {
-      var _this5 = this;
+      var _this6 = this;
       // 先关闭其他帖子的菜单与评论框
       (this.posts || []).forEach(function (item) {
         if (!item) return;
-        if (item._menuOpen) _this5.$set(item, '_menuOpen', false);
-        if (item._commenting) _this5.$set(item, '_commenting', false);
+        if (item._menuOpen) _this6.$set(item, '_menuOpen', false);
+        if (item._commenting) _this6.$set(item, '_commenting', false);
         var id = String(item.id);
-        _this5.$set(_this5.focusMap, id, false);
+        _this6.$set(_this6.focusMap, id, false);
       });
       // 切换当前帖子的操作菜单（使用 $set 确保响应式），并收起当前帖子的评论框
       var next = !(p && p._menuOpen);
@@ -691,7 +756,7 @@ var _default = {
       // 这里不自动收起，让用户通过点击其他地方或明确操作来关闭
     },
     toggleLike: function toggleLike(p) {
-      var _this6 = this;
+      var _this7 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3() {
         var id, token, response, _response;
         return _regenerator.default.wrap(function _callee3$(_context3) {
@@ -721,10 +786,10 @@ var _default = {
               case 10:
                 response = _context3.sent;
                 if (response && response.success) {
-                  _this6.$set(p, 'liked', false);
-                  _this6.$set(p, 'likes', Math.max((p.likes || 0) - 1, 0));
+                  _this7.$set(p, 'liked', false);
+                  _this7.$set(p, 'likes', Math.max((p.likes || 0) - 1, 0));
                   // 从本地存储中移除收藏状态和帖子信息
-                  _this6.removeFromLikedPosts(id);
+                  _this7.removeFromLikedPosts(id);
                   uni.showToast({
                     title: '已取消收藏',
                     icon: 'none'
@@ -743,10 +808,10 @@ var _default = {
               case 16:
                 _response = _context3.sent;
                 if (_response && _response.success) {
-                  _this6.$set(p, 'liked', true);
-                  _this6.$set(p, 'likes', (p.likes || 0) + 1);
+                  _this7.$set(p, 'liked', true);
+                  _this7.$set(p, 'likes', (p.likes || 0) + 1);
                   // 保存到本地存储
-                  _this6.saveToLikedPosts(p);
+                  _this7.saveToLikedPosts(p);
                   uni.showToast({
                     title: '已收藏',
                     icon: 'none'
@@ -822,21 +887,21 @@ var _default = {
     },
     // 从本地存储恢复收藏状态
     restoreLikedStatus: function restoreLikedStatus(posts) {
-      var _this7 = this;
+      var _this8 = this;
       try {
         var likedPosts = uni.getStorageSync('liked_posts') || {};
         posts.forEach(function (post) {
           if (post && post.id) {
             var postId = String(post.id);
             if (likedPosts[postId]) {
-              _this7.$set(post, 'liked', true);
+              _this8.$set(post, 'liked', true);
             }
           }
         });
       } catch (error) {}
     },
     getComments: function getComments(pid) {
-      var _this8 = this;
+      var _this9 = this;
       var cm = this.commentsMap || {};
       var list = cm[String(pid)] || [];
 
@@ -848,7 +913,7 @@ var _default = {
         }
 
         // 显示帖子作者的评论（需要从帖子信息中获取作者ID）
-        var post = _this8.posts.find(function (p) {
+        var post = _this9.posts.find(function (p) {
           return String(p.id) === String(pid);
         });
         if (post && comment.userId === String(post.userId)) {
@@ -893,17 +958,17 @@ var _default = {
       return this.getComments(pid).length;
     },
     focusComment: function focusComment(p) {
-      var _this9 = this;
+      var _this10 = this;
       if (!p) return;
 
       // 先关闭其他帖子的菜单与评论框
       (this.posts || []).forEach(function (item) {
         if (!item) return;
-        if (item._menuOpen) _this9.$set(item, '_menuOpen', false);
+        if (item._menuOpen) _this10.$set(item, '_menuOpen', false);
         if (item._commenting && item.id !== p.id) {
-          _this9.$set(item, '_commenting', false);
+          _this10.$set(item, '_commenting', false);
           var itemId = String(item.id);
-          _this9.$set(_this9.focusMap, itemId, false);
+          _this10.$set(_this10.focusMap, itemId, false);
         }
       });
 
@@ -917,7 +982,7 @@ var _default = {
       this.$set(this.inputMap, id, '');
     },
     handleSendComment: function handleSendComment(p) {
-      var _this10 = this;
+      var _this11 = this;
       console.log('发送按钮被点击，帖子ID:', p.id);
       // 防止重复点击
       if (this.sendingComment) {
@@ -926,11 +991,11 @@ var _default = {
       }
       this.sendingComment = true;
       this.submitComment(p).finally(function () {
-        _this10.sendingComment = false;
+        _this11.sendingComment = false;
       });
     }
   }, (0, _defineProperty2.default)(_methods, "handleSendComment", function handleSendComment(p) {
-    var _this11 = this;
+    var _this12 = this;
     console.log('发送按钮被点击，帖子ID:', p.id);
     // 防止重复点击
     if (this.sendingComment) {
@@ -939,10 +1004,10 @@ var _default = {
     }
     this.sendingComment = true;
     this.submitComment(p).finally(function () {
-      _this11.sendingComment = false;
+      _this12.sendingComment = false;
     });
   }), (0, _defineProperty2.default)(_methods, "submitComment", function submitComment(p) {
-    var _this12 = this;
+    var _this13 = this;
     return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
       var pid, text, token;
       return _regenerator.default.wrap(function _callee4$(_context4) {
@@ -951,7 +1016,7 @@ var _default = {
             case 0:
               console.log('submitComment 方法被调用，帖子ID:', p.id);
               pid = String(p.id);
-              text = (_this12.inputMap[pid] || '').trim();
+              text = (_this13.inputMap[pid] || '').trim();
               if (text) {
                 _context4.next = 6;
                 break;
@@ -1003,22 +1068,22 @@ var _default = {
                     userId: 'current',
                     avatar: uni.getStorageSync('userAvatar') || '/static/picture/profile.png'
                   };
-                  var cm = _objectSpread({}, _this12.commentsMap || {});
+                  var cm = _objectSpread({}, _this13.commentsMap || {});
                   var list = Array.isArray(cm[pid]) ? cm[pid].slice() : [];
                   list.push(one);
                   cm[pid] = list;
-                  _this12.commentsMap = cm;
+                  _this13.commentsMap = cm;
                   uni.setStorageSync('social_comments', cm);
 
                   // 清空输入框
-                  _this12.$set(_this12.inputMap, pid, '');
+                  _this13.$set(_this13.inputMap, pid, '');
 
                   // 更新评论数量显示
-                  _this12.$set(p, 'commentCount', (p.commentCount || 0) + 1);
+                  _this13.$set(p, 'commentCount', (p.commentCount || 0) + 1);
 
                   // 评论成功后，自动收起评论框
-                  _this12.$set(p, '_commenting', false);
-                  _this12.$set(_this12.focusMap, pid, false);
+                  _this13.$set(p, '_commenting', false);
+                  _this13.$set(_this13.focusMap, pid, false);
                   uni.showToast({
                     title: '评论成功',
                     icon: 'success'
@@ -1064,7 +1129,7 @@ var _default = {
     } catch (e) {}
     return 'https://example.com';
   }), (0, _defineProperty2.default)(_methods, "scrollToPost", function scrollToPost(postId) {
-    var _this13 = this;
+    var _this14 = this;
     if (!postId) return;
     console.log('开始滚动到帖子:', postId, '当前帖子列表:', this.posts);
 
@@ -1101,7 +1166,7 @@ var _default = {
         console.log('已滚动到位置:', scrollTop);
 
         // 添加高亮效果（使用uni-app的方式）
-        var targetPost = _this13.posts[targetIndex];
+        var targetPost = _this14.posts[targetIndex];
         if (targetPost) {
           // 临时添加高亮样式类
           targetPost._highlighted = true;

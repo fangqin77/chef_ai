@@ -104,31 +104,24 @@ var render = function () {
   var _c = _vm._self._c || _h
   var g0 = _vm.posts.length
   var g1 = !_vm.loading ? !_vm.loading && _vm.posts.length === 0 : null
-  var l1 =
+  var l0 =
     !_vm.loading && !g1
       ? _vm.__map(_vm.posts, function (post, __i0__) {
           var $orig = _vm.__get_orig(post)
           var m0 = _vm.hasImages(post)
-          var m1 = m0 ? _vm.gridCols(post) : null
-          var l0 = m0
-            ? _vm.__map(_vm.getImages(post), function (img, idx) {
-                var $orig = _vm.__get_orig(img)
-                var m2 = _vm.getImageUrl(img)
-                return {
-                  $orig: $orig,
-                  m2: m2,
-                }
-              })
-            : null
+          var m1 = m0 ? _vm.getImageUrl(_vm.getImages(post)[0]) : null
+          var g2 = m0 ? _vm.getImages(post).length : null
+          var g3 = m0 && g2 > 1 ? _vm.getImages(post).length : null
+          var m2 = _vm.getCommentCount(post.id)
           var m3 = _vm.displayTime(post)
-          var m4 = _vm.getCommentCount(post.id)
           return {
             $orig: $orig,
             m0: m0,
             m1: m1,
-            l0: l0,
+            g2: g2,
+            g3: g3,
+            m2: m2,
             m3: m3,
-            m4: m4,
           }
         })
       : null
@@ -138,7 +131,7 @@ var render = function () {
       $root: {
         g0: g0,
         g1: g1,
-        l1: l1,
+        l0: l0,
       },
     }
   )
@@ -187,7 +180,6 @@ var _defineProperty2 = _interopRequireDefault(__webpack_require__(/*! @babel/run
 var _asyncToGenerator2 = _interopRequireDefault(__webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ 45));
 var _recipes = __webpack_require__(/*! @/api/recipes */ 42);
 var _user = __webpack_require__(/*! @/api/user */ 30);
-var _methods;
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 var _default = {
@@ -229,7 +221,7 @@ var _default = {
       }, _callee);
     }))();
   },
-  methods: (_methods = {
+  methods: {
     // 加载用户信息
     loadUserInfo: function loadUserInfo(options) {
       var _this2 = this;
@@ -265,7 +257,7 @@ var _default = {
                 // 检查是否是当前用户
                 _this2.checkIfCurrentUser(userId);
 
-                // 通过API获取真实的用户信息
+                // 通过API获取真实的用户信息（包含统计数据的接口）
                 if (!userId) {
                   _context2.next = 10;
                   break;
@@ -273,68 +265,95 @@ var _default = {
                 _context2.next = 10;
                 return _this2.loadRealUserInfo(userId);
               case 10:
-                _context2.next = 12;
-                return _this2.loadFollowStats();
-              case 12:
                 if (!(userId && !_this2.isCurrentUser)) {
-                  _context2.next = 15;
+                  _context2.next = 13;
                   break;
                 }
-                _context2.next = 15;
+                _context2.next = 13;
                 return _this2.checkFollowStatus(userId);
-              case 15:
-                _context2.next = 23;
+              case 13:
+                console.log('最终用户信息:', _this2.userInfo);
+                _context2.next = 22;
                 break;
-              case 17:
-                _context2.prev = 17;
+              case 16:
+                _context2.prev = 16;
                 _context2.t0 = _context2["catch"](1);
                 console.error('加载用户信息失败:', _context2.t0);
                 // 如果API调用失败，使用默认值
                 _this2.userInfo.followCount = 0;
                 _this2.userInfo.fansCount = 0;
                 _this2.userInfo.likeCount = 0;
-              case 23:
+              case 22:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, null, [[1, 17]]);
+        }, _callee2, null, [[1, 16]]);
       }))();
     },
     // 通过API获取真实的用户信息
     loadRealUserInfo: function loadRealUserInfo(userId) {
       var _this3 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee3() {
-        var userData;
+        var introductionResponse, introData, userData, userInfoData;
         return _regenerator.default.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
                 _context3.prev = 0;
                 _context3.next = 3;
-                return (0, _user.getUserInfoById)(userId);
+                return (0, _recipes.getUserIntroduction)();
               case 3:
+                introductionResponse = _context3.sent;
+                console.log('获取用户简介响应:', introductionResponse);
+                if (!(introductionResponse && introductionResponse.success && introductionResponse.data)) {
+                  _context3.next = 16;
+                  break;
+                }
+                introData = introductionResponse.data; // 直接使用接口返回的字段名
+                _this3.userInfo.name = introData.nickname || _this3.userInfo.name;
+                _this3.userInfo.avatar = introData.avatar_url || introData.avatar || _this3.userInfo.avatar;
+                _this3.userInfo.bio = introData.description || _this3.userInfo.bio;
+
+                // 更新统计数据
+                _this3.userInfo.followCount = introData.followCount || _this3.userInfo.followCount;
+                _this3.userInfo.fansCount = introData.fansCount || _this3.userInfo.fansCount;
+                _this3.userInfo.likeCount = introData.likeCount || _this3.userInfo.likeCount;
+                console.log('从简介接口获取的用户信息:', _this3.userInfo);
+                _context3.next = 21;
+                break;
+              case 16:
+                _context3.next = 18;
+                return (0, _user.getUserInfoById)(userId);
+              case 18:
                 userData = _context3.sent;
                 console.log('获取用户信息API响应:', userData);
+                if (userData && userData.success) {
+                  userInfoData = userData.data || userData;
+                  _this3.userInfo.name = userInfoData.nickname || userInfoData.name || _this3.userInfo.name;
+                  _this3.userInfo.avatar = userInfoData.avatar || userInfoData.avatar_url || _this3.userInfo.avatar;
+                  _this3.userInfo.bio = userInfoData.bio || userInfoData.description || userInfoData.introduction || _this3.userInfo.bio;
 
-                // 更新用户信息为API返回的真实数据
-                _this3.userInfo.name = userData.nickname || _this3.userInfo.name;
-                _this3.userInfo.avatar = userData.avatar || _this3.userInfo.avatar;
-                _this3.userInfo.bio = userData.bio || userData.introduction || _this3.userInfo.bio;
+                  // 更新统计数据
+                  _this3.userInfo.followCount = userInfoData.followCount || _this3.userInfo.followCount;
+                  _this3.userInfo.fansCount = userInfoData.fansCount || _this3.userInfo.fansCount;
+                  _this3.userInfo.likeCount = userInfoData.likeCount || _this3.userInfo.likeCount;
+                }
+              case 21:
                 console.log('更新后的用户信息:', _this3.userInfo);
-                _context3.next = 14;
+                _context3.next = 27;
                 break;
-              case 11:
-                _context3.prev = 11;
+              case 24:
+                _context3.prev = 24;
                 _context3.t0 = _context3["catch"](0);
                 console.error('调用用户信息API失败:', _context3.t0);
                 // API调用失败时，继续使用URL参数的值
-              case 14:
+              case 27:
               case "end":
                 return _context3.stop();
             }
           }
-        }, _callee3, null, [[0, 11]]);
+        }, _callee3, null, [[0, 24]]);
       }))();
     },
     // 检查是否是当前用户
@@ -361,7 +380,7 @@ var _default = {
     loadFollowStats: function loadFollowStats() {
       var _this4 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
-        var response, stats;
+        var response, stats, _stats;
         return _regenerator.default.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
@@ -374,9 +393,14 @@ var _default = {
                 console.log('获取关注统计响应:', response);
                 if (response && response.success) {
                   stats = response.data || {};
-                  _this4.userInfo.followCount = stats.followingCount || 0; // 关注数
-                  _this4.userInfo.fansCount = stats.followerCount || 0; // 粉丝数
-                  _this4.userInfo.likeCount = stats.likeCount || 0; // 获赞数
+                  _this4.userInfo.followCount = stats.followingCount || stats.following_count || 0; // 关注数
+                  _this4.userInfo.fansCount = stats.followerCount || stats.follower_count || 0; // 粉丝数
+                  _this4.userInfo.likeCount = stats.likeCount || stats.like_count || 0; // 获赞数
+                } else if (response && response.code === 200 && response.data) {
+                  _stats = response.data || {};
+                  _this4.userInfo.followCount = _stats.followingCount || _stats.following_count || 0; // 关注数
+                  _this4.userInfo.fansCount = _stats.followerCount || _stats.follower_count || 0; // 粉丝数
+                  _this4.userInfo.likeCount = _stats.likeCount || _stats.like_count || 0; // 获赞数
                 } else {
                   console.warn('获取关注统计失败，使用默认值');
                 }
@@ -411,6 +435,8 @@ var _default = {
                 console.log('检查关注状态响应:', response);
                 if (response && response.success) {
                   _this5.userInfo.isFollowed = response.data || false;
+                } else if (response && response.code === 200 && response.data) {
+                  _this5.userInfo.isFollowed = response.data || false;
                 } else {
                   console.warn('检查关注状态失败，使用默认值');
                   _this5.userInfo.isFollowed = false;
@@ -434,7 +460,7 @@ var _default = {
     loadUserPosts: function loadUserPosts(userId) {
       var _this6 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee6() {
-        var response;
+        var response, postsData;
         return _regenerator.default.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
@@ -446,22 +472,44 @@ var _default = {
               case 4:
                 response = _context6.sent;
                 console.log('获取用户帖子响应:', response);
-                if (response && response.list) {
-                  _this6.posts = response.list.map(function (post) {
+
+                // 如果 getCommunityPosts 接口失败，尝试使用 getUserPublishedPosts 接口
+                if (!(!response || !response.success && response.code !== 200)) {
+                  _context6.next = 12;
+                  break;
+                }
+                console.log('使用 getCommunityPosts 失败，尝试 getUserPublishedPosts');
+                _context6.next = 10;
+                return (0, _recipes.getUserPublishedPosts)(1, 20);
+              case 10:
+                response = _context6.sent;
+                console.log('获取用户发布帖子响应:', response);
+              case 12:
+                // 处理响应数据
+                if (response && (response.success || response.code === 200) && response.data) {
+                  postsData = response.data.list || response.data || [];
+                  console.log('接口返回的帖子数据:', postsData);
+                  _this6.posts = postsData.map(function (post) {
                     return _objectSpread(_objectSpread({}, post), {}, {
+                      // 确保内容字段正确映射
+                      content: post.content || post.title || post.description || '',
+                      likes: post.likes || post.like_count || 0,
                       liked: false // 初始化点赞状态
                     });
                   });
 
+                  console.log('处理后的帖子列表:', _this6.posts);
+
                   // 恢复收藏状态
                   _this6.restoreLikedStatus(_this6.posts);
                 } else {
+                  console.warn('获取用户帖子失败，响应格式不正确');
                   _this6.posts = [];
                 }
-                _context6.next = 14;
+                _context6.next = 20;
                 break;
-              case 9:
-                _context6.prev = 9;
+              case 15:
+                _context6.prev = 15;
                 _context6.t0 = _context6["catch"](1);
                 console.error('获取用户帖子失败:', _context6.t0);
                 uni.showToast({
@@ -469,16 +517,16 @@ var _default = {
                   icon: 'none'
                 });
                 _this6.posts = [];
-              case 14:
-                _context6.prev = 14;
+              case 20:
+                _context6.prev = 20;
                 _this6.loading = false;
-                return _context6.finish(14);
-              case 17:
+                return _context6.finish(20);
+              case 23:
               case "end":
                 return _context6.stop();
             }
           }
-        }, _callee6, null, [[1, 9, 14, 17]]);
+        }, _callee6, null, [[1, 15, 20, 23]]);
       }))();
     },
     // 返回上一页
@@ -489,7 +537,7 @@ var _default = {
     showFollowList: function showFollowList() {
       var _this7 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee7() {
-        var token, response, followingList;
+        var token, response, followingList, _followingList;
         return _regenerator.default.wrap(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
@@ -517,9 +565,15 @@ var _default = {
                 response = _context7.sent;
                 console.log('关注列表响应:', response);
                 if (response && response.success && response.data) {
-                  followingList = response.data.list || [];
+                  followingList = response.data.list || response.data || [];
                   uni.showToast({
                     title: "\u5173\u6CE8\u5217\u8868: ".concat(followingList.length, "\u4EBA"),
+                    icon: 'none'
+                  });
+                } else if (response && response.code === 200 && response.data) {
+                  _followingList = response.data.list || response.data || [];
+                  uni.showToast({
+                    title: "\u5173\u6CE8\u5217\u8868: ".concat(_followingList.length, "\u4EBA"),
                     icon: 'none'
                   });
                 } else {
@@ -559,7 +613,7 @@ var _default = {
     showFansList: function showFansList() {
       var _this8 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee8() {
-        var token, response, followersList;
+        var token, response, followersList, _followersList;
         return _regenerator.default.wrap(function _callee8$(_context8) {
           while (1) {
             switch (_context8.prev = _context8.next) {
@@ -587,9 +641,15 @@ var _default = {
                 response = _context8.sent;
                 console.log('粉丝列表响应:', response);
                 if (response && response.success && response.data) {
-                  followersList = response.data.list || [];
+                  followersList = response.data.list || response.data || [];
                   uni.showToast({
                     title: "\u7C89\u4E1D\u5217\u8868: ".concat(followersList.length, "\u4EBA"),
+                    icon: 'none'
+                  });
+                } else if (response && response.code === 200 && response.data) {
+                  _followersList = response.data.list || response.data || [];
+                  uni.showToast({
+                    title: "\u7C89\u4E1D\u5217\u8868: ".concat(_followersList.length, "\u4EBA"),
                     icon: 'none'
                   });
                 } else {
@@ -663,7 +723,7 @@ var _default = {
                 return (0, _recipes.unfollowUser)(_this9.userInfo.id);
               case 8:
                 response = _context9.sent;
-                if (!(response && response.success)) {
+                if (!(response && response.success || response && response.code === 200)) {
                   _context9.next = 15;
                   break;
                 }
@@ -685,7 +745,7 @@ var _default = {
                 return (0, _recipes.followUser)(_this9.userInfo.id);
               case 20:
                 _response = _context9.sent;
-                if (!(_response && _response.success)) {
+                if (!(_response && _response.success || _response && _response.code === 200)) {
                   _context9.next = 27;
                   break;
                 }
@@ -769,6 +829,24 @@ var _default = {
         }
       }
 
+      // 处理 media_json 字段（后端返回的字段名）
+      if (post.media_json) {
+        try {
+          var _media = JSON.parse(post.media_json);
+          if (Array.isArray(_media)) {
+            return _media.map(function (item) {
+              if (typeof item === 'string') return item;
+              if (item && item.url) return item.url;
+              return '';
+            }).filter(function (url) {
+              return url;
+            });
+          }
+        } catch (e) {
+          console.error('解析 media_json 失败:', e);
+        }
+      }
+
       // 处理 images 字段
       if (Array.isArray(post.images)) {
         return post.images.filter(function (url) {
@@ -781,8 +859,13 @@ var _default = {
     getImageUrl: function getImageUrl(img) {
       if (!img) return '';
 
-      // 检查是否是有效的URL
-      if (img.startsWith('http://') || img.startsWith('https://')) {
+      // 将HTTP转换为HTTPS，避免小程序不支持HTTP的问题
+      if (img.startsWith('http://')) {
+        return img.replace('http://', 'https://');
+      }
+
+      // 检查是否是有效的HTTPS URL
+      if (img.startsWith('https://')) {
         return img;
       }
 
@@ -817,43 +900,47 @@ var _default = {
       console.warn('头像加载失败:', e.detail);
       // 当头像加载失败时，使用默认头像
       this.userInfo.avatar = '/static/picture/profile.png';
-    }
-  }, (0, _defineProperty2.default)(_methods, "onAvatarError", function onAvatarError(e) {
-    console.warn('头像加载失败:', e.detail);
-    // 当头像加载失败时，使用默认头像
-    this.userInfo.avatar = '/static/picture/profile.png';
-  }), (0, _defineProperty2.default)(_methods, "onImageError", function onImageError(e) {
-    console.warn('图片加载失败:', e.detail);
-    var imageElement = e.target || e.currentTarget;
-    if (imageElement) {
-      imageElement.src = '/static/picture/profile.png';
-    }
-  }), (0, _defineProperty2.default)(_methods, "displayTime", function displayTime(post) {
-    var t = post && post.time;
-    if (!t) return '刚刚';
-    var s = String(t).trim().toLowerCase();
-    if (!s || s === 'null' || s === 'undefined') return '刚刚';
-    return t;
-  }), (0, _defineProperty2.default)(_methods, "getCommentCount", function getCommentCount(pid) {
-    var cm = this.commentsMap || {};
-    var list = cm[String(pid)] || [];
-    return Array.isArray(list) ? list.length : 0;
-  }), (0, _defineProperty2.default)(_methods, "restoreLikedStatus", function restoreLikedStatus(posts) {
-    var _this10 = this;
-    try {
-      var likedPosts = uni.getStorageSync('liked_posts') || {};
-      posts.forEach(function (post) {
-        if (post && post.id) {
-          var postId = String(post.id);
-          if (likedPosts[postId]) {
-            _this10.$set(post, 'liked', true);
+    },
+    // 图片加载失败处理
+    onImageError: function onImageError(e) {
+      console.warn('图片加载失败:', e.detail);
+      var imageElement = e.target || e.currentTarget;
+      if (imageElement) {
+        imageElement.src = '/static/picture/profile.png';
+      }
+    },
+    // 显示时间
+    displayTime: function displayTime(post) {
+      var t = post && post.time;
+      if (!t) return '刚刚';
+      var s = String(t).trim().toLowerCase();
+      if (!s || s === 'null' || s === 'undefined') return '刚刚';
+      return t;
+    },
+    // 获取评论数量
+    getCommentCount: function getCommentCount(pid) {
+      var cm = this.commentsMap || {};
+      var list = cm[String(pid)] || [];
+      return Array.isArray(list) ? list.length : 0;
+    },
+    // 从本地存储恢复收藏状态
+    restoreLikedStatus: function restoreLikedStatus(posts) {
+      var _this10 = this;
+      try {
+        var likedPosts = uni.getStorageSync('liked_posts') || {};
+        posts.forEach(function (post) {
+          if (post && post.id) {
+            var postId = String(post.id);
+            if (likedPosts[postId]) {
+              _this10.$set(post, 'liked', true);
+            }
           }
-        }
-      });
-    } catch (error) {
-      console.error('恢复收藏状态失败:', error);
+        });
+      } catch (error) {
+        console.error('恢复收藏状态失败:', error);
+      }
     }
-  }), _methods)
+  }
 };
 exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 2)["default"]))

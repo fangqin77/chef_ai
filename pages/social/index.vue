@@ -116,6 +116,9 @@ export default {
   async onShow() {
     this.loading = true;
     
+    // 添加评论更新监听器
+    this.setupCommentsUpdateListener();
+    
     // 获取URL参数中的postId
     const options = getCurrentPages()[getCurrentPages().length - 1].options || {};
     const targetPostId = options.postId || null;
@@ -224,6 +227,69 @@ export default {
     }
   },
   methods: {
+    // 设置评论更新监听器
+    setupCommentsUpdateListener() {
+      // 监听评论更新事件
+      uni.$on('commentsUpdated', (data) => {
+        console.log('收到评论更新事件:', data);
+        
+        // 重新加载评论数据
+        this.loadCommentsFromStorage();
+        
+        // 强制更新视图
+        this.$forceUpdate();
+        
+        // 如果指定了特定帖子，可以刷新该帖子的评论显示
+        if (data.postId && data.postId !== 'undefined' && data.postId !== 'unknown') {
+          const postId = String(data.postId);
+          console.log(`刷新帖子 ${postId} 的评论显示`);
+          
+          // 重新加载特定帖子的评论
+          this.reloadPostComments(postId);
+        } else {
+          // 如果没有指定postId，刷新所有帖子的评论显示
+          console.log('刷新所有帖子的评论显示');
+          this.reloadAllPostsComments();
+        }
+      });
+    },
+    
+    // 重新加载特定帖子的评论
+    reloadPostComments(postId) {
+      if (this.posts && this.posts.length > 0) {
+        const post = this.posts.find(p => String(p.id) === String(postId));
+        if (post) {
+          // 重新加载该帖子的评论数据
+          const socialComments = uni.getStorageSync('social_comments') || {};
+          post.comments = socialComments[postId] || [];
+          
+          // 更新评论数量
+          if (post.commentCount !== undefined) {
+            post.commentCount = post.comments.length;
+          }
+        }
+      }
+    },
+    
+    // 重新加载所有帖子的评论
+    reloadAllPostsComments() {
+      if (this.posts && this.posts.length > 0) {
+        const socialComments = uni.getStorageSync('social_comments') || {};
+        
+        this.posts.forEach(post => {
+          const postId = String(post.id);
+          if (socialComments[postId]) {
+            post.comments = socialComments[postId];
+            
+            // 更新评论数量
+            if (post.commentCount !== undefined) {
+              post.commentCount = post.comments.length;
+            }
+          }
+        });
+      }
+    },
+    
     async onImageTap(p, idx) {
       const urls = this.getImages(p)
       const current = urls[idx] || ''

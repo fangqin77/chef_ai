@@ -497,6 +497,7 @@ var _default = {
     },
     // 保存编辑
     saveEdit: function saveEdit(comment) {
+      var _this4 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee4() {
         var response;
         return _regenerator.default.wrap(function _callee4$(_context4) {
@@ -531,51 +532,55 @@ var _default = {
               case 10:
                 response = _context4.sent;
                 if (!(response && response.success)) {
-                  _context4.next = 17;
+                  _context4.next = 18;
                   break;
                 }
+                // 更新本地评论内容
                 comment.content = comment.editContent;
                 comment.editing = false;
+
+                // 同步更新美食圈中的评论数据
+                _this4.syncCommentToSocial(comment.id, comment.editContent, 'edit');
                 uni.showToast({
                   title: '评论修改成功',
                   icon: 'success'
                 });
-                _context4.next = 22;
+                _context4.next = 23;
                 break;
-              case 17:
+              case 18:
                 if (!(response && response.message && response.message.includes('updated_at'))) {
-                  _context4.next = 21;
+                  _context4.next = 22;
                   break;
                 }
                 uni.showToast({
                   title: '后端数据库字段缺失，请联系管理员',
                   icon: 'none'
                 });
-                _context4.next = 22;
+                _context4.next = 23;
                 break;
-              case 21:
-                throw new Error('修改失败');
               case 22:
-                _context4.next = 28;
+                throw new Error('修改失败');
+              case 23:
+                _context4.next = 29;
                 break;
-              case 24:
-                _context4.prev = 24;
+              case 25:
+                _context4.prev = 25;
                 _context4.t0 = _context4["catch"](6);
                 console.error('修改评论失败:', _context4.t0);
                 uni.showToast({
                   title: '修改失败，请重试',
                   icon: 'none'
                 });
-              case 28:
-                _context4.prev = 28;
+              case 29:
+                _context4.prev = 29;
                 uni.hideLoading();
-                return _context4.finish(28);
-              case 31:
+                return _context4.finish(29);
+              case 32:
               case "end":
                 return _context4.stop();
             }
           }
-        }, _callee4, null, [[6, 24, 28, 31]]);
+        }, _callee4, null, [[6, 25, 29, 32]]);
       }))();
     },
     // 删除评论
@@ -585,14 +590,14 @@ var _default = {
     },
     // 确认删除
     confirmDelete: function confirmDelete() {
-      var _this4 = this;
+      var _this5 = this;
       return (0, _asyncToGenerator2.default)( /*#__PURE__*/_regenerator.default.mark(function _callee5() {
         var response;
         return _regenerator.default.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
               case 0:
-                if (_this4.deletingComment) {
+                if (_this5.deletingComment) {
                   _context5.next = 2;
                   break;
                 }
@@ -603,49 +608,117 @@ var _default = {
                   title: '删除中...'
                 });
                 _context5.next = 6;
-                return (0, _recipes.deleteComment)(_this4.deletingComment.id);
+                return (0, _recipes.deleteComment)(_this5.deletingComment.id);
               case 6:
                 response = _context5.sent;
                 if (!(response && response.success)) {
-                  _context5.next = 12;
+                  _context5.next = 13;
                   break;
                 }
                 // 从列表中移除删除的评论
-                _this4.comments = _this4.comments.filter(function (c) {
-                  return c.id !== _this4.deletingComment.id;
+                _this5.comments = _this5.comments.filter(function (c) {
+                  return c.id !== _this5.deletingComment.id;
                 });
+
+                // 同步删除美食圈中的评论数据
+                _this5.syncCommentToSocial(_this5.deletingComment.id, '', 'delete');
                 uni.showToast({
                   title: '评论删除成功',
                   icon: 'success'
                 });
-                _context5.next = 13;
+                _context5.next = 14;
                 break;
-              case 12:
-                throw new Error('删除失败');
               case 13:
-                _context5.next = 19;
+                throw new Error('删除失败');
+              case 14:
+                _context5.next = 20;
                 break;
-              case 15:
-                _context5.prev = 15;
+              case 16:
+                _context5.prev = 16;
                 _context5.t0 = _context5["catch"](2);
                 console.error('删除评论失败:', _context5.t0);
                 uni.showToast({
                   title: '删除失败，请重试',
                   icon: 'none'
                 });
-              case 19:
-                _context5.prev = 19;
+              case 20:
+                _context5.prev = 20;
                 uni.hideLoading();
-                _this4.showDeleteModal = false;
-                _this4.deletingComment = null;
-                return _context5.finish(19);
-              case 24:
+                _this5.showDeleteModal = false;
+                _this5.deletingComment = null;
+                return _context5.finish(20);
+              case 25:
               case "end":
                 return _context5.stop();
             }
           }
-        }, _callee5, null, [[2, 15, 19, 24]]);
+        }, _callee5, null, [[2, 16, 20, 25]]);
       }))();
+    },
+    // 同步评论数据到美食圈
+    syncCommentToSocial: function syncCommentToSocial(commentId, newContent, action) {
+      try {
+        // 获取当前评论信息
+        var comment = this.comments.find(function (c) {
+          return String(c.id) === String(commentId);
+        });
+        if (!comment) return;
+        console.log('开始同步评论数据，评论ID:', commentId, '评论内容:', comment);
+
+        // 获取美食圈的评论数据
+        var socialComments = uni.getStorageSync('social_comments') || {};
+        console.log('美食圈评论数据:', socialComments);
+        var foundPostId = null;
+
+        // 遍历所有帖子的评论
+        Object.keys(socialComments).forEach(function (postId) {
+          var postComments = socialComments[postId] || [];
+
+          // 查找当前评论在美食圈中的位置 - 使用多种匹配方式
+          var commentIndex = postComments.findIndex(function (c) {
+            // 方式1：直接匹配id
+            if (c.id && String(c.id) === String(commentId)) return true;
+
+            // 方式2：匹配commentId字段
+            if (c.commentId && String(c.commentId) === String(commentId)) return true;
+
+            // 方式3：匹配内容（最后的手段）
+            if (c.text && c.text === comment.content) return true;
+            if (c.content && c.content === comment.content) return true;
+            return false;
+          });
+          if (commentIndex !== -1) {
+            foundPostId = postId; // 记录找到的帖子ID
+            console.log("\u5728\u5E16\u5B50 ".concat(postId, " \u4E2D\u627E\u5230\u8BC4\u8BBA\uFF0C\u7D22\u5F15: ").concat(commentIndex, "\uFF0C\u8BC4\u8BBA\u5BF9\u8C61:"), postComments[commentIndex]);
+            if (action === 'edit') {
+              // 更新评论内容
+              postComments[commentIndex].text = newContent;
+              postComments[commentIndex].content = newContent;
+              console.log("\u5728\u5E16\u5B50 ".concat(postId, " \u4E2D\u66F4\u65B0\u8BC4\u8BBA ").concat(commentId, " \u7684\u5185\u5BB9\u4E3A: ").concat(newContent));
+            } else if (action === 'delete') {
+              // 删除评论
+              postComments.splice(commentIndex, 1);
+              console.log("\u5728\u5E16\u5B50 ".concat(postId, " \u4E2D\u5220\u9664\u8BC4\u8BBA ").concat(commentId));
+            }
+
+            // 更新存储
+            socialComments[postId] = postComments;
+          }
+        });
+
+        // 保存更新后的评论数据
+        uni.setStorageSync('social_comments', socialComments);
+        console.log('已同步更新美食圈评论数据，找到的postId:', foundPostId);
+
+        // 发送全局事件通知美食圈页面更新
+        uni.$emit('commentsUpdated', {
+          commentId: commentId,
+          action: action,
+          postId: foundPostId || comment.postId || 'unknown'
+        });
+      } catch (error) {
+        console.error('同步评论数据到美食圈失败:', error);
+      }
     }
   }
 };

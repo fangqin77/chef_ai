@@ -331,6 +331,48 @@ var _default = {
         });
       });
 
+      // 3) 添加模拟评论数据
+      if (list.length === 0) {
+        // 模拟其他用户在我的帖子中的评论
+        var mockComments = [{
+          type: 'comment_on_my_post',
+          postId: '1001',
+          title: '美食达人小王 评论了你的作品',
+          brief: '这道菜看起来太棒了！能分享一下做法吗？',
+          time: '2小时前',
+          avatar: '/static/IMG_20251111_161402.jpg'
+        }, {
+          type: 'comment_on_my_post',
+          postId: '1002',
+          title: '吃货小李 评论了你的作品',
+          brief: '看着就流口水了，下次我也试试！',
+          time: '1天前',
+          avatar: '/static/IMG_20251111_161420.jpg'
+        }, {
+          type: 'comment_on_my_post',
+          postId: '1003',
+          title: '美食博主小张 评论了你的作品',
+          brief: '照片拍得真不错，光线和构图都很专业！',
+          time: '3天前',
+          avatar: '/static/IMG_20251111_161431.jpg'
+        }, {
+          type: 'reply_to_me',
+          postId: '1004',
+          title: '厨艺爱好者小陈 回复了你',
+          brief: '谢谢你的建议，我试了一下确实效果很好！',
+          time: '5小时前',
+          avatar: '/static/IMG_20251111_161449.jpg'
+        }, {
+          type: 'comment_on_my_post',
+          postId: '1005',
+          title: '甜点师小杨 评论了你的作品',
+          brief: '这个配方太棒了，我试了很好吃！',
+          time: '1周前',
+          avatar: '/static/IMG_20251111_161511.jpg'
+        }];
+        list.push.apply(list, mockComments);
+      }
+
       // 合并已保存通知（若有）
       var saved = [];
       try {
