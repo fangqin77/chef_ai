@@ -16,20 +16,35 @@
     ON DUPLICATE KEY UPDATE browse_time = NOW()
   </insert>
 
-  <!-- 浏览历史列表（含用户昵称与头像） -->
+  <!-- 浏览历史列表：包含用户昵称头像 + 浏览的帖子内容与图片等 -->
   <select id="listUserBrowsingHistory" resultType="map">
+    <![CDATA[
     SELECT 
       h.id,
       h.user_id,
       h.post_id,
       h.browse_time,
       u.nickname  AS user_nickname,
-      u.avatar_url AS user_avatar_url
+      u.avatar_url AS user_avatar_url,
+      -- 帖子字段
+      p.content        AS post_content,
+      p.media_json     AS post_media_json,
+      p.visibility     AS post_visibility,
+      p.status         AS post_status,
+      p.audit_status   AS post_audit_status,
+      p.like_count     AS post_like_count,
+      p.comment_count  AS post_comment_count,
+      -- 帖子作者信息
+      au.nickname      AS post_user_nickname,
+      au.avatar_url    AS post_user_avatar_url
     FROM browsing_history h
-    LEFT JOIN userss u ON u.id = h.user_id
+    LEFT JOIN userss u  ON u.id  = h.user_id
+    LEFT JOIN posts  p  ON p.id  = h.post_id
+    LEFT JOIN userss au ON au.id = p.user_id
     WHERE h.user_id = #{userId}
     ORDER BY h.browse_time DESC
     LIMIT #{limit} OFFSET #{offset}
+    ]]>
   </select>
 
   <select id="countUserBrowsingHistory" resultType="int">
