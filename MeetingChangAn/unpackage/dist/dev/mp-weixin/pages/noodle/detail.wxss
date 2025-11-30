@@ -1,0 +1,392 @@
+@charset "UTF-8";
+/* uni.scss */
+/* 颜色变量 */
+/* 背景色 */
+/* 文字色 */
+/* 边框色 */
+/* 尺寸变量 */
+/* 圆角 */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+/* 项目自定义颜色 */
+.city-page.data-v-51485ee8 {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffaf1 0%, #fff5dc 100%);
+  color: #5a2c12;
+  padding-bottom: 40rpx;
+}
+.top-row.data-v-51485ee8 {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 20rpx 24rpx 8rpx;
+}
+.hero-line.data-v-51485ee8 {
+  width: 100%;
+  height: 2rpx;
+  background: #8c5c2a;
+  border-radius: 2rpx;
+}
+.hero.data-v-51485ee8 {
+  position: relative;
+  /* 作为绝对定位图片的参照 */
+  width: 100%;
+  /* 占满页面内容宽度，避免 vw 溢出 */
+  height: 360rpx;
+  /* 头图显示高度，可按需调整 */
+  overflow: hidden;
+  /* 超出部分裁剪（主要裁掉下端） */
+  margin-top: 0;
+  /* 紧贴页面顶端 */
+}
+.hero-img.data-v-51485ee8 {
+  position: absolute;
+  /* 覆盖容器 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 充满容器并裁切 */
+  object-position: top;
+  /* 从顶部对齐，裁掉底部 */
+  -webkit-transform: none;
+          transform: none;
+  /* 移除下移，避免露出顶部背景 */
+  display: block;
+}
+.city-text.data-v-51485ee8 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.city-name.data-v-51485ee8 {
+  font-size: 40rpx;
+  font-weight: 700;
+}
+.city-desc.data-v-51485ee8 {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: #8c5c2a;
+}
+.section-title.data-v-51485ee8 {
+  margin: 20rpx 24rpx 12rpx;
+  /* 与特色面食卡片左边缘对齐 */
+  font-size: 32rpx;
+  font-weight: 600;
+}
+.section-title--with-action.data-v-51485ee8 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-action.data-v-51485ee8 {
+  background: #ffd98a;
+  color: #7b2f00;
+  padding: 6rpx 16rpx;
+  border-radius: 999px;
+  font-size: 24rpx;
+}
+.noodle-list.data-v-51485ee8 {
+  padding: 0 24rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* 两列网格 */
+  gap: 12rpx;
+  /* 更紧凑的间距 */
+}
+.noodle-card.data-v-51485ee8 {
+  background: #fff5df;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.08);
+  display: flex;
+  /* 纵向：上图下文 */
+  flex-direction: column;
+  padding: 12rpx;
+  /* 更紧凑的内边距 */
+}
+.noodle-img.data-v-51485ee8 {
+  width: 100%;
+  /* 两列卡片占满卡片宽度 */
+  height: 240rpx;
+  /* 拉长20rpx，展示更大 */
+  border-radius: 16rpx;
+  object-fit: cover;
+  /* 充满并裁切，视觉更好 */
+  display: block;
+}
+.noodle-body.data-v-51485ee8 {
+  padding: 8rpx 4rpx 4rpx;
+  /* 适配纵向卡片 */
+  display: flex;
+  /* 垂直排列文本 */
+  flex-direction: column;
+  gap: 10rpx;
+  /* 更紧凑的段间距 */
+  flex: 1;
+  /* 撑满卡片剩余空间，便于把标签压到最底部 */
+}
+.noodle-name.data-v-51485ee8 {
+  font-size: 28rpx;
+  /* 两列更紧凑的标题 */
+  font-weight: 700;
+  display: block;
+  /* 保证换行 */
+}
+.noodle-tags.data-v-51485ee8 {
+  margin-top: auto;
+  /* 将标签推到底部 */
+  padding-top: 8rpx;
+  /* 与名字保持一点点间距 */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx 12rpx;
+}
+.tag.data-v-51485ee8 {
+  font-size: 22rpx;
+  color: #7b2f00;
+  background: #ffecc7;
+  padding: 6rpx 12rpx;
+  border-radius: 999px;
+}
+/* 经典组合 */
+.pair-list.data-v-51485ee8 {
+  padding: 0;
+  /* 交由外层 extra-sections 控制统一左右内边距 */
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.pair-card.data-v-51485ee8 {
+  background: #fff5df;
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.08);
+  padding: 16rpx;
+}
+.pair-body.data-v-51485ee8 {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.pair-title.data-v-51485ee8 {
+  font-size: 30rpx;
+  font-weight: 700;
+}
+.pair-desc.data-v-51485ee8 {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: #8c5c2a;
+}
+/* 时令民俗 */
+.season-list.data-v-51485ee8 {
+  padding: 0;
+  /* 交由外层 extra-sections 控制统一左右内边距 */
+  display: flex;
+  flex-direction: column;
+  /* 每列纵向排列卡片 */
+  gap: 16rpx;
+}
+.season-card.data-v-51485ee8 {
+  background: #fff5df;
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.08);
+  padding: 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.season-badge.data-v-51485ee8 {
+  background: #ffd98a;
+  color: #7b2f00;
+  padding: 6rpx 12rpx;
+  border-radius: 999px;
+  font-size: 22rpx;
+  flex-shrink: 0;
+}
+.season-desc.data-v-51485ee8 {
+  font-size: 26rpx;
+}
+/* 打卡区 - 上传表单 */
+.upload-form.data-v-51485ee8 {
+  padding: 0 24rpx 12rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.modal-mask.data-v-51485ee8 {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal.data-v-51485ee8 {
+  width: 86%;
+  max-width: 640rpx;
+  background: #fff5df;
+  border-radius: 24rpx;
+  box-shadow: 0 16rpx 32rpx rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+.modal-title.data-v-51485ee8 {
+  padding: 16rpx 20rpx 0;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #7b2f00;
+}
+.uploader.data-v-51485ee8 {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+.thumb.data-v-51485ee8 {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  position: relative;
+  background: #fff5df;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.06);
+}
+.thumb image.data-v-51485ee8 {
+  width: 100%;
+  height: 100%;
+}
+.thumb-del.data-v-51485ee8 {
+  position: absolute;
+  right: 8rpx;
+  top: 8rpx;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2rpx 10rpx;
+  font-size: 22rpx;
+}
+.thumb.add.data-v-51485ee8 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #7b2f00;
+}
+.add-plus.data-v-51485ee8 {
+  font-size: 40rpx;
+  line-height: 1;
+}
+.add-text.data-v-51485ee8 {
+  font-size: 22rpx;
+}
+.form-fields.data-v-51485ee8 {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.input.data-v-51485ee8 {
+  background: #fff5df;
+  border-radius: 12rpx;
+  padding: 12rpx;
+  font-size: 26rpx;
+  box-shadow: inset 0 0 0 1rpx rgba(0, 0, 0, 0.06);
+}
+.form-actions.data-v-51485ee8 {
+  display: flex;
+  justify-content: flex-end;
+}
+.post-btn.data-v-51485ee8 {
+  background: #ffc34a;
+  color: #5a2c12;
+  border-radius: 999px;
+  padding: 0 16rpx;
+}
+/* 两列容器：左经典、右时令 */
+.extra-sections.data-v-51485ee8 {
+  padding: 0 24rpx;
+  /* 统一左右内边距，确保与上方卡片左侧对齐 */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+.col.data-v-51485ee8 {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.post-list.data-v-51485ee8 {
+  padding: 0 24rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.post-card.data-v-51485ee8 {
+  background: #fff5df;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 18rpx rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  padding: 10rpx 10rpx 12rpx;
+  position: relative;
+}
+.post-img.data-v-51485ee8 {
+  width: 100%;
+  height: 220rpx;
+  object-fit: cover;
+  display: block;
+}
+.post-footer.data-v-51485ee8 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6rpx 12rpx 8rpx;
+  font-size: 22rpx;
+  color: #8c5c2a;
+}
+.post-time.data-v-51485ee8 {
+  opacity: 0.9;
+}
+.post-location.data-v-51485ee8 {
+  opacity: 0.9;
+}
+.post-caption.data-v-51485ee8 {
+  display: block;
+  padding: 10rpx 6rpx 6rpx;
+  font-size: 26rpx;
+}
+.post-del.data-v-51485ee8 {
+  position: absolute;
+  right: 10rpx;
+  top: 10rpx;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2rpx 10rpx;
+  font-size: 22rpx;
+}
+/* 新增：三图等分与底部元信息布局 */
+.post-images-row.data-v-51485ee8 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6rpx;
+  width: 100%;
+}
+.post-img-tn.data-v-51485ee8 {
+  width: 100%;
+  height: 200rpx;
+  object-fit: cover;
+  display: block;
+  border-radius: 10rpx;
+}
+.post-meta.data-v-51485ee8 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6rpx;
+  font-size: 22rpx;
+  color: #8c5c2a;
+}

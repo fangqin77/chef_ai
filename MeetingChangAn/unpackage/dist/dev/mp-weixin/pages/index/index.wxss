@@ -1,0 +1,699 @@
+@charset "UTF-8";
+/* uni.scss */
+/* 颜色变量 */
+/* 背景色 */
+/* 文字色 */
+/* 边框色 */
+/* 尺寸变量 */
+/* 圆角 */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+/* 项目自定义颜色 */
+.index-page.data-v-57280228 {
+  min-height: 100vh;
+  padding: 40rpx 32rpx 0rpx;
+  background: linear-gradient(180deg, #fffaf1 0%, #fff5dc 100%);
+  font-family: "LXGW WenKai Screen", "PingFang SC", system-ui;
+  color: #5a2c12;
+  position: relative;
+  overflow: visible;
+}
+/* 左上角图片样式 */
+.corner-image.data-v-57280228 {
+  position: absolute;
+  top: -10rpx;
+  left: 3rpx;
+  z-index: 2;
+  width: 180rpx;
+  -webkit-transform: translateY(7rpx) translateX(6rpx) scaleX(1.3);
+          transform: translateY(7rpx) translateX(6rpx) scaleX(1.3);
+  -webkit-transform-origin: left top;
+          transform-origin: left top;
+  pointer-events: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+}
+/* 页面底部图标容器 */
+.bottom-icons-container.data-v-57280228 {
+  position: fixed;
+  bottom: 40rpx;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
+/* 底部图标行样式 */
+.bottom-icons-row.data-v-57280228 {
+  display: flex;
+  justify-content: space-between;
+  width: calc(100% - 80rpx);
+  max-width: 600rpx;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+  border-radius: 60rpx;
+  padding: 16rpx 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
+}
+.bottom-icon-pill.data-v-57280228 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 8rpx;
+  border-radius: 40rpx;
+  transition: all 0.3s ease;
+}
+.bottom-icon-pill.data-v-57280228:active {
+  background: rgba(255, 207, 93, 0.3);
+  -webkit-transform: scale(0.95);
+          transform: scale(0.95);
+}
+.bottom-icon-pill .icon-dot.data-v-57280228 {
+  width: 16rpx;
+  height: 16rpx;
+  background: #ff7a18;
+  border-radius: 50%;
+  margin-bottom: 6rpx;
+}
+.bottom-icon-pill text.data-v-57280228 {
+  font-size: 22rpx;
+  font-weight: 500;
+  color: #5a2c12;
+}
+/* 中央上方图标样式 */
+.top-center-icon.data-v-57280228 {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 120rpx;
+}
+.center-icon-pill.data-v-57280228 {
+  width: 170rpx;
+  height: 150rpx;
+  border-radius: 50%;
+  background: #ff7a18;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 8rpx 16rpx rgba(255, 122, 24, 0.4);
+  position: relative;
+  z-index: 2;
+}
+/* 面条连接线 */
+.noodle-connector.data-v-57280228 {
+  position: absolute;
+  top: 280rpx;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+  width: 8rpx;
+  height: 120rpx;
+  background: linear-gradient(180deg, #ff7a18, #ffcf5d);
+  border-radius: 4rpx;
+  z-index: 1;
+  box-shadow: 0 4rpx 8rpx rgba(255, 122, 24, 0.3);
+}
+/* 下方图标行样式 */
+.bottom-icons-row.data-v-57280228 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 40rpx 60rpx;
+  position: relative;
+  z-index: 2;
+}
+.bottom-icon-pill.data-v-57280228 {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #ffe569;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  box-shadow: 0 6rpx 12rpx rgba(255, 200, 0, 0.45);
+}
+.floating-btn.data-v-57280228 {
+  position: fixed;
+  right: 40rpx;
+  bottom: 160rpx;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #ffcf5d;
+  color: #7b2f00;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  box-shadow: 0 10rpx 18rpx rgba(255, 160, 16, 0.35);
+  z-index: 20;
+}
+.hero.data-v-57280228 {
+  position: relative;
+  padding-top: 60rpx;
+  margin-bottom: 60rpx;
+}
+.hero-bowl.data-v-57280228 {
+  width: 150rpx;
+  height: 150rpx;
+}
+.map-panel.data-v-57280228 {
+  margin-top: 30rpx;
+  /* 再上移40rpx */
+  padding: 22rpx 1rpx 100rpx 32rpx;
+  /* 上-10, 右-15, 下-40, 左保持 */
+  border-radius: 32rpx;
+  background: transparent;
+  /* 白底交由 .map-bg 控制 */
+  overflow: visible;
+  box-shadow: 0 20rpx 40rpx rgba(255, 190, 90, 0.2);
+}
+.map-title.data-v-57280228 {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+.map.data-v-57280228 {
+  position: relative;
+  width: calc(100% - 50rpx);
+  height: 750rpx;
+  margin-top: 120rpx;
+  background: transparent;
+  border-radius: 24rpx;
+  overflow: visible;
+}
+/* 渐变白底移至伪元素，便于单独控制尺寸与位置 */
+.map.data-v-57280228::before {
+  content: "";
+  position: absolute;
+  top: -190rpx;
+  /* 下移约 60rpx */
+  right: -38rpx;
+  bottom: 0;
+  left: -30rpx;
+  border-radius: 24rpx;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 220, 120, 0.4), transparent 60%), radial-gradient(circle at 70% 40%, rgba(255, 180, 150, 0.35), transparent 55%);
+  z-index: 1;
+  pointer-events: none;
+}
+.sx-map-canvas.data-v-57280228 {
+  position: absolute;
+  top: -790rpx;
+  right: -120rpx;
+  bottom: -440rpx;
+  left: -170rpx;
+  z-index: 5;
+  /* 提升层级，避免被装饰覆盖 */
+  -webkit-transform: none;
+          transform: none;
+  -webkit-transform-origin: center;
+          transform-origin: center;
+}
+.map-city.data-v-57280228 {
+  position: absolute;
+  width: 300rpx;
+  padding: 25rpx;
+  border-radius: 30% 70% 60% 40%;
+  text-align: center;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);
+  -webkit-transform: translate(-30%, -50%);
+          transform: translate(-30%, -50%);
+  transition: -webkit-transform 0.2s;
+  transition: transform 0.2s;
+  transition: transform 0.2s, -webkit-transform 0.2s;
+}
+.map-city.data-v-57280228:active {
+  -webkit-transform: translate(-50%, -50%) scale(0.96);
+          transform: translate(-50%, -50%) scale(0.96);
+}
+.city-name.data-v-57280228 {
+  font-weight: 700;
+}
+.city-tagline.data-v-57280228 {
+  display: block;
+  font-size: 20rpx;
+  margin-top: 6rpx;
+}
+.feature-cards.data-v-57280228 {
+  display: flex;
+  gap: 40rpx;
+  margin-top: -335rpx;
+  margin-bottom: 120rpx;
+  position: relative;
+  z-index: 40;
+}
+.feature-cards.data-v-57280228::before {
+  content: "";
+  position: absolute;
+  top: 0rpx;
+  right: 30rpx;
+  bottom: -2rpx;
+  /* 下端延长 20rpx */
+  left: 30rpx;
+  background: #ffffff;
+  border-radius: 32rpx;
+  box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.08);
+  z-index: -1;
+  pointer-events: none;
+}
+.feature-card.data-v-57280228 {
+  flex: 0 0 calc(50% - 92rpx);
+  /* 在 20rpx 间距的两列布局上，每张卡再减 20rpx */
+  padding: 32rpx;
+  border-radius: 32rpx;
+  background: #ffefc2;
+  box-shadow: inset 0 0 0 6rpx rgba(255, 255, 255, 0.8), 0 12rpx 20rpx rgba(255, 174, 65, 0.2);
+}
+.feature-name.data-v-57280228 {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+.feature-desc.data-v-57280228 {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 26rpx;
+}
+.section-divider.data-v-57280228 {
+  width: 100%;
+  display: block;
+  margin: -102rpx 0 32rpx;
+  position: relative;
+  z-index: 60;
+}
+.divider.data-v-57280228 {
+  margin-top: 60rpx;
+}
+.chopsticks.data-v-57280228 {
+  height: 14rpx;
+  background: linear-gradient(90deg, #6b3b1f, #a15a2f);
+  border-radius: 14rpx;
+  position: relative;
+  margin-bottom: 24rpx;
+}
+.chopsticks.data-v-57280228::after {
+  content: "";
+  position: absolute;
+  right: 60rpx;
+  top: -10rpx;
+  width: 12rpx;
+  height: 34rpx;
+  background: #d5c06f;
+  border-radius: 4rpx;
+  box-shadow: -18rpx 0 0 #d5c06f, -36rpx 0 0 #d5c06f;
+}
+.icon-row.data-v-57280228 {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 10rpx;
+}
+.icon-row.data-v-57280228::before {
+  content: "";
+  position: absolute;
+  top: -16rpx;
+  left: 0;
+  right: 0;
+  height: 80rpx;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="80"><path d="M0 40 Q50 0 100 40 T200 40 T300 40 T400 40" stroke="%23ffcf5d" stroke-width="6" fill="none" stroke-linecap="round"/></svg>') center/contain no-repeat;
+  z-index: -1;
+}
+.icon-pill.data-v-57280228 {
+  width: 110rpx;
+  height: 110rpx;
+  border-radius: 50%;
+  background: #ffe569;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  z-index: 1;
+  box-shadow: 0 6rpx 10rpx rgba(255, 200, 0, 0.45);
+}
+.icon-dot.data-v-57280228 {
+  width: 18rpx;
+  height: 18rpx;
+  background: #d54c10;
+  border-radius: 50%;
+  margin-bottom: 6rpx;
+}
+.overlay.data-v-57280228 {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+.modal.data-v-57280228 {
+  width: 90%;
+  max-height: 84vh;
+  background: #fffefa;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  box-shadow: 0 30rpx 60rpx rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+.modal-header.data-v-57280228 {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 32rpx;
+  margin-bottom: 24rpx;
+}
+.modal-close.data-v-57280228 {
+  font-size: 48rpx;
+  line-height: 1;
+}
+.shot-list.data-v-57280228 {
+  overflow-y: auto;
+  gap: 24rpx;
+  display: flex;
+  flex-direction: column;
+}
+.shot-card.data-v-57280228 {
+  background: #fff5df;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  box-shadow: inset 0 0 0 4rpx rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+.shot-img.data-v-57280228 {
+  width: 180rpx;
+  height: 180rpx;
+}
+.shot-clue.data-v-57280228 {
+  display: block;
+  margin: 12rpx 0;
+  font-size: 26rpx;
+}
+.shot-btn.data-v-57280228 {
+  margin-bottom: 12rpx;
+  border-radius: 999px;
+  background: #ffc34a;
+  color: #5a2c12;
+}
+.shot-knowledge.data-v-57280228 {
+  font-size: 24rpx;
+  color: #a14b1f;
+}
+.modal.dialect .dialect-body.data-v-57280228 {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  font-size: 28rpx;
+}
+.dialect-tip.data-v-57280228 {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #8c5c2a;
+}
+/* 面语卡片样式：每条面语独立卡片分隔显示 */
+.dialect-card.data-v-57280228 {
+  background: #fff5df;
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.08);
+  border: 3rpx solid #e8d4b8;
+  padding: 16rpx 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.dialect-title.data-v-57280228 {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #5a2c12;
+  margin-bottom: 4rpx;
+}
+.dialect-title.data-v-57280228 {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #5a2c12;
+  margin-bottom: 4rpx;
+}
+.dialect-line.data-v-57280228 {
+  display: block;
+  font-size: 26rpx;
+  color: #5a2c12;
+  line-height: 1.6;
+}
+.dialect-line.data-v-57280228 {
+  display: block;
+  font-size: 26rpx;
+  color: #5a2c12;
+  line-height: 1.6;
+}
+/* 面条方框装饰，放在白色模块内部四周 */
+.noodle-frame.data-v-57280228 {
+  position: absolute;
+  top: -125rpx;
+  /* 四边统一内缩 20rpx，总体长宽各缩小 40rpx */
+  left: -60rpx;
+  right: -42rpx;
+  bottom: 250rpx;
+  width: auto;
+  height: auto;
+  border-radius: 32rpx;
+  /* 与 map-panel 圆角一致 */
+  z-index: 1;
+  /* 装饰层 */
+  pointer-events: none;
+  /* 不干扰点击 */
+}
+/* 面条方框装饰，放在白色模块内部四周 */
+.noodle-frame.data-v-57280228 {
+  position: absolute;
+  top: -125rpx;
+  /* 四边统一内缩 20rpx，总体长宽各缩小 40rpx */
+  left: -60rpx;
+  right: -42rpx;
+  bottom: 250rpx;
+  width: auto;
+  height: auto;
+  border-radius: 32rpx;
+  /* 与 map-panel 圆角一致 */
+  z-index: 1;
+  /* 装饰层 */
+  pointer-events: none;
+  /* 不干扰点击 */
+}
+.dialect-title.data-v-57280228 {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #5a2c12;
+  margin-bottom: 4rpx;
+}
+.dialect-title.data-v-57280228 {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #5a2c12;
+  margin-bottom: 4rpx;
+}
+.dialect-line.data-v-57280228 {
+  display: block;
+  font-size: 26rpx;
+  color: #5a2c12;
+  line-height: 1.6;
+}
+.dialect-line.data-v-57280228 {
+  display: block;
+  font-size: 26rpx;
+  color: #5a2c12;
+  line-height: 1.6;
+}
+/* 面条方框装饰，放在白色模块内部四周 */
+.noodle-frame.data-v-57280228 {
+  position: absolute;
+  top: -125rpx;
+  /* 四边统一内缩 20rpx，总体长宽各缩小 40rpx */
+  left: -60rpx;
+  right: -42rpx;
+  bottom: 250rpx;
+  width: auto;
+  height: auto;
+  border-radius: 32rpx;
+  /* 与 map-panel 圆角一致 */
+  z-index: 1;
+  /* 装饰层 */
+  pointer-events: none;
+  /* 不干扰点击 */
+}
+/* 面条方框装饰，放在白色模块内部四周 */
+.noodle-frame.data-v-57280228 {
+  position: absolute;
+  top: -125rpx;
+  /* 四边统一内缩 20rpx，总体长宽各缩小 40rpx */
+  left: -60rpx;
+  right: -42rpx;
+  bottom: 250rpx;
+  width: auto;
+  height: auto;
+  border-radius: 32rpx;
+  /* 与 map-panel 圆角一致 */
+  z-index: 1;
+  /* 装饰层 */
+  pointer-events: none;
+  /* 不干扰点击 */
+}
+/* 纯白圆角背景层（非渐变、非面条方框）：仅控制白底自身大小与位置 */
+.white-bg.data-v-57280228 {
+  position: absolute;
+  top: -20rpx;
+  right: 44rpx;
+  bottom: 330rpx;
+  left: 10rpx;
+  background: #fffef7;
+  border-radius: 32rpx;
+  z-index: 0;
+  /* 高于 noodle-frame(0)，低于内容(map,2) */
+  pointer-events: none;
+}
+/* 确保模块内容在装饰之上 */
+.map-panel.data-v-57280228 {
+  position: relative;
+}
+.map.data-v-57280228 {
+  position: relative;
+  z-index: 2;
+}
+/* 右下角装饰 */
+.noodle-splash.data-v-57280228 {
+  position: absolute;
+  right: -17rpx;
+  /* 向内收，避免外溢 */
+  bottom: 250rpx;
+  width: 150rpx;
+  /* 可按视觉再调 140~220rpx */
+  z-index: 4;
+  /* 在方框之上，低于内容 */
+  pointer-events: none;
+}
+.floating-btn.data-v-57280228,
+.bottom-icons-container.data-v-57280228 {
+  display: none !important;
+}
+/* 新图标布局（图片 + 下方文字），不使用圆形底色，不被白色方框包裹 */
+.icons-top.data-v-57280228 {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: -40rpx 0 20rpx;
+  padding-top: 0;
+  z-index: -1;
+}
+.icons-top .icon-block.data-v-57280228 {
+  -webkit-transform: translateY(75rpx);
+          transform: translateY(75rpx);
+  /* 仅下移陕面通图标，不影响底栏背景 */
+  will-change: transform;
+}
+/* 延长上方“陕面通”米黄色背景，仅背景加长不改图标大小 */
+.icons-top.data-v-57280228::before {
+  content: "";
+  position: absolute;
+  top: -20rpx;
+  left: 0;
+  right: 0rpx;
+  height: 140rpx;
+  /* 可根据效果再调 */
+  background: #fff5dc;
+  border-radius: 24rpx;
+  z-index: -2;
+}
+.icons-bottom.data-v-57280228 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 35rpx;
+  padding: 0 10rpx;
+  /* 无背景，无边框，确保不被任何白色方框包住 */
+  background: transparent;
+  margin-top: -12rpx;
+  /* 整体上移一点，不影响大小 */
+}
+/* 仅增大“陕味集”(第2个) 与 “陕非遗”(第3个) 的间距 */
+.icons-bottom .icon-block.data-v-57280228:nth-child(2) {
+  margin-right: 24rpx;
+}
+.icons-bottom .icon-block.data-v-57280228:nth-child(3) {
+  margin-left: 24rpx;
+}
+.icon-block.data-v-57280228 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32%;
+}
+.icon-img.data-v-57280228 {
+  width: 58rpx;
+  /* 再缩小 0.5 倍 */
+  height: auto;
+  display: block;
+}
+/* 仅放大顶部“陕面通”图标，不影响底部四个 */
+.icons-top .icon-img.data-v-57280228 {
+  width: 68rpx;
+}
+.icon-label.data-v-57280228 {
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  color: #5a2c12;
+  text-align: center;
+}
+/* 顶部“陕面通”图标白色圆形包裹层：让圆形白底看起来置于底栏内部 */
+.top-circle-wrap.data-v-57280228 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 50%;
+  padding: 18rpx;
+  /* 圆形白底厚度 */
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  /* 轻阴影，避免突兀 */
+  border: 0;
+  position: relative;
+  z-index: -2;
+  /* 降低层级到底栏之下 */
+}
+/* 固定底部容器：确保图标始终贴底，并覆盖多余空白 */
+.icons-fixed.data-v-57280228 {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 60rpx;
+  padding: 10rpx 20rpx 16rpx;
+  /* 适度内边距，避免贴边 */
+  background: transparent;
+  z-index: 20;
+  /* 降低层级，避免覆盖卡片 */
+}
+/* 统一底栏背景：白色圆角条，覆盖五个图标区域 */
+.icons-fixed.data-v-57280228::before {
+  content: "";
+  position: absolute;
+  left: 12rpx;
+  right: 12rpx;
+  bottom: -5rpx;
+  top: 100rpx;
+  /* 下移背景上边界，避免压住卡片 */
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  z-index: -1;
+  /* 置于图标后面，仅作为背景 */
+}

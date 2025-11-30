@@ -1,0 +1,81 @@
+@charset "UTF-8";
+/* uni.scss */
+/* 颜色变量 */
+/* 背景色 */
+/* 文字色 */
+/* 边框色 */
+/* 尺寸变量 */
+/* 圆角 */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+/* 项目自定义颜色 */
+/* 继承整体米白背景+柔和阴影与圆角，控制蓝/绿为低饱和度以不跳脱 */
+/* 与其他页一致的文字主色 */
+/* 暖黄色，与项目主色调一致 */
+/* 品牌棕色，统一视觉 */
+.detail-page.data-v-a0d09b10 {
+  min-height: 100vh;
+  background: #fffef7;
+  color: #5a2c12;
+  padding-bottom: 0;
+}
+/* 顶部媒体模块（蓝色背景容器） */
+.media-wrap.data-v-a0d09b10 {
+  margin: 16rpx 16rpx 10rpx;
+  padding: 16rpx;
+  background: #fff5dc;
+  border-radius: 24rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+.media.data-v-a0d09b10 {
+  width: 100%;
+  height: 42vh;
+  /* 下调视频高度，页面更紧凑 */
+  border-radius: 16rpx;
+  object-fit: cover;
+  display: block;
+  background: #0003;
+}
+/* 绿色名称条 */
+.name-bar.data-v-a0d09b10 {
+  margin: 12rpx 16rpx 16rpx;
+  padding: 24rpx 22rpx;
+  background: #7A4E2D;
+  color: #fff;
+  text-align: center;
+  /* 名称文字居中 */
+  border-radius: 20rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+.heritage-name.data-v-a0d09b10 {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+/* 内容卡片（延续白底圆角+柔和阴影） */
+.section.data-v-a0d09b10 {
+  margin: 12rpx 16rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+.section-title.data-v-a0d09b10 {
+  padding: 20rpx 22rpx 8rpx;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #5a2c12;
+}
+.section-body.data-v-a0d09b10 {
+  padding: 0 22rpx 22rpx;
+}
+.section-text.data-v-a0d09b10 {
+  display: block;
+  /* 设为块级，确保首行缩进生效 */
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: #6b4a2e;
+  text-indent: 2em;
+  /* 首行缩进 */
+}

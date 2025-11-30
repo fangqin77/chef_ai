@@ -1,0 +1,6 @@
+<!-- 强制使用 2D Canvas，确保能拿到 node -->
+<canvas type="2d" class="ec-canvas" canvas-id="{{ canvasId }}"
+  bindinit="init"
+  bindtouchstart="touchStart"
+  bindtouchmove="touchMove"
+  bindtouchend="touchEnd"></canvas>

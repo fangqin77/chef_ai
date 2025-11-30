@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "非遗详情",
+  "enablePullDownRefresh": false,
+  "navigationBarBackgroundColor": "#fffef7",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#fffef7",
+  "usingComponents": {}
+}

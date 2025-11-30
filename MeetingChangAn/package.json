@@ -1,0 +1,58 @@
+{
+  "name": "shaanxi-noodle-guide",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "server:dev": "node server/index.js",
+    "dev:app": "npx @dcloudio/vue-cli-plugin-uni dev",
+    "dev:custom": "npx @dcloudio/vue-cli-plugin-uni dev -p",
+    "dev:h5": "npx @dcloudio/vue-cli-plugin-uni dev",
+    "dev:mp-weixin": "npx @dcloudio/vue-cli-plugin-uni dev -p mp-weixin",
+    "dev:mp-alipay": "npx @dcloudio/vue-cli-plugin-uni dev -p mp-alipay",
+    "dev:mp-baidu": "npx @dcloudio/vue-cli-plugin-uni dev -p mp-baidu",
+    "dev:mp-toutiao": "npx @dcloudio/vue-cli-plugin-uni dev -p mp-toutiao",
+    "dev:mp-qq": "npx @dcloudio/vue-cli-plugin-uni dev -p mp-qq",
+    "dev:quickapp-webview": "npx @dcloudio/vue-cli-plugin-uni dev -p quickapp-webview",
+    "build:app": "npx @dcloudio/vue-cli-plugin-uni build",
+    "build:custom": "npx @dcloudio/vue-cli-plugin-uni build -p",
+    "build:h5": "npx @dcloudio/vue-cli-plugin-uni build",
+    "build:mp-weixin": "npx @dcloudio/vue-cli-plugin-uni build -p mp-weixin",
+    "build:mp-alipay": "npx @dcloudio/vue-cli-plugin-uni build -p mp-alipay",
+    "build:mp-baidu": "npx @dcloudio/vue-cli-plugin-uni build -p mp-baidu",
+    "build:mp-toutiao": "npx @dcloudio/vue-cli-plugin-uni build -p mp-toutiao",
+    "build:mp-qq": "npx @dcloudio/vue-cli-plugin-uni build -p mp-qq",
+    "build:quickapp-webview": "npx @dcloudio/vue-cli-plugin-uni build -p quickapp-webview"
+  },
+  "dependencies": {
+    "@dcloudio/uni-ui": "^1.5.5",
+    "echarts": "^6.0.0",
+    "vue": "^2.6.14"
+  },
+  "devDependencies": {
+    "@dcloudio/uni-cli-i18n": "^2.0.0-32220210513001",
+    "@dcloudio/uni-cli-shared": "^2.0.0-32220210513001",
+    "@dcloudio/uni-mp-vue": "^2.0.0-32220210513001",
+    "@dcloudio/vue-cli-plugin-hbuilderx": "^2.0.0-32220210513001",
+    "@dcloudio/vue-cli-plugin-uni": "^2.0.0-32220210513001",
+    "@dcloudio/webpack-uni-mp-loader": "^2.0.0-32220210513001",
+    "@dcloudio/webpack-uni-pages-loader": "^2.0.0-32220210513001",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "autoprefixer": "^9.8.8",
+    "babel-plugin-dynamic-import-node": "^2.3.3",
+    "babel-plugin-import": "^1.11.0",
+    "postcss": "^7.0.39",
+    "postcss-comment": "^2.0.0",
+    "postcss-loader": "^3.0.0",
+    "sass": "^1.32.0",
+    "sass-loader": "^10.0.0",
+    "vue-template-compiler": "^2.6.14"
+  },
+  "browserslist": [
+    "Android >= 4.4",
+    "ios >= 9"
+  ],
+  "uni-app": {
+    "scripts": {}
+  }
+}

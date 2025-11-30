@@ -1,0 +1,29 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/heritage/detail",
+    "pages/index/index",
+    "pages/agreement/index",
+    "pages/heritage/index",
+    "pages/noodle/detail",
+    "pages/noodle/item",
+    "pages/flavor/index",
+    "pages/mine/index",
+    "pages/checklist/index"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#fff8eb"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "为了给你提供精准的门店级打卡定位服务，请授权定位权限"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation",
+    "chooseLocation"
+  ],
+  "usingComponents": {}
+}

@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "陕面通",
+  "navigationBarBackgroundColor": "#fff5dc",
+  "navigationBarTextStyle": "black",
+  "navigationStyle": "default",
+  "usingComponents": {
+    "ec-canvas": "/wxcomponents/ec-canvas/ec-canvas"
+  }
+}

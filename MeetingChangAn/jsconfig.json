@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "unpackage",
+    "dist"
+  ],
+  "include": [
+    "src/**/*",
+    "pages/**/*",
+    "components/**/*",
+    "static/**/*"
+, "utils/amap-wx.js"  ]
+}

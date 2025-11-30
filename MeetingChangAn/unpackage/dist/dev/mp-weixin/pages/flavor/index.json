@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "陕味集",
+  "enablePullDownRefresh": false,
+  "navigationBarBackgroundColor": "#fff5dc",
+  "navigationBarTextStyle": "black",
+  "navigationStyle": "default",
+  "usingComponents": {}
+}
